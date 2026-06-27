@@ -8,8 +8,5 @@ __pycache__/
 .venv/
 venv/
 
-# Build output (regenerate with: cd style_library && python3 build_deck.py)
-style_library/library.pptx
-
 # MS Office lock/owner temp files
 ~$*

@@ -81,7 +81,8 @@ from deck_core.style import (
 # ── charts ─────────────────────────────────────────────────────────────────
 from deck_core.charts import (
     graphic_frame, styled_chart, editable_bundled_chart,
-    column_chart, bar_chart, line_chart, waterfall_chart, marimekko_chart,
+    column_chart, bar_chart, combo_chart, line_chart, bubble_chart,
+    waterfall_chart, marimekko_chart,
     THINKCELL_BARS,
 )
 from deck_core.chart_key import chart_key, chart_legend

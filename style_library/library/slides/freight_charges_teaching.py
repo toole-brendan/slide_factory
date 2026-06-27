@@ -1,78 +1,307 @@
-"""freight_charges — Commercial Strategy market-analysis deck (20260325), source slide 134.
+"""Teaching exemplar: Freight Charges — stacked contribution bar + addressability table.
 
-EXHIBIT — "Freight Charges": ~70% of westbound (Long Beach → Honolulu) freight
-charges are directly related to vessel operations; the rest are shoreside. Left:
-a styled stacked-bar chart breaking down the weighted-avg freight charge
-(normalized $ / TEU, CY25) by component — Basic Ocean Rate, Terminal & Wharfage
-(Long Beach / Honolulu), Other fees. A legend pairs each component swatch with its
-name; on-bar value labels show each component's $. Two grouping bands bracket the
-components into "Directly related to vessel operations" vs "Shoreside charges".
+ROLE
+  unit_economics / freight_charge_breakdown
 
-CODE MAP (body follows source PAINT ORDER; headers mark roles in place):
-  • chrome ............ breadcrumb() + title_placeholder() + prelim_chip()
-  • styled chart ...... graphic_frame(rId2) → CHARTS[0] = styled_chart(...); the
-                        7-component series live in _CHART0_DATA
-  • _DATA_LABELS ...... main-bar and thin-segment value-label buckets
-  • _LEGEND_KEYS / _LEGEND_LABELS  component colour keys and captions
-  • _GROUP_CAPTIONS ... vessel-operations vs shoreside grouping labels
-  • _ANNOTATION_BOXES . dated analysis-status note
-  • table ............ single-cell label table (low-level table())
-  • custom_geometry .. status icons via custom_geometry() over 2 deduped path
-                       constants (_GEOM_CHECK ×2, _GEOM_CROSS ×3)
-  • connectors ....... dashed leader lines (anchored at _LEADER_X)
+USE WHEN
+  A slide needs to decompose one all-in freight price into component charges,
+  show which components are vessel-operations-addressable, and connect the chart
+  to a short explanatory table.
 
-styled_chart caveat: editing _CHART0_DATA re-renders the chart, but PowerPoint's
-"Edit Data" pane still shows the source workbook until it is regenerated.
+TEACHES
+  - fully declarative native stacked-column charting with column_chart(mode="stacked")
+  - source workbook values embedded as Python constants instead of sidecar XLSB
+  - source chart-part style values embedded as CHART_STYLE and SOURCE_CHART_AUDIT
+  - manual on-bar dollar labels over a percentage-normalized stacked chart
+  - separate legend/category labels when the chart has a single category
+  - status icons and dashed leader lines tied to an explanatory table
+  - off-house status note, footnote, and Preliminary chip preservation
 
-Auto-converted by _tools/convert_slide.py, then hand-annotated for study (names and
-comments made semantic, body grouped into sections) and retrofitted to the
-custom_geometry() primitive; paint order is unchanged and the render is verified
-equivalent (the custGeom paths are byte-identical; positions differ only by
-inch-rounding).
+TEXT-FIT PRECEDENT
+  chart_component_labels:
+    geometry: 0.229-0.311in wide x 0.167in high
+    type: Arial 10pt, centered, zero/tight insets, no wrap
+    content: one short $K value token only, e.g. 2.8 / 0.5 / <0.1
+    copy_when: a single stacked bar uses percentage-normalized geometry while the
+               audience needs dollarized component labels
+  charge_component_table:
+    geometry: 6.634in wide x 4.250in high
+    type: Arial 10pt with a compact header and six component rows
+    copy_when: the chart alone does not explain addressability or pass-through
+               mechanics for each price component
+  group_captions:
+    geometry: 1.37in wide, Arial 10pt italic
+    content: short group labels only; avoid paragraph explanations inside brackets
 
-Converter stats: text_box=10, connector=5, chart=1, table=1, chrome_builders=3,
-clusters=5 (covering 23 shapes), custom_geometry=5 (check/cross icons = 2 deduped
-path constants _GEOM_CHECK/_GEOM_CROSS), raw_verbatim=0, dropped=1 (think-cell OLE
-frame), frozen_fields=15.
-Residue: the Note/Source line sits off the house position, kept verbatim.
+SOURCE NOTE
+  Teaching rewrite of source-faithful `freight_charges.py`. The original used a
+  `styled_chart(...)` wrapper backed by slide134_chart78.xml/.xlsb. This version
+  intentionally replaces that runtime template dependency with a native editable
+  `column_chart(mode="stacked", ...)` spec. The chart values are the exact Sheet1
+  workbook row from slide134_chart78.xlsb, and the key XML chart styling values
+  (manual layout, gap width, overlap, value-axis bounds, segment outlines, and
+  series fills) are explicit constants in the module.
+
+FIDELITY NOTE
+  This is a practical factory-native rebuild, not a byte-identical chart-template
+  port. It preserves the visible chart semantics, percentage-normalized stack,
+  manual $K labels, total label, route label, legend, grouping brackets, table,
+  custom status icons, leader lines, source note, and Preliminary chip. Minor
+  differences can remain in PowerPoint's internal chart XML ordering versus the
+  original chart part.
 """
 # HAND-POLISHED — do not regenerate with convert_slide.py (it will refuse; see logs).
 from __future__ import annotations
 
-from pathlib import Path
+from dataclasses import dataclass
 
-from deck_core.authoring import (
-    slide, run, paragraph, text_box, custom_geometry, connector, line_break, table, trow,
-    tcell, tcell_rich, tpara, trun, tbreak, breadcrumb, title_placeholder, prelim_chip,
-    graphic_frame, styled_chart, IN, PT, BLACK, WHITE, DK, GRAY_1, FONT, edge, bd, cell,
-    rcell,
+from deck_core.primitives import (
+    slide, run, paragraph, text_box, custom_geometry, connector, line_break, table, trow, tcell, tcell_rich, tpara, trun, tbreak, breadcrumb, title_placeholder, prelim_chip,
 )
+from deck_core.charts import graphic_frame, column_chart
+from deck_core.style import IN, PT, BLACK, WHITE, DK, GRAY_1, FONT
 
 LAYOUT = "slideLayout4"
 
-_SRC = Path(__file__).parent / "_src"
-_CHART0_TPL = (_SRC / "slide134_chart78.xml").read_text(encoding="utf-8")
-_XLSB0 = (_SRC / "slide134_chart78.xlsb").read_bytes()
 
+# ════════════════════════════════════════════════════════════════════════════
+# Source chart data and factory-native chart specification.
+# ════════════════════════════════════════════════════════════════════════════
+@dataclass(frozen=True)
+class FreightComponent:
+    """One bottom-to-top segment in the stacked freight-charge bar."""
+
+    name: str
+    fill: str
+    workbook_pct: float
+    dollar_label_k: str
+    addressability_group: str
+
+
+BASIC_OCEAN_RATE = "364D6E"
+FUEL_SURCHARGE = "4C6C9C"
+TERMINAL_CHARGE = "808080"
+WHARFAGE = "C0C0C0"
+OTHER_FEES = WHITE
+SEGMENT_OUTLINE = BLACK
+
+CHART_CATEGORIES: tuple[str, ...] = ("Long Beach to Honolulu",)
+TOTAL_FREIGHT_CHARGE_K = 4.9
+
+# Exact Sheet1 row read from slide134_chart78.xlsb. These values are percentages
+# of the normalized westbound freight charge; manual labels convert the same
+# stack into visible $K / TEU labels.
+SOURCE_XLSB_COMPONENT_PCT_VALUES: tuple[float, ...] = (
+    57.14285714285715,
+    10.204081632653061,
+    16.326530612244905,
+    10.204081632653061,
+    2.0408163265306145,
+    4.081632653061229,
+    0.0,
+)
+
+# Exact chart-part styling values pulled from slide134_chart78.xml.
+SOURCE_PLOT_LAYOUT = {
+    "x": 0.016214530714062987,
+    "y": 0.021968736797634135,
+    "w": 0.967570938571874,
+    "h": 0.9560625264047318,
+}
+SOURCE_GAP_WIDTH = 250
+SOURCE_BAR_OVERLAP = 100
+SOURCE_VALUE_AXIS_MIN = 0
+SOURCE_VALUE_AXIS_MAX = 110.00000000000001
+SOURCE_VALUE_AXIS_MAJOR_UNIT = None  # source XML omits <c:majorUnit>
+SOURCE_SEGMENT_LINE_WIDTH = 3_175
+SOURCE_AXIS_LINE_WIDTH = 9_525
+SOURCE_XML_COMPONENT_FILL_COLORS: tuple[str, ...] = (
+    BASIC_OCEAN_RATE,
+    FUEL_SURCHARGE,
+    TERMINAL_CHARGE,
+    TERMINAL_CHARGE,
+    WHARFAGE,
+    WHARFAGE,
+    OTHER_FEES,
+)
+
+FREIGHT_COMPONENTS: tuple[FreightComponent, ...] = (
+    FreightComponent("Basic Ocean Rate", BASIC_OCEAN_RATE, SOURCE_XLSB_COMPONENT_PCT_VALUES[0], "2.8", "vessel_operations"),
+    FreightComponent("Fuel Surcharge", FUEL_SURCHARGE, SOURCE_XLSB_COMPONENT_PCT_VALUES[1], "0.5", "vessel_operations"),
+    FreightComponent("Terminal - Long Beach", TERMINAL_CHARGE, SOURCE_XLSB_COMPONENT_PCT_VALUES[2], "0.8", "shoreside"),
+    FreightComponent("Terminal - Honolulu", TERMINAL_CHARGE, SOURCE_XLSB_COMPONENT_PCT_VALUES[3], "0.5", "shoreside"),
+    FreightComponent("Wharfage - Long Beach", WHARFAGE, SOURCE_XLSB_COMPONENT_PCT_VALUES[4], "0.1", "shoreside"),
+    FreightComponent("Wharfage - Honolulu", WHARFAGE, SOURCE_XLSB_COMPONENT_PCT_VALUES[5], "0.2", "shoreside"),
+    FreightComponent("Other fees", OTHER_FEES, SOURCE_XLSB_COMPONENT_PCT_VALUES[6], "<0.1", "shoreside"),
+)
+
+FREIGHT_CHARGE_SERIES: tuple[dict, ...] = tuple(
+    {
+        "name": component.name,
+        "color": component.fill,
+        "values": [component.workbook_pct],
+        "hide_labels": True,
+    }
+    for component in FREIGHT_COMPONENTS
+)
+
+# Kept as a readable data mirror for agents/tools that expect the converted-slide
+# data-dict shape. CHARTS consumes the same values through column_chart().
 _CHART0_DATA = {
-    "categories": None,
+    "categories": CHART_CATEGORIES,
     "series": [
-        {"values": [57.1429]},
-        {"values": [10.2041]},
-        {"values": [16.3265]},
-        {"values": [10.2041]},
-        {"values": [2.0408]},
-        {"values": [4.0816]},
-        {"values": [0]},
+        {"name": component.name, "values": [component.workbook_pct]}
+        for component in FREIGHT_COMPONENTS
     ],
 }
 
-CHARTS = [styled_chart(_CHART0_TPL, _CHART0_DATA, _XLSB0)]
+CHART_STYLE = {
+    "mode": "stacked",
+    "categories": list(CHART_CATEGORIES),
+    "series": [dict(series) for series in FREIGHT_CHARGE_SERIES],
+    "show_legend": False,
+    "show_cat_labels": False,
+    "show_value_axis_labels": False,
+    "show_gridlines": False,
+    "show_value_labels": False,
+    "value_axis_format": "General",
+    "value_label_format": "General",
+    "cat_label_size_pt": 10,
+    "value_label_size_pt": 10,
+    "gap_width": SOURCE_GAP_WIDTH,
+    "bar_overlap": SOURCE_BAR_OVERLAP,
+    "seg_line_color": SEGMENT_OUTLINE,
+    "seg_line_width": SOURCE_SEGMENT_LINE_WIDTH,
+    "axis_line_color": BLACK,
+    "axis_line_width": SOURCE_AXIS_LINE_WIDTH,
+    "value_axis_min": SOURCE_VALUE_AXIS_MIN,
+    "value_axis_max": SOURCE_VALUE_AXIS_MAX,
+    "plot_layout": dict(SOURCE_PLOT_LAYOUT),
+    "cat_header": "Route",
+}
+
+CHARTS = [column_chart(**CHART_STYLE)]
+
+SOURCE_CHART_AUDIT = {
+    "source_xml": "slide134_chart78.xml",
+    "source_workbook": "slide134_chart78.xlsb",
+    "workbook_rows": [SOURCE_XLSB_COMPONENT_PCT_VALUES],
+    "xml_style": {
+        "manualLayout": SOURCE_PLOT_LAYOUT,
+        "barDir": "col",
+        "grouping": "stacked",
+        "gapWidth": SOURCE_GAP_WIDTH,
+        "overlap": SOURCE_BAR_OVERLAP,
+        "valueAxisMin": SOURCE_VALUE_AXIS_MIN,
+        "valueAxisMax": SOURCE_VALUE_AXIS_MAX,
+        "valueAxisMajorUnit": SOURCE_VALUE_AXIS_MAJOR_UNIT,
+        "segmentLineWidth": SOURCE_SEGMENT_LINE_WIDTH,
+        "axisLineWidth": SOURCE_AXIS_LINE_WIDTH,
+        "seriesFillsBottomToTop": SOURCE_XML_COMPONENT_FILL_COLORS,
+    },
+}
+
+
+def _validate_source_chart_alignment() -> None:
+    """Fail fast if a future edit drifts from the source XML/XLSB values."""
+
+    if len(CHART_CATEGORIES) != 1:
+        raise ValueError("slide134_chart78 contains exactly one chart category / stacked bar.")
+    if len(FREIGHT_COMPONENTS) != 7:
+        raise ValueError("Expected seven freight-charge components from slide134_chart78.xlsb.")
+    actual_values = tuple(component.workbook_pct for component in FREIGHT_COMPONENTS)
+    if actual_values != SOURCE_XLSB_COMPONENT_PCT_VALUES:
+        raise ValueError("Freight component percentages no longer match slide134_chart78.xlsb.")
+    actual_colors = tuple(component.fill for component in FREIGHT_COMPONENTS)
+    if actual_colors != SOURCE_XML_COMPONENT_FILL_COLORS:
+        raise ValueError("Freight component fills no longer match slide134_chart78.xml series colors.")
+    if abs(sum(SOURCE_XLSB_COMPONENT_PCT_VALUES) - 100.0) > 1e-9:
+        raise ValueError("Freight component percentages should sum to the source 100% stack.")
+    if CHART_STYLE["gap_width"] != SOURCE_GAP_WIDTH or CHART_STYLE["bar_overlap"] != SOURCE_BAR_OVERLAP:
+        raise ValueError("Chart gap/overlap must match slide134_chart78.xml.")
+    if CHART_STYLE["plot_layout"] != SOURCE_PLOT_LAYOUT:
+        raise ValueError("Manual plot layout must match slide134_chart78.xml.")
+    if CHART_STYLE["value_axis_min"] != SOURCE_VALUE_AXIS_MIN or CHART_STYLE["value_axis_max"] != SOURCE_VALUE_AXIS_MAX:
+        raise ValueError("Value-axis bounds must match slide134_chart78.xml.")
+    if SOURCE_VALUE_AXIS_MAJOR_UNIT is None and "value_axis_major_unit" in CHART_STYLE:
+        raise ValueError("Source XML omits c:majorUnit; do not hard-code a native major unit.")
+    if CHART_STYLE["seg_line_width"] != SOURCE_SEGMENT_LINE_WIDTH:
+        raise ValueError("Segment outline width must match slide134_chart78.xml.")
+
+
+_validate_source_chart_alignment()
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Teaching metadata: these are comments the module can expose programmatically.
+# ════════════════════════════════════════════════════════════════════════════
+TEACHING_METADATA = {
+    "role": "unit_economics / freight_charge_breakdown",
+    "use_when": (
+        "Use for a single-route freight price decomposition where one stacked "
+        "chart needs to be read with a component legend, addressability table, "
+        "and explicit vessel-operations vs. shoreside grouping."
+    ),
+    "teaches": [
+        "native stacked column chart with one category",
+        "source workbook values embedded as Python constants",
+        "source XML styling embedded in CHART_STYLE",
+        "manual dollar-value labels over percentage-normalized geometry",
+        "manual legend labels for one-bar composition charts",
+        "custom geometry status icons in an explanatory table",
+        "dashed leader lines from chart components to table rows",
+    ],
+    "source_module": "freight_charges.py",
+    "rebuild_strategy": "replace styled_chart template with native column_chart",
+}
+
+TEXT_FIT = {
+    "chart_component_labels": {
+        "box_in": "0.229-0.311 wide x 0.167 high",
+        "font_pt": 10,
+        "content": "one short $K value token: 2.8 / 0.5 / 0.8 / 0.1 / <0.1",
+        "note": "Use manual labels because the chart values are percentages but visible labels are dollars.",
+    },
+    "charge_component_table": {
+        "box_in": (6.634, 4.250),
+        "font_pt": 10,
+        "content": "header + six component rows + one italic source-method row",
+    },
+    "analysis_status_note": {
+        "box_in": (3.900, 0.290),
+        "font_pt": 10,
+        "content": "single italic status sentence",
+    },
+}
 
 
 # ── table kit (local): separates a cell's CONTENT from its MECHANICS (insets,
 #    borders, spans). Renders identically to the raw tcell()/tcell_rich() form —
 #    the only change is legibility. ──
+def edge(color, w=12700):
+    """One cell-border edge (default 1pt hairline)."""
+    return {"color": color, "width": w}
+
+
+def bd(L=None, R=None, T=None, B=None):
+    """Border dict from only the edges drawn; omitted sides render no-fill (as the source does)."""
+    return {k: v for k, v in (("L", L), ("R", R), ("T", T), ("B", B)) if v is not None} or None
+
+
+def cell(text="", *, fill=None, bold=None, italic=None, color=BLACK, size=PT(10),
+         align="l", anchor="ctr", span=1, rowspan=1,
+         l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, **edges):
+    """tcell with span/align/insets defaulted to the engine defaults; borders via L/R/T/B=edge(...)."""
+    return tcell(text, fill=fill, bold=bold, italic=italic, color=color, size=size,
+                 align=align, anchor=anchor, grid_span=span, row_span=rowspan, font=FONT,
+                 l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=bd(**edges))
+
+
+def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
+          l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, **edges):
+    """tcell_rich with span/anchor/insets defaulted to the engine defaults; borders via L/R/T/B=edge(...)."""
+    return tcell_rich(paras, fill=fill, grid_span=span, row_span=rowspan, anchor=anchor,
+                      l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=bd(**edges))
 
 
 # ── layout anchors (shared coordinates; value unchanged from the raw port) ──
@@ -159,7 +388,7 @@ def _body() -> str:
     _ids = iter(range(100, 2000))
     n = lambda: next(_ids)   # noqa: E731 - sequential shape ids
     # DROPPED graphicFrame ('think-cell data - do not delete') - think-cell OLE
-    # ── styled chart (data-over-template) → CHARTS[0] ──
+    # ── native factory chart (stacked column) → CHARTS[0] ──
     out.append(graphic_frame(sp_id=n(), name="Chart", x=IN(0.439), y=IN(2.062), cx=IN(5.568), cy=IN(4.109), rId="rId2"))
     out.append(text_box(n(), "Text Placeholder 25", IN(0.53), IN(1.87), IN(4.431), _TXT_H, [paragraph([run("Weighted avg. freight charges, normalized on TEU basis ($K, CY25)", size=PT(10), bold=True, color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
     for _y, _t in _DATA_LABELS["bar_values"]:

@@ -51,14 +51,14 @@ from . import (
     ships_act_volume,                # src 51:  SHIPS Act Volume - bill-specified subsidy funding (chart + connectors)
     ships_act_plus_volume,           # src 52:  SHIPS Act "Plus" Volume - demand declines after mid-2030s (chart + connectors)
     ships_act_captive_demand,        # src 60:  SHIPS Act Captive Demand - MSTF supports ~100 more vessels than mandated (styled chart + mandate table)
-    assumptions_income_statement_1,  # src 77:  Assumptions & Methodology - Income Statement (1/2) (table)
-    assumptions_income_statement_2,  # src 78:  Assumptions & Methodology - Income Statement (2/2) (table)
+    assumptions_income_statement_1_teaching_factory_table,  # src 77:  Assumptions & Methodology - Income Statement (1/2) (native factory table)
+    assumptions_income_statement_2_teaching_factory_table,  # src 78:  Assumptions & Methodology - Income Statement (2/2) (native factory table)
     approach_unit_economics_teaching_factory_table,  # src 120: Approach (1/2) - determining unit economics (native factory table)
-    freight_charges,                 # src 134: Freight Charges - ~70% of westbound charges are vessel-related (styled chart + cost table)
+    freight_charges_teaching,        # src 134: Freight Charges - ~70% of westbound charges are vessel-related (native factory chart + cost table)
     coordination_archetypes_teaching_factory_table,  # src 166: Coordination Archetypes - entities in the Coordination step (native factory table)
-    key_inputs,                      # src 167: Key Inputs (table)
+    key_inputs_teaching_factory_table,  # src 167: Key Inputs (native factory table)
     # ── Market Sizing: Golden Dome (20260116) ──
-    comparison_vs_ddgs,              # src 8:   Comparison vs. DDGs - GD MR procurement cost vs four Arleigh Burkes (chart + 2 tables)
+    comparison_vs_ddgs_teaching_factory_chart,  # src 8:   Comparison vs. DDGs - GD MR procurement cost vs four Arleigh Burkes (native factory chart + 2 tables)
     production_outlook_colocated,    # src 11:  Production Outlook - co-located sensors and interceptors (chart)
     production_outlook_separate_teaching_factory_chart,  # src 12:  Production Outlook - separate platforms (native column_chart factory variant)
 )
@@ -100,14 +100,14 @@ SLIDE_RENDERS: list[tuple] = [
     (ships_act_volume, ships_act_volume.render),
     (ships_act_plus_volume, ships_act_plus_volume.render),
     (ships_act_captive_demand, ships_act_captive_demand.render),
-    (assumptions_income_statement_1, assumptions_income_statement_1.render),
-    (assumptions_income_statement_2, assumptions_income_statement_2.render),
+    (assumptions_income_statement_1_teaching_factory_table, assumptions_income_statement_1_teaching_factory_table.render),
+    (assumptions_income_statement_2_teaching_factory_table, assumptions_income_statement_2_teaching_factory_table.render),
     (approach_unit_economics_teaching_factory_table, approach_unit_economics_teaching_factory_table.render),
-    (freight_charges, freight_charges.render),
+    (freight_charges_teaching, freight_charges_teaching.render),
     (coordination_archetypes_teaching_factory_table, coordination_archetypes_teaching_factory_table.render),
-    (key_inputs, key_inputs.render),
+    (key_inputs_teaching_factory_table, key_inputs_teaching_factory_table.render),
     # ── Market Sizing: Golden Dome (20260116) ──
-    (comparison_vs_ddgs, comparison_vs_ddgs.render),
+    (comparison_vs_ddgs_teaching_factory_chart, comparison_vs_ddgs_teaching_factory_chart.render),
     (production_outlook_colocated, production_outlook_colocated.render),
     (production_outlook_separate_teaching_factory_chart, production_outlook_separate_teaching_factory_chart.render),
 ]

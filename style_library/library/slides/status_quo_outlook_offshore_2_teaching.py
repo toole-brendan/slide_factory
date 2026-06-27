@@ -1,0 +1,773 @@
+"""Teaching exemplar: offshore demand vs. crude-prices combo chart.
+
+ROLE
+  scenario_forecast / external_driver_test
+
+USE WHEN
+  A slide needs to test whether a macro driver plausibly explains a demand
+  pattern, using one style-dense combo chart plus a small legend, manual peak
+  labels, a shaded no-activity region, and a statistical callout.
+
+TEACHES
+  - when to keep `styled_chart(...)` instead of forcing a native factory rebuild
+  - readable data-over-template authoring for a dual-axis bar + line combo chart
+  - explicit semantic series records even when the chart template omits series names
+  - manual year ticks over a dense 40-year axis
+  - manual peak column labels for only analytically important years
+  - left-side custom legend for mixed series types: filled bar swatch + line rules
+  - off-house source note, scenario chip, and correlation callout placement
+  - preserving a provided chart XML / workbook pair as the editable style template
+
+TEXT-FIT PRECEDENT
+  left_axis_title:
+    geometry: 5.212in wide x 0.167in high
+    type: Arial 10pt bold, no-wrap, bottom anchored
+    content: long commodity-price axis title plus a footnote marker
+    copy_when: the chart needs a technical axis title but cannot spare vertical
+               space for a native chart title
+
+  right_axis_title:
+    geometry: 3.753in wide x 0.167in high
+    type: Arial 10pt bold, right aligned, no-wrap, bottom anchored
+    content: one long fleet-additions axis title
+    copy_when: a combo chart has two value axes and each must be labeled outside
+               the chart frame
+
+  manual_year_ticks:
+    geometry: 0.319in wide x 0.167in high
+    type: Arial 10pt, centered, no-wrap, zero inset
+    content: nine four-digit years across a 40-year chart
+    copy_when: a dense chart should show periodic anchor years, not every category
+
+  correlation_callout:
+    geometry: 3.823in wide x 0.994in high
+    type: Arial 10pt, centered, two emphasized coefficient lines
+    content: one finding sentence plus two numeric evidence lines
+    copy_when: the slide is making a statistical relationship claim rather than
+               merely plotting two time series
+
+SOURCE NOTE
+  Teaching rewrite of the source-faithful `status_quo_outlook_offshore_2.py`
+  module. The original chart is a dual-axis combo chart: one bar/column series for
+  FSV / PSV additions on the right axis, and two crude-price line series on the
+  left axis. Because the current native chart factories do not expose a single
+  dual-axis combo-chart surface, this module intentionally keeps the provided
+  `slide46_chart28.xml` + `slide46_chart28.xlsb` pair as a `styled_chart(...)`
+  template, while making the data, series roles, labels, and teaching grammar
+  explicit in Python.
+
+FIDELITY NOTE
+  This is a practical teaching rewrite, not a byte-identical source port. It keeps
+  the chart template and workbook pair for visual fidelity and PowerPoint Edit
+  Data support, while replacing converter-era tuple buckets with typed semantic
+  records, named zones, metadata, copy rules, and paint functions. The visible
+  shapes and coordinates follow the source slide; the chart remains a template-
+  backed combo chart rather than a native factory rebuild.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+from deck_core.authoring import (
+    IN,
+    PT,
+    BLACK,
+    WHITE,
+    GRAY_1,
+    FONT,
+    slide,
+    run,
+    paragraph,
+    line_break,
+    text_box,
+    connector,
+    breadcrumb,
+    title_placeholder,
+    prelim_chip,
+    graphic_frame,
+    styled_chart,
+)
+
+LAYOUT = "slideLayout4"
+
+# Local semantic palette. These names are easier for an authoring agent to reuse
+# than anonymous converter colors.
+FLEET_ADDS_BLUE = "364D6E"
+WTI_GOLD = "FFC000"
+BRENT_TEAL = "007770"
+SCENARIO_BLUE = "CEDDEC"
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Teaching metadata: small programmatic index for retrieval / agent search.
+# ════════════════════════════════════════════════════════════════════════════
+TEACHING_METADATA = {
+    "role": "scenario_forecast / external_driver_test",
+    "use_when": (
+        "Use when the slide tests whether a macro variable explains a demand "
+        "or production pattern over time, especially when a combo chart needs "
+        "manual annotations and a concise statistical callout."
+    ),
+    "teaches": [
+        "style-dense combo chart preserved with styled_chart",
+        "dual-axis chart contract documented in Python",
+        "manual axis titles outside chart frame",
+        "manual periodic year ticks across 40 annual categories",
+        "manual peak value labels rather than full data labels",
+        "mixed-series legend: filled bar swatch plus line-rule keys",
+        "shaded no-activity panel behind chart template",
+        "statistical callout with emphasized coefficients",
+    ],
+    "source_module": "status_quo_outlook_offshore_2.py",
+    "source_chart_assets": ("slide46_chart28.xml", "slide46_chart28.xlsb"),
+    "rebuild_strategy": "preserve dual-axis combo chart as styled_chart template",
+}
+
+TEXT_FIT = {
+    "left_axis_title": {
+        "box_in": (5.212, 0.167),
+        "font_pt": 10,
+        "content": "long WTI/Brent axis title plus footnote marker",
+        "note": "No-wrap title; keep it bottom anchored and outside the chart XML.",
+    },
+    "right_axis_title": {
+        "box_in": (3.753, 0.167),
+        "font_pt": 10,
+        "content": "US-built & flagged FSV / PSV additions axis title",
+        "note": "Right align so the title visually belongs to the secondary axis.",
+    },
+    "manual_year_ticks": {
+        "box_in": (0.319, 0.167),
+        "font_pt": 10,
+        "content": "four-digit year; nine anchor ticks across 40 categories",
+    },
+    "legend_labels": {
+        "box_in": "0.936-1.682 wide x 0.167 high",
+        "font_pt": 10,
+        "content": "short series captions; no wrapping",
+    },
+    "correlation_callout": {
+        "box_in": (3.823, 0.994),
+        "font_pt": 10,
+        "content": "one relationship claim + two coefficient lines",
+        "note": "Do not expand into a paragraph; this callout works because it is compact.",
+    },
+    "source_note": {
+        "box_in": (12.367, 0.306),
+        "font_pt": 8,
+        "content": "two-line Note / Source block",
+    },
+}
+
+COPY_RULES = [
+    "Use `styled_chart(...)` when the important precedent is a style-dense chart type the native factories do not yet expose, such as this dual-axis combo chart.",
+    "Keep the chart data semantic in Python even when the chart template omits native series names; the series-order contract is the teaching surface.",
+    "Use manual peak labels when only outlier years matter; do not clutter the full time series with every data label.",
+    "Use a shaded no-activity panel behind the chart only when the absence of activity is itself part of the finding.",
+    "A correlation callout should state the relationship and the coefficient evidence, not restate the chart narrative.",
+]
+
+CHART_TEMPLATE_CONTRACT = {
+    "why_styled_chart": (
+        "The provided chart XML is a combo chart with one bar series and two line "
+        "series split across right and left value axes. Keeping the template is "
+        "less lossy than rebuilding as two overlaid native charts."
+    ),
+    "series_order": (
+        "FSV / PSV adds — bar series, right axis 0-50 vessels",
+        "WTI spot price — line series, left axis 0-160 $/barrel",
+        "Brent spot price — line series, left axis 0-160 $/barrel",
+    ),
+    "chart_xml_containers": ("barChart: 1 series", "lineChart: 2 series"),
+    "manual_labels": "periodic year ticks, peak add labels, legend, axis titles, and correlation callout live as slide text",
+}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Small semantic records.
+# ════════════════════════════════════════════════════════════════════════════
+@dataclass(frozen=True)
+class Box:
+    """Geometry in inches; converted to EMU only at the primitive boundary."""
+
+    x: float
+    y: float
+    w: float
+    h: float
+
+    def emu(self) -> tuple[int, int, int, int]:
+        return IN(self.x), IN(self.y), IN(self.w), IN(self.h)
+
+
+@dataclass(frozen=True)
+class ComboSeries:
+    """One series in the template-backed combo chart."""
+
+    name: str
+    chart_kind: str
+    axis: str
+    color: str
+    values: tuple[float | int | None, ...]
+
+    def styled_chart_dict(self) -> dict:
+        # The source chart template omits <c:tx> series-name caches, so the name
+        # is intentionally not passed into styled_chart; it is carried here as
+        # semantic documentation and as the legend contract.
+        return {"values": list(self.values)}
+
+
+@dataclass(frozen=True)
+class AxisTitle:
+    """Manual title placed outside the chart frame."""
+
+    box: Box
+    text: str
+    align: str | None = None
+    footnote: str | None = None
+
+
+@dataclass(frozen=True)
+class YearTick:
+    """Manual x-axis anchor tick."""
+
+    box: Box
+    label: str
+
+
+@dataclass(frozen=True)
+class PeakAddLabel:
+    """Manual label attached only to analytically important fleet-add peaks."""
+
+    year: int
+    box: Box
+    label: str
+
+
+@dataclass(frozen=True)
+class LegendEntry:
+    """Legend row for a mixed chart series."""
+
+    name: str
+    key_kind: str
+    color: str
+    key_box: Box
+    label_box: Box
+
+
+@dataclass(frozen=True)
+class LineKey:
+    """Short line-rule key used in the mixed-series legend."""
+
+    name: str
+    x: float
+    y: float
+    w: float
+    h: float
+    color: str
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Layout zones. These names are the teaching surface.
+# ════════════════════════════════════════════════════════════════════════════
+NO_ADDITIONS_PANEL = Box(11.389, 2.097, 1.153, 4.092)
+CHART_FRAME = Box(0.420, 1.866, 12.521, 4.569)
+LEFT_AXIS_TITLE = AxisTitle(
+    Box(0.533, 1.752, 5.212, 0.167),
+    "West Texas Intermediate (WTI) and Brent Crude Spot Prices (2025 $ per barrel)",
+    footnote="1",
+)
+RIGHT_AXIS_TITLE = AxisTitle(
+    Box(9.075, 1.752, 3.753, 0.167),
+    "US-Built & Flagged FSV / PSV Fleet Additions (# Vessels)",
+    align="r",
+)
+YEAR_TICK_Y = 6.236
+YEAR_TICK_W = 0.319
+YEAR_TICK_H = 0.167
+PEAK_LABEL_W = 0.191
+PEAK_LABEL_H = 0.167
+LEGEND_LABEL_X = 1.330
+LEGEND_LABEL_H = 0.167
+SOURCE_NOTE = Box(0.495, 6.692, 12.367, 0.306)
+SCENARIO_CHIP = Box(8.069, 0.174, 2.977, 0.217)
+CORRELATION_CALLOUT = Box(1.031, 3.069, 3.823, 0.994)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Semantic chart data.
+# The source template has 40 annual slots, 1986-2025. None values become gaps in
+# the chart cache, which is how the source represents no observed additions.
+# ════════════════════════════════════════════════════════════════════════════
+YEARS: tuple[str, ...] = tuple(str(year) for year in range(1986, 2026))
+
+FSV_PSV_ADDS: tuple[int | None, ...] = (
+    None, None, None, None, 2, 1, 1, None, 1, 2,
+    4, 7, 14, 15, 11, 5, 11, 17, 8, 12,
+    9, 18, 18, 16, 16, 7, 13, 18, 33, 23,
+    11, 6, 5, 3, 1, 2, None, None, None, None,
+)
+
+WTI_SPOT_PRICE_2025_DOLLARS: tuple[float, ...] = (
+    37.29, 46.15, 36.94, 43.53, 52.09, 44.26, 41.19, 35.99, 32.90, 34.52,
+    40.57, 37.15, 25.79, 34.09, 52.23, 43.79, 43.55, 50.64, 66.00, 87.53,
+    99.28, 106.01, 141.87, 88.42, 111.45, 129.76, 126.27, 129.84, 121.76, 63.47,
+    55.90, 64.48, 81.13, 69.88, 47.49, 79.35, 103.75, 81.71, 78.65, 65.39,
+)
+
+BRENT_SPOT_PRICE_2025_DOLLARS: tuple[float | None, ...] = (
+    None, 44.54, 34.49, 40.41, 50.45, 41.17, 38.66, 33.21, 30.34, 31.88,
+    37.86, 34.45, 22.82, 31.55, 49.27, 41.23, 41.57, 47.01, 60.83, 84.33,
+    97.94, 106.16, 137.98, 88.12, 111.63, 152.16, 149.87, 143.86, 129.34, 68.25,
+    56.36, 68.70, 88.73, 78.84, 50.88, 82.53, 110.34, 86.88, 82.64, 69.14,
+)
+
+COMBO_SERIES: tuple[ComboSeries, ...] = (
+    ComboSeries("FSV/PSV Adds", "bar", "right value axis", FLEET_ADDS_BLUE, FSV_PSV_ADDS),
+    ComboSeries("WTI Spot Price ($ / barrel)", "line", "left value axis", WTI_GOLD, WTI_SPOT_PRICE_2025_DOLLARS),
+    ComboSeries("Brent Spot Price ($ / barrel)", "line", "left value axis", BRENT_TEAL, BRENT_SPOT_PRICE_2025_DOLLARS),
+)
+
+CHART_DATA = {
+    # The template omits category caches; the years are authored manually as slide
+    # labels. Keep categories None so styled_chart only rewrites the value caches.
+    "categories": None,
+    "series": [series.styled_chart_dict() for series in COMBO_SERIES],
+}
+
+# The correlation callout treats missing fleet additions as zero-add years; that
+# convention matches the source slide's displayed WTI coefficient. The Brent value
+# is kept verbatim from the source callout.
+DISPLAYED_CORRELATIONS = {
+    "WTI": 0.48,
+    "Brent": 0.46,
+}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Manual labels copied from source slide coordinates.
+# ════════════════════════════════════════════════════════════════════════════
+YEAR_TICKS: tuple[YearTick, ...] = tuple(
+    YearTick(Box(x, YEAR_TICK_Y, YEAR_TICK_W, YEAR_TICK_H), label)
+    for x, label in (
+        (0.889, "1986"),
+        (2.052, "1990"),
+        (3.505, "1995"),
+        (4.960, "2000"),
+        (6.413, "2005"),
+        (7.868, "2010"),
+        (9.321, "2015"),
+        (10.776, "2020"),
+        (12.229, "2025"),
+    )
+)
+
+PEAK_ADD_LABELS: tuple[PeakAddLabel, ...] = (
+    PeakAddLabel(2000, Box(5.606, 5.097, PEAK_LABEL_W, PEAK_LABEL_H), "11"),
+    PeakAddLabel(2014, Box(9.095, 3.304, PEAK_LABEL_W, PEAK_LABEL_H), "33"),
+    PeakAddLabel(2015, Box(9.385, 4.120, PEAK_LABEL_W, PEAK_LABEL_H), "23"),
+)
+
+LEGEND_ENTRIES: tuple[LegendEntry, ...] = (
+    LegendEntry(
+        "FSV/PSV Adds",
+        "bar_swatch",
+        FLEET_ADDS_BLUE,
+        Box(1.078, 2.174, 0.196, 0.146),
+        Box(LEGEND_LABEL_X, 2.168, 0.936, LEGEND_LABEL_H),
+    ),
+    LegendEntry(
+        "WTI Spot Price ($ / barrel)",
+        "line_rule",
+        WTI_GOLD,
+        Box(1.094, 2.469, 0.165, 0.000),
+        Box(LEGEND_LABEL_X, 2.391, 1.608, LEGEND_LABEL_H),
+    ),
+    LegendEntry(
+        "Brent Spot Price ($ / barrel)",
+        "line_rule",
+        BRENT_TEAL,
+        Box(1.094, 2.691, 0.165, 0.000),
+        Box(LEGEND_LABEL_X, 2.613, 1.682, LEGEND_LABEL_H),
+    ),
+)
+
+LEGEND_LINE_KEYS: tuple[LineKey, ...] = tuple(
+    LineKey(entry.name, entry.key_box.x, entry.key_box.y, entry.key_box.w, entry.key_box.h, entry.color)
+    for entry in LEGEND_ENTRIES
+    if entry.key_kind == "line_rule"
+)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Source chart assets. The zip generated for this teaching module includes these
+# files under `_src/`; the same layout matches the original slide modules.
+# ════════════════════════════════════════════════════════════════════════════
+def _asset_path(filename: str) -> Path:
+    """Resolve chart assets from the normal `_src/` directory, with a same-folder
+    fallback that is convenient for quick notebook/sandbox smoke tests."""
+
+    here = Path(__file__).parent
+    for candidate in (here / "_src" / filename, here / filename):
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError(f"Missing chart asset {filename!r}; expected it in {here / '_src'}")
+
+
+_CHART_TEMPLATE_XML = _asset_path("slide46_chart28.xml").read_text(encoding="utf-8")
+_CHART_WORKBOOK_BYTES = _asset_path("slide46_chart28.xlsb").read_bytes()
+
+CHARTS = [styled_chart(_CHART_TEMPLATE_XML, CHART_DATA, _CHART_WORKBOOK_BYTES)]
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Validation helpers. These keep edits from silently desynchronizing manual
+# labels from the data-over-template chart.
+# ════════════════════════════════════════════════════════════════════════════
+def _validate_semantics() -> None:
+    if len(YEARS) != 40:
+        raise ValueError("Offshore crude-price chart must carry 40 annual slots, 1986-2025.")
+    if any(len(series.values) != len(YEARS) for series in COMBO_SERIES):
+        raise ValueError("Every combo series must align to YEARS.")
+
+    adds_by_year = {int(year): value for year, value in zip(YEARS, FSV_PSV_ADDS)}
+    for label in PEAK_ADD_LABELS:
+        if str(adds_by_year[label.year] or 0) != label.label:
+            raise ValueError(f"Peak label for {label.year} no longer matches FSV/PSV adds data.")
+
+    if tuple(tick.label for tick in YEAR_TICKS) != ("1986", "1990", "1995", "2000", "2005", "2010", "2015", "2020", "2025"):
+        raise ValueError("Manual year ticks should remain the nine source anchor years.")
+
+
+_validate_semantics()
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Tiny local authoring helpers.
+# ════════════════════════════════════════════════════════════════════════════
+def _textbox(sp_id: int, name: str, box: Box, paras: list[str], **kwargs) -> str:
+    return text_box(sp_id, name, *box.emu(), paras, **kwargs)
+
+
+def _one_line(
+    text: str,
+    *,
+    size: int = PT(10),
+    bold: bool = False,
+    italic: bool = False,
+    color: str = BLACK,
+    align: str | None = None,
+) -> str:
+    return paragraph(
+        [run(text, size=size, bold=bold or None, italic=italic or None, color=color, font=FONT)],
+        align=align,
+        mar_l=0,
+        indent=0,
+        line_spacing=100000,
+    )
+
+
+def _empty_centered_paragraph() -> str:
+    return paragraph([], align="ctr", line_spacing=100000)
+
+
+def _axis_title_paragraph(axis_title: AxisTitle) -> str:
+    runs = [run(axis_title.text, size=PT(10), bold=True, color=BLACK, font=FONT)]
+    if axis_title.footnote:
+        runs.append(run(axis_title.footnote, size=PT(10), bold=True, color=BLACK, font=FONT))
+    return paragraph(runs, align=axis_title.align, mar_l=0, indent=0, line_spacing=100000)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Paint functions. Order follows the source's effective stacking: shaded no-adds
+# panel, template chart, manual chart titles, manual ticks/labels, chrome, legend,
+# source note, scenario/prelim, and statistical callout.
+# ════════════════════════════════════════════════════════════════════════════
+def paint_no_additions_panel(next_id) -> list[str]:
+    """Tall grey panel marking the recent no-additions period on the chart."""
+
+    return [
+        _textbox(
+            next_id(),
+            "NoAdditionsPanel",
+            NO_ADDITIONS_PANEL,
+            [
+                paragraph(
+                    [run("No FSV / PSV additions", size=PT(10), italic=True, color=BLACK, font=FONT)],
+                    line_spacing=100000,
+                )
+            ],
+            fill=GRAY_1,
+            line_color="none",
+        )
+    ]
+
+
+def paint_template_combo_chart(next_id) -> list[str]:
+    """Style-dense dual-axis combo chart placed as a PowerPoint chart frame."""
+
+    x, y, w, h = CHART_FRAME.emu()
+    return [
+        graphic_frame(
+            sp_id=next_id(),
+            name="Chart",
+            x=x,
+            y=y,
+            cx=w,
+            cy=h,
+            rId="rId2",
+        )
+    ]
+
+
+def paint_axis_titles(next_id) -> list[str]:
+    """Manual axis titles for the left crude-price axis and right adds axis."""
+
+    shapes: list[str] = []
+    for title in (RIGHT_AXIS_TITLE, LEFT_AXIS_TITLE):
+        shapes.append(
+            _textbox(
+                next_id(),
+                "AxisTitle",
+                title.box,
+                [_axis_title_paragraph(title)],
+                fill=None,
+                line_color="none",
+                anchor="b",
+                wrap="none",
+                l_ins=0,
+                t_ins=0,
+                r_ins=0,
+                b_ins=0,
+            )
+        )
+    return shapes
+
+
+def paint_manual_year_ticks(next_id) -> list[str]:
+    """Nine source-positioned year ticks across the 40-year chart."""
+
+    return [
+        _textbox(
+            next_id(),
+            "YearTickLabel",
+            tick.box,
+            [_one_line(tick.label, align="ctr")],
+            fill=None,
+            line_color="none",
+            wrap="none",
+            l_ins=0,
+            t_ins=0,
+            r_ins=0,
+            b_ins=0,
+        )
+        for tick in YEAR_TICKS
+    ]
+
+
+def paint_peak_add_labels(next_id) -> list[str]:
+    """Manual fleet-add labels for only the high-signal peak columns."""
+
+    return [
+        _textbox(
+            next_id(),
+            "PeakFleetAddLabel",
+            label.box,
+            [_one_line(label.label, align="ctr")],
+            fill=None,
+            line_color="none",
+            anchor="b",
+            wrap="none",
+            l_ins=17463,
+            t_ins=0,
+            r_ins=17463,
+            b_ins=0,
+        )
+        for label in PEAK_ADD_LABELS
+    ]
+
+
+def paint_chrome(next_id) -> list[str]:
+    """House chrome for the status-quo offshore outlook page."""
+
+    return [
+        breadcrumb("US-Built Ship Demand", "Status Quo"),
+        title_placeholder(
+            "Status Quo Outlook (Addressable Offshore 2/2)",
+            "Favorable upstream capex outlook likely contingent upon crude prices remaining elevated, though recent spike did not result in fleet adds.",
+        ),
+    ]
+
+
+def paint_mixed_series_legend(next_id) -> list[str]:
+    """Left legend with one filled swatch and two short line-rule keys."""
+
+    shapes: list[str] = []
+    bar_entry = next(entry for entry in LEGEND_ENTRIES if entry.key_kind == "bar_swatch")
+    shapes.append(
+        _textbox(
+            next_id(),
+            "LegendBarSwatch",
+            bar_entry.key_box,
+            [_empty_centered_paragraph()],
+            fill=bar_entry.color,
+            line_color="none",
+            anchor="ctr",
+        )
+    )
+
+    for key in LEGEND_LINE_KEYS:
+        shapes.append(
+            connector(
+                next_id(),
+                "LegendLineRule",
+                IN(key.x),
+                IN(key.y),
+                IN(key.w),
+                IN(key.h),
+                color=key.color,
+                width=28575,
+                dashed=True,
+                arrow=True,
+            )
+        )
+
+    for entry in LEGEND_ENTRIES:
+        shapes.append(
+            _textbox(
+                next_id(),
+                "LegendLabel",
+                entry.label_box,
+                [_one_line(entry.name)],
+                fill=None,
+                line_color="none",
+                anchor="ctr",
+                wrap="none",
+                l_ins=0,
+                t_ins=0,
+                r_ins=0,
+                b_ins=0,
+            )
+        )
+    return shapes
+
+
+def paint_source_note(next_id) -> list[str]:
+    """Off-house Note / Source block preserved at the source position."""
+
+    return [
+        _textbox(
+            next_id(),
+            "SourceNote",
+            SOURCE_NOTE,
+            [
+                paragraph(
+                    [
+                        run(
+                            "Note: (1) Historical WTI and Brent spot prices inflated to 2025 $ using US Personal Consumption Expenditures (PCE) index",
+                            size=PT(8),
+                            color=BLACK,
+                            font=FONT,
+                        ),
+                        line_break(),
+                        run("Source: Clarksons (US fleet adds); ", size=PT(8), color=BLACK, font=FONT),
+                        run("EIA (WTI Spot)", size=PT(8), color=BLACK, font=FONT),
+                        run("; ", size=PT(8), color=BLACK, font=FONT),
+                        run("EIA (Brent Spot)", size=PT(8), color=BLACK, font=FONT),
+                        run("; ", size=PT(8), color=BLACK, font=FONT),
+                        run("FRED (PCE)", size=PT(8), color=BLACK, font=FONT),
+                    ],
+                    line_spacing=100000,
+                )
+            ],
+            fill=None,
+            line_color="none",
+        )
+    ]
+
+
+def paint_scenario_chrome(next_id) -> list[str]:
+    """Scenario chip + Preliminary chip; both intentionally paint late."""
+
+    return [
+        prelim_chip(),
+        _textbox(
+            next_id(),
+            "ScenarioChip",
+            SCENARIO_CHIP,
+            [_one_line("(1) Status Quo Scenario", size=PT(12), bold=True, align="ctr")],
+            fill=SCENARIO_BLUE,
+            line_color=BLACK,
+            anchor="ctr",
+        ),
+    ]
+
+
+def paint_correlation_callout(next_id) -> list[str]:
+    """Compact statistical evidence box that states the driver-test result."""
+
+    return [
+        _textbox(
+            next_id(),
+            "CorrelationCallout",
+            CORRELATION_CALLOUT,
+            [
+                paragraph(
+                    [
+                        run("Moderate positive correlation", size=PT(10), bold=True, color=BLACK, font=FONT),
+                        run(" ", size=PT(10), bold=True, color=BLACK, font=FONT),
+                        run(
+                            "between crude prices (inflation adjusted) and FSV & PSV fleet additions:",
+                            size=PT(10),
+                            color=BLACK,
+                            font=FONT,
+                        ),
+                        line_break(),
+                        line_break(),
+                        run(
+                            f"WTI correlation coefficient (r) = {DISPLAYED_CORRELATIONS['WTI']:.2f} ",
+                            size=PT(10),
+                            bold=True,
+                            color=BLACK,
+                            font=FONT,
+                        ),
+                        line_break(),
+                        run(
+                            f"Brent correlation coefficient (r) = {DISPLAYED_CORRELATIONS['Brent']:.2f} ",
+                            size=PT(10),
+                            bold=True,
+                            color=BLACK,
+                            font=FONT,
+                        ),
+                    ],
+                    align="ctr",
+                    line_spacing=100000,
+                )
+            ],
+            fill=SCENARIO_BLUE,
+            line_color="none",
+            anchor="ctr",
+        )
+    ]
+
+
+def _body() -> str:
+    shapes: list[str] = []
+    ids = iter(range(100, 2000))
+    next_id = lambda: next(ids)  # noqa: E731 - compact sequential shape ids
+
+    shapes.extend(paint_no_additions_panel(next_id))
+    shapes.extend(paint_template_combo_chart(next_id))
+    shapes.extend(paint_axis_titles(next_id))
+    shapes.extend(paint_manual_year_ticks(next_id))
+    shapes.extend(paint_peak_add_labels(next_id))
+    shapes.extend(paint_chrome(next_id))
+    shapes.extend(paint_mixed_series_legend(next_id))
+    shapes.extend(paint_source_note(next_id))
+    shapes.extend(paint_scenario_chrome(next_id))
+    shapes.extend(paint_correlation_callout(next_id))
+    return "".join(shapes)
+
+
+def render() -> str:
+    return slide(_body())

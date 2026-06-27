@@ -46,7 +46,7 @@ from . import (
     archetype_comps_shipbuilder_margins_teaching,  # src 34:  Archetype Comps (3/3) - shipbuilder margin profile across geographies (5 native factory charts, dense)
     # NOTE: fleet_overview (src 42) + status_quo_fleet_outlook (src 43) promoted to *_teaching in the render-first block
     status_quo_outlook_oceangoing_teaching,   # src 44:  Status Quo Outlook (Oceangoing Commercial) (native column_chart(stacked) + table)
-    status_quo_outlook_offshore_1,   # src 45:  Status Quo Outlook (Addressable Offshore 1/2) (chart + table)
+    status_quo_outlook_offshore_1_teaching,   # src 45:  Status Quo Outlook (Addressable Offshore 1/2) (styled_chart + table; reads _src/slide45_chart27.*)
     status_quo_outlook_offshore_2_teaching,   # src 46:  Status Quo Outlook (Addressable Offshore 2/2) (chart)
     ships_act_volume_teaching_factory_chart,  # src 51:  SHIPS Act Volume - bill-specified subsidy funding (styled_chart + connectors)
     ships_act_plus_volume_teaching_factory_chart,  # src 52:  SHIPS Act "Plus" Volume - demand declines after mid-2030s (local stacked_area_chart + connectors)
@@ -95,7 +95,7 @@ SLIDE_RENDERS: list[tuple] = [
     # NOTE: archetype_comps_newbuild_prices_teaching + archetype_comps_vocc_performance_teaching promoted to the render-first block above
     (archetype_comps_shipbuilder_margins_teaching, archetype_comps_shipbuilder_margins_teaching.render),
     (status_quo_outlook_oceangoing_teaching, status_quo_outlook_oceangoing_teaching.render),
-    (status_quo_outlook_offshore_1, status_quo_outlook_offshore_1.render),
+    (status_quo_outlook_offshore_1_teaching, status_quo_outlook_offshore_1_teaching.render),
     # NOTE: status_quo_outlook_offshore_2_teaching promoted to the render-first block above
     (ships_act_volume_teaching_factory_chart, ships_act_volume_teaching_factory_chart.render),
     (ships_act_plus_volume_teaching_factory_chart, ships_act_plus_volume_teaching_factory_chart.render),

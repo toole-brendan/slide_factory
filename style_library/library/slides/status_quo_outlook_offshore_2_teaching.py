@@ -9,14 +9,14 @@ USE WHEN
   labels, a shaded no-activity region, and a statistical callout.
 
 TEACHES
-  - when to keep `styled_chart(...)` instead of forcing a native factory rebuild
-  - readable data-over-template authoring for a dual-axis bar + line combo chart
-  - explicit semantic series records even when the chart template omits series names
+  - rebuilding a dual-axis source combo chart with native `combo_chart(...)`
+  - readable native authoring for a dual-axis bar + line combo chart
+  - explicit semantic series records for the generated embedded workbook
   - manual year ticks over a dense 40-year axis
   - manual peak column labels for only analytically important years
   - left-side custom legend for mixed series types: filled bar swatch + line rules
   - off-house source note, scenario chip, and correlation callout placement
-  - preserving a provided chart XML / workbook pair as the editable style template
+  - transcribing chart XML / workbook values into a native editable combo chart
 
 TEXT-FIT PRECEDENT
   left_axis_title:
@@ -50,24 +50,21 @@ SOURCE NOTE
   Teaching rewrite of the source-faithful `status_quo_outlook_offshore_2.py`
   module. The original chart is a dual-axis combo chart: one bar/column series for
   FSV / PSV additions on the right axis, and two crude-price line series on the
-  left axis. Because the current native chart factories do not expose a single
-  dual-axis combo-chart surface, this module intentionally keeps the provided
-  `slide46_chart28.xml` + `slide46_chart28.xlsb` pair as a `styled_chart(...)`
-  template, while making the data, series roles, labels, and teaching grammar
-  explicit in Python.
+  left axis. The source `slide46_chart28.xml` + `slide46_chart28.xlsb` values, axes,
+  gap/overlap, line colors, and plot layout are transcribed into a native
+  `combo_chart(...)` spec, while the series roles, labels, and teaching grammar
+  remain explicit in Python.
 
 FIDELITY NOTE
-  This is a practical teaching rewrite, not a byte-identical source port. It keeps
-  the chart template and workbook pair for visual fidelity and PowerPoint Edit
-  Data support, while replacing converter-era tuple buckets with typed semantic
-  records, named zones, metadata, copy rules, and paint functions. The visible
-  shapes and coordinates follow the source slide; the chart remains a template-
-  backed combo chart rather than a native factory rebuild.
+  This is a practical teaching rewrite, not a byte-identical source port. It uses native chart XML and a generated embedded workbook for PowerPoint Edit
+  Data, while replacing converter-era tuple buckets with typed semantic records,
+  named zones, metadata, copy rules, and paint functions. The visible shapes and
+  coordinates follow the source slide; the chart is now native rather than native.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
+from typing import Optional, Union
 
 from deck_core.authoring import (
     IN,
@@ -86,7 +83,7 @@ from deck_core.authoring import (
     title_placeholder,
     prelim_chip,
     graphic_frame,
-    styled_chart,
+    combo_chart,
 )
 
 LAYOUT = "slideLayout4"
@@ -110,18 +107,18 @@ TEACHING_METADATA = {
         "manual annotations and a concise statistical callout."
     ),
     "teaches": [
-        "style-dense combo chart preserved with styled_chart",
+        "style-dense combo chart rebuilt with native combo_chart",
         "dual-axis chart contract documented in Python",
         "manual axis titles outside chart frame",
         "manual periodic year ticks across 40 annual categories",
         "manual peak value labels rather than full data labels",
         "mixed-series legend: filled bar swatch plus line-rule keys",
-        "shaded no-activity panel behind chart template",
+        "shaded no-activity panel behind native chart",
         "statistical callout with emphasized coefficients",
     ],
     "source_module": "status_quo_outlook_offshore_2.py",
     "source_chart_assets": ("slide46_chart28.xml", "slide46_chart28.xlsb"),
-    "rebuild_strategy": "preserve dual-axis combo chart as styled_chart template",
+    "rebuild_strategy": "rebuild dual-axis combo chart with native combo_chart",
 }
 
 TEXT_FIT = {
@@ -161,18 +158,18 @@ TEXT_FIT = {
 }
 
 COPY_RULES = [
-    "Use `styled_chart(...)` when the important precedent is a style-dense chart type the native factories do not yet expose, such as this dual-axis combo chart.",
-    "Keep the chart data semantic in Python even when the chart template omits native series names; the series-order contract is the teaching surface.",
+    "Use `combo_chart(...)` when the important precedent is a native dual-axis column-plus-line chart with explicit series roles.",
+    "Keep the chart data semantic in Python even when the native chart omits native series names; the series-order contract is the teaching surface.",
     "Use manual peak labels when only outlier years matter; do not clutter the full time series with every data label.",
     "Use a shaded no-activity panel behind the chart only when the absence of activity is itself part of the finding.",
     "A correlation callout should state the relationship and the coefficient evidence, not restate the chart narrative.",
 ]
 
 CHART_TEMPLATE_CONTRACT = {
-    "why_styled_chart": (
-        "The provided chart XML is a combo chart with one bar series and two line "
-        "series split across right and left value axes. Keeping the template is "
-        "less lossy than rebuilding as two overlaid native charts."
+    "why_native_chart": (
+        "The source chart XML is a combo chart with one bar series and two line "
+        "series split across right and left value axes. combo_chart() now builds "
+        "one native editable chart with the same roles and axis bounds."
     ),
     "series_order": (
         "FSV / PSV adds — bar series, right axis 0-50 vessels",
@@ -202,19 +199,22 @@ class Box:
 
 @dataclass(frozen=True)
 class ComboSeries:
-    """One series in the template-backed combo chart."""
+    """One native series in the dual-axis column + line combo chart."""
 
     name: str
     chart_kind: str
     axis: str
     color: str
-    values: tuple[float | int | None, ...]
+    values: tuple[Optional[Union[float, int]], ...]
 
-    def styled_chart_dict(self) -> dict:
-        # The source chart template omits <c:tx> series-name caches, so the name
-        # is intentionally not passed into styled_chart; it is carried here as
-        # semantic documentation and as the legend contract.
-        return {"values": list(self.values)}
+    def chart_dict(self) -> dict:
+        out = {"name": self.name, "values": list(self.values), "color": self.color}
+        if self.chart_kind == "bar":
+            out["hide_labels"] = True
+        if self.chart_kind == "line":
+            out["width"] = 28_575
+            out["marker"] = "none"
+        return out
 
 
 @dataclass(frozen=True)
@@ -223,8 +223,8 @@ class AxisTitle:
 
     box: Box
     text: str
-    align: str | None = None
-    footnote: str | None = None
+    align: Optional[str] = None
+    footnote: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -296,12 +296,12 @@ CORRELATION_CALLOUT = Box(1.031, 3.069, 3.823, 0.994)
 
 # ════════════════════════════════════════════════════════════════════════════
 # Semantic chart data.
-# The source template has 40 annual slots, 1986-2025. None values become gaps in
+# The source chart has 40 annual slots, 1986-2025. None values become gaps in
 # the chart cache, which is how the source represents no observed additions.
 # ════════════════════════════════════════════════════════════════════════════
 YEARS: tuple[str, ...] = tuple(str(year) for year in range(1986, 2026))
 
-FSV_PSV_ADDS: tuple[int | None, ...] = (
+FSV_PSV_ADDS: tuple[Optional[int], ...] = (
     None, None, None, None, 2, 1, 1, None, 1, 2,
     4, 7, 14, 15, 11, 5, 11, 17, 8, 12,
     9, 18, 18, 16, 16, 7, 13, 18, 33, 23,
@@ -315,7 +315,7 @@ WTI_SPOT_PRICE_2025_DOLLARS: tuple[float, ...] = (
     55.90, 64.48, 81.13, 69.88, 47.49, 79.35, 103.75, 81.71, 78.65, 65.39,
 )
 
-BRENT_SPOT_PRICE_2025_DOLLARS: tuple[float | None, ...] = (
+BRENT_SPOT_PRICE_2025_DOLLARS: tuple[Optional[float], ...] = (
     None, 44.54, 34.49, 40.41, 50.45, 41.17, 38.66, 33.21, 30.34, 31.88,
     37.86, 34.45, 22.82, 31.55, 49.27, 41.23, 41.57, 47.01, 60.83, 84.33,
     97.94, 106.16, 137.98, 88.12, 111.63, 152.16, 149.87, 143.86, 129.34, 68.25,
@@ -329,11 +329,64 @@ COMBO_SERIES: tuple[ComboSeries, ...] = (
 )
 
 CHART_DATA = {
-    # The template omits category caches; the years are authored manually as slide
-    # labels. Keep categories None so styled_chart only rewrites the value caches.
-    "categories": None,
-    "series": [series.styled_chart_dict() for series in COMBO_SERIES],
+    "categories": YEARS,
+    "series": [series.chart_dict() for series in COMBO_SERIES],
 }
+
+SOURCE_CHART_AUDIT = {
+    "source_xml": "slide46_chart28.xml",
+    "source_workbook": "slide46_chart28.xlsb",
+    "chart_type": "barChart + lineChart",
+    "manualLayout": {
+        "x": 0.038546866333887965,
+        "y": 0.053951367781155016,
+        "w": 0.9290072102052135,
+        "h": 0.89209726443769,
+    },
+    "barAxis": {"min": 0, "max": 50, "majorUnit": 5},
+    "lineAxis": {"min": 0, "max": 160, "majorUnit": 10},
+    "gapWidth": 80,
+    "overlap": 100,
+    "lineWidth": 28_575,
+}
+
+CHART_STYLE = {
+    "mode": "stacked",
+    "categories": list(YEARS),
+    "series": [COMBO_SERIES[0].chart_dict()],
+    "line_overlay": [series.chart_dict() for series in COMBO_SERIES[1:]],
+    "line_overlay_axis": "secondary",
+    "show_legend": False,
+    "show_cat_labels": False,
+    "show_value_axis_labels": True,
+    "show_line_value_axis_labels": True,
+    "show_gridlines": False,
+    "line_show_gridlines": False,
+    "show_value_labels": False,
+    "value_axis_format": '#,##0;"-"#,##0',
+    "line_value_axis_format": '#,##0;"-"#,##0',
+    "cat_label_size_pt": 10,
+    "gap_width": SOURCE_CHART_AUDIT["gapWidth"],
+    "bar_overlap": SOURCE_CHART_AUDIT["overlap"],
+    "seg_line_color": None,
+    "axis_line_color": BLACK,
+    "axis_line_width": 9_525,
+    "value_axis_position": "r",
+    "value_axis_min": SOURCE_CHART_AUDIT["barAxis"]["min"],
+    "value_axis_max": SOURCE_CHART_AUDIT["barAxis"]["max"],
+    "value_axis_major_unit": SOURCE_CHART_AUDIT["barAxis"]["majorUnit"],
+    "line_value_axis_position": "l",
+    "line_value_axis_min": SOURCE_CHART_AUDIT["lineAxis"]["min"],
+    "line_value_axis_max": SOURCE_CHART_AUDIT["lineAxis"]["max"],
+    "line_value_axis_major_unit": SOURCE_CHART_AUDIT["lineAxis"]["majorUnit"],
+    "line_width": SOURCE_CHART_AUDIT["lineWidth"],
+    "line_marker_symbol": "none",
+    "plot_layout": dict(SOURCE_CHART_AUDIT["manualLayout"]),
+    "cat_header": "Year",
+}
+
+CHARTS = [combo_chart(**CHART_STYLE)]
+
 
 # The correlation callout treats missing fleet additions as zero-add years; that
 # convention matches the source slide's displayed WTI coefficient. The Brent value
@@ -399,30 +452,10 @@ LEGEND_LINE_KEYS: tuple[LineKey, ...] = tuple(
 )
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Source chart assets. The zip generated for this teaching module includes these
-# files under `_src/`; the same layout matches the original slide modules.
-# ════════════════════════════════════════════════════════════════════════════
-def _asset_path(filename: str) -> Path:
-    """Resolve chart assets from the normal `_src/` directory, with a same-folder
-    fallback that is convenient for quick notebook/sandbox smoke tests."""
-
-    here = Path(__file__).parent
-    for candidate in (here / "_src" / filename, here / filename):
-        if candidate.exists():
-            return candidate
-    raise FileNotFoundError(f"Missing chart asset {filename!r}; expected it in {here / '_src'}")
-
-
-_CHART_TEMPLATE_XML = _asset_path("slide46_chart28.xml").read_text(encoding="utf-8")
-_CHART_WORKBOOK_BYTES = _asset_path("slide46_chart28.xlsb").read_bytes()
-
-CHARTS = [styled_chart(_CHART_TEMPLATE_XML, CHART_DATA, _CHART_WORKBOOK_BYTES)]
-
 
 # ════════════════════════════════════════════════════════════════════════════
 # Validation helpers. These keep edits from silently desynchronizing manual
-# labels from the data-over-template chart.
+# labels from the native combo chart.
 # ════════════════════════════════════════════════════════════════════════════
 def _validate_semantics() -> None:
     if len(YEARS) != 40:
@@ -437,6 +470,12 @@ def _validate_semantics() -> None:
 
     if tuple(tick.label for tick in YEAR_TICKS) != ("1986", "1990", "1995", "2000", "2005", "2010", "2015", "2020", "2025"):
         raise ValueError("Manual year ticks should remain the nine source anchor years.")
+    if CHART_STYLE["value_axis_max"] != 50 or CHART_STYLE["line_value_axis_max"] != 160:
+        raise ValueError("Native combo chart axis bounds must match slide46_chart28.xml.")
+    if CHART_STYLE["gap_width"] != 80 or CHART_STYLE["bar_overlap"] != 100:
+        raise ValueError("Native combo chart gap/overlap must match slide46_chart28.xml.")
+    if CHART_STYLE["plot_layout"] != SOURCE_CHART_AUDIT["manualLayout"]:
+        raise ValueError("Native combo chart plot layout must match slide46_chart28.xml.")
 
 
 _validate_semantics()
@@ -456,7 +495,7 @@ def _one_line(
     bold: bool = False,
     italic: bool = False,
     color: str = BLACK,
-    align: str | None = None,
+    align: Optional[str] = None,
 ) -> str:
     return paragraph(
         [run(text, size=size, bold=bold or None, italic=italic or None, color=color, font=FONT)],
@@ -480,7 +519,7 @@ def _axis_title_paragraph(axis_title: AxisTitle) -> str:
 
 # ════════════════════════════════════════════════════════════════════════════
 # Paint functions. Order follows the source's effective stacking: shaded no-adds
-# panel, template chart, manual chart titles, manual ticks/labels, chrome, legend,
+# panel, native chart, manual chart titles, manual ticks/labels, chrome, legend,
 # source note, scenario/prelim, and statistical callout.
 # ════════════════════════════════════════════════════════════════════════════
 def paint_no_additions_panel(next_id) -> list[str]:
@@ -503,7 +542,7 @@ def paint_no_additions_panel(next_id) -> list[str]:
     ]
 
 
-def paint_template_combo_chart(next_id) -> list[str]:
+def paint_native_combo_chart(next_id) -> list[str]:
     """Style-dense dual-axis combo chart placed as a PowerPoint chart frame."""
 
     x, y, w, h = CHART_FRAME.emu()
@@ -757,7 +796,7 @@ def _body() -> str:
     next_id = lambda: next(ids)  # noqa: E731 - compact sequential shape ids
 
     shapes.extend(paint_no_additions_panel(next_id))
-    shapes.extend(paint_template_combo_chart(next_id))
+    shapes.extend(paint_native_combo_chart(next_id))
     shapes.extend(paint_axis_titles(next_id))
     shapes.extend(paint_manual_year_ticks(next_id))
     shapes.extend(paint_peak_add_labels(next_id))

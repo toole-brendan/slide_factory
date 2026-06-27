@@ -9,10 +9,9 @@ USE WHEN
   serial-production threshold key, and a single takeaway banner.
 
 TEACHES
-  - preserving a source chart XML / workbook pair as an editable `styled_chart(...)`
-    template when the user provides chart assets and wants high visual fidelity
+  - rebuilding a source stacked-column chart as a native editable chart with transcribed data/style
   - readable semantic chart data for a negative stacked-column forecast
-  - manual year ticks and selective net-hull labels over a template-backed chart
+  - manual year ticks and selective net-hull labels over a native chart
   - left-side shaded "no orderbook" evidence band beside the plot
   - compact legend placed outside the chart rather than relying on native legend XML
   - right-side retirement-replacement table with a merged commentary cell
@@ -49,15 +48,15 @@ TEXT-FIT PRECEDENT
 
 SOURCE NOTE
   Teaching rewrite of the source-faithful `status_quo_outlook_offshore_1.py`
-  module. The original used `styled_chart(...)` with `slide45_chart27.xml` and
-  `slide45_chart27.xlsb`; this version keeps that attached chart template/workbook
-  pair for visual fidelity and PowerPoint Edit Data support, while replacing the
-  converter-era tuple buckets with typed semantic records, metadata, copy rules,
+  module. The original used a runtime native chart from `slide45_chart27.xml` and
+  `slide45_chart27.xlsb`; this version transcribes the values, point fills,
+  axes, gap/overlap, and plot layout into a native `column_chart()` spec while replacing
+  the converter-era tuple buckets with typed semantic records, metadata, copy rules,
   named layout zones, validation helpers, and named paint functions.
 
 FIDELITY NOTE
   This is a practical teaching rewrite, not a byte-identical source port. It
-  preserves the source chart asset pair, chart data, coordinates, labels, table,
+  preserves the source chart semantics, chart data, coordinates, labels, table,
   callouts, legend, source note, scenario chip, and takeaway banner. Shape ids are
   regenerated and the code is reorganized around authoring patterns rather than
   raw conversion clusters.
@@ -65,7 +64,7 @@ FIDELITY NOTE
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
+from typing import Optional
 
 from deck_core.authoring import (
     IN,
@@ -87,7 +86,7 @@ from deck_core.authoring import (
     title_placeholder,
     prelim_chip,
     graphic_frame,
-    styled_chart,
+    column_chart,
     cell,
     rcell,
     edge,
@@ -115,7 +114,7 @@ TEACHING_METADATA = {
         "replacement volume must be compared against a serial-production threshold."
     ),
     "teaches": [
-        "template-backed negative stacked-column chart",
+        "native negative stacked-column chart",
         "manual dense year ticks on a 25-year horizon",
         "selective net-hull labels rather than every bar label",
         "no-orderbook evidence band beside the chart",
@@ -125,7 +124,7 @@ TEACHING_METADATA = {
     ],
     "source_module": "status_quo_outlook_offshore_1.py",
     "source_chart_assets": ("slide45_chart27.xml", "slide45_chart27.xlsb"),
-    "rebuild_strategy": "preserve source stacked-column chart as styled_chart template",
+    "rebuild_strategy": "rebuild source stacked-column chart with native column_chart",
 }
 
 TEXT_FIT = {
@@ -177,16 +176,16 @@ COPY_RULES = [
 ]
 
 CHART_TEMPLATE_CONTRACT = {
-    "why_styled_chart": (
-        "The user supplied the chart XML and workbook. This module keeps that pair "
-        "as the editable style template while surfacing the data and slide-level "
-        "annotation system in readable Python."
+    "why_native_chart": (
+        "The source chart XML and workbook were transcribed into this module. "
+        "column_chart() now builds a native editable chart while the slide-level "
+        "annotation system stays readable in Python."
     ),
     "chart_xml_type": "barChart with barDir='col' and grouping='stacked'",
     "axis_contract": "fixed value axis from -35 to +10 hulls, major unit 5",
     "series_order": (
-        "PSV retirements — dark blue series, template series 0",
-        "Crew/Fast Supply retirements — light blue series, template series 1",
+        "PSV retirements — dark blue series, native series 0",
+        "Crew/Fast Supply retirements — light blue series, native series 1",
     ),
     "manual_labels": (
         "year ticks, selective net-hull labels, legend, chart title, callouts, "
@@ -213,16 +212,27 @@ class Box:
 
 @dataclass(frozen=True)
 class OffshoreRetirementSeries:
-    """One chart-template series, aligned to YEARS and to template series order."""
+    """One native stacked-column series, aligned to YEARS and source series order."""
 
     name: str
     fill: str
-    values: tuple[int | None, ...]
+    values: tuple[Optional[int], ...]
+    point_fill_overrides: Optional[dict[int, str]] = None
 
-    def styled_chart_dict(self) -> dict:
-        # The template owns styling and may omit tx/name caches. The Python name is
-        # semantic documentation for agents and for the manual legend.
-        return {"values": list(self.values)}
+    def point_fills(self) -> tuple[str, ...]:
+        fills = [self.fill] * len(self.values)
+        for idx, fill in (self.point_fill_overrides or {}).items():
+            fills[idx] = fill
+        return tuple(fills)
+
+    def chart_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "color": self.fill,
+            "values": list(self.values),
+            "data_point_colors": list(self.point_fills()),
+            "hide_labels": True,
+        }
 
 
 @dataclass(frozen=True)
@@ -297,18 +307,18 @@ NET_LABEL_H = 0.167
 # ════════════════════════════════════════════════════════════════════════════
 YEARS: tuple[str, ...] = tuple(str(year) for year in range(2026, 2051))
 
-PSV_RETIREMENTS: tuple[int | None, ...] = (
+PSV_RETIREMENTS: tuple[Optional[int], ...] = (
     -2, -3, -8, -12, -9, -3, -8, -14, -5, -5, -5, -11, -9, -9, -14,
     -4, -8, -14, -27, -17, -9, -4, -4, -2, -1,
 )
 
-CREW_FAST_SUPPLY_RETIREMENTS: tuple[int | None, ...] = (
+CREW_FAST_SUPPLY_RETIREMENTS: tuple[Optional[int], ...] = (
     -30, None, -3, -3, -7, -4, -7, -9, -7, -2, -3, -5, -4, -6, -6,
     -2, -2, -1, -1, None, None, None, None, None, None,
 )
 
 OFFSHORE_RETIREMENT_SERIES: tuple[OffshoreRetirementSeries, ...] = (
-    OffshoreRetirementSeries("PSV retirements", PSV_BLUE, PSV_RETIREMENTS),
+    OffshoreRetirementSeries("PSV retirements", PSV_BLUE, PSV_RETIREMENTS, {1: CREW_FAST_SUPPLY_BLUE}),
     OffshoreRetirementSeries("Crew/Fast Supply retirements", CREW_FAST_SUPPLY_BLUE, CREW_FAST_SUPPLY_RETIREMENTS),
 )
 
@@ -373,7 +383,7 @@ RETIREMENT_REPLACEMENT_ROWS: tuple[ReplacementRow, ...] = (
     ReplacementRow("PSV", PSV_BLUE, "~8.2", "~8.2", SERIAL_PRODUCTION_GREEN),
 )
 
-COMMENTARY_BULLETS: tuple[tuple[str, str | None], ...] = (
+COMMENTARY_BULLETS: tuple[tuple[str, Optional[str]], ...] = (
     (
         "1-for-1 retirement replacements potentially challenged by O&G sector maintaining capital discipline that drives retirement deferrals ",
         "(potentially mitigated if crude prices remain high due to Persian Gulf disruptions)",
@@ -405,20 +415,60 @@ SERIAL_PRODUCTION_KEY: tuple[SerialKeyEntry, ...] = (
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Template-backed chart wiring.
+# Native stacked-column chart wiring.
 # ════════════════════════════════════════════════════════════════════════════
-_SRC = Path(__file__).parent / "_src"
-_CHART_TEMPLATE_PATH = _SRC / "slide45_chart27.xml"
-_CHART_WORKBOOK_PATH = _SRC / "slide45_chart27.xlsb"
-_CHART0_TPL = _CHART_TEMPLATE_PATH.read_text(encoding="utf-8")
-_XLSB0 = _CHART_WORKBOOK_PATH.read_bytes()
-
-_CHART0_DATA = {
-    "categories": None,
-    "series": [series.styled_chart_dict() for series in OFFSHORE_RETIREMENT_SERIES],
+SOURCE_CHART_AUDIT = {
+    "source_xml": "slide45_chart27.xml",
+    "source_workbook": "slide45_chart27.xlsb",
+    "chart_type": "barChart / col / stacked",
+    "manualLayout": {
+        "x": 0.06157112526539278,
+        "y": 0.05652866242038217,
+        "w": 0.9261618306204293,
+        "h": 0.8869426751592356,
+    },
+    "gapWidth": 130,
+    "overlap": 100,
+    "valueAxisMin": -35,
+    "valueAxisMax": 10,
+    "valueAxisMajorUnit": 5,
+    "seriesPointOverrides": {"PSV retirements": {1: CREW_FAST_SUPPLY_BLUE}},
 }
 
-CHARTS = [styled_chart(_CHART0_TPL, _CHART0_DATA, _XLSB0)]
+_CHART0_DATA = {
+    "categories": YEARS,
+    "series": [
+        {"name": series.name, "values": list(series.values)}
+        for series in OFFSHORE_RETIREMENT_SERIES
+    ],
+}
+
+CHART_STYLE = {
+    "mode": "stacked",
+    "categories": list(YEARS),
+    "series": [series.chart_dict() for series in OFFSHORE_RETIREMENT_SERIES],
+    "show_legend": False,
+    "show_cat_labels": False,
+    "show_value_axis_labels": True,
+    "show_gridlines": False,
+    "show_value_labels": False,
+    "value_axis_format": '#,##0;"-"#,##0',
+    "value_label_format": '#,##0;"-"#,##0',
+    "cat_label_size_pt": 8,
+    "value_label_size_pt": 10,
+    "gap_width": SOURCE_CHART_AUDIT["gapWidth"],
+    "bar_overlap": SOURCE_CHART_AUDIT["overlap"],
+    "seg_line_color": None,
+    "axis_line_color": BLACK,
+    "axis_line_width": 9_525,
+    "value_axis_min": SOURCE_CHART_AUDIT["valueAxisMin"],
+    "value_axis_max": SOURCE_CHART_AUDIT["valueAxisMax"],
+    "value_axis_major_unit": SOURCE_CHART_AUDIT["valueAxisMajorUnit"],
+    "plot_layout": dict(SOURCE_CHART_AUDIT["manualLayout"]),
+    "cat_header": "Year",
+}
+
+CHARTS = [column_chart(**CHART_STYLE)]
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -433,8 +483,12 @@ def _validate_semantics() -> None:
         expected = NET_HULLS_BY_YEAR[label.year]
         if label.label != str(expected):
             raise ValueError(f"Net-hull label for {label.year} is {label.label!r}, expected {expected!r}.")
-    if "<c:barChart" not in _CHART0_TPL or "<c:grouping val=\"stacked\"" not in _CHART0_TPL:
-        raise ValueError("slide45_chart27.xml is expected to be a stacked bar/column chart template.")
+    if CHART_STYLE["gap_width"] != SOURCE_CHART_AUDIT["gapWidth"] or CHART_STYLE["bar_overlap"] != SOURCE_CHART_AUDIT["overlap"]:
+        raise ValueError("Native chart gap/overlap must match slide45_chart27.xml.")
+    if CHART_STYLE["value_axis_min"] != SOURCE_CHART_AUDIT["valueAxisMin"] or CHART_STYLE["value_axis_max"] != SOURCE_CHART_AUDIT["valueAxisMax"]:
+        raise ValueError("Native chart value-axis bounds must match slide45_chart27.xml.")
+    if CHART_STYLE["plot_layout"] != SOURCE_CHART_AUDIT["manualLayout"]:
+        raise ValueError("Native chart plot layout must match slide45_chart27.xml.")
 
 
 _validate_semantics()
@@ -454,7 +508,7 @@ def _one_line(
     bold: bool = False,
     italic: bool = False,
     color: str = BLACK,
-    align: str | None = None,
+    align: Optional[str] = None,
 ) -> str:
     return paragraph(
         [run(text, size=size, bold=bold or None, italic=italic or None, color=color, font=FONT)],
@@ -469,7 +523,7 @@ def _empty_centered_paragraph() -> str:
     return paragraph([], align="ctr", line_spacing=100000)
 
 
-def _commentary_paragraph(text: str, italic_tail: str | None = None) -> str:
+def _commentary_paragraph(text: str, italic_tail: Optional[str] = None) -> str:
     runs = [trun(text, size=PT(10), color=BLACK, font=FONT)]
     if italic_tail:
         runs.append(trun(italic_tail, size=PT(10), italic=True, color=BLACK, font=FONT))
@@ -512,7 +566,7 @@ def paint_orderbook_note(next_id) -> list[str]:
     ]
 
 
-def paint_template_chart(next_id) -> list[str]:
+def paint_native_chart(next_id) -> list[str]:
     """Template-backed editable chart frame; labels are slide-level objects."""
 
     x, y, w, h = CHART_FRAME.emu()
@@ -567,7 +621,7 @@ def paint_net_hull_labels(next_id) -> list[str]:
 
 
 def paint_chart_title(next_id) -> list[str]:
-    """Technical chart caption outside the chart template."""
+    """Technical chart caption outside the native chart."""
 
     return [
         _textbox(
@@ -853,9 +907,9 @@ def _body() -> str:
     next_id = lambda: next(ids)  # noqa: E731 - compact sequential shape ids
 
     # The source slide had a dropped think-cell OLE frame. The rendered chart is
-    # represented by the template-backed native chart part above.
+    # represented by the native native chart part above.
     shapes.extend(paint_orderbook_note(next_id))
-    shapes.extend(paint_template_chart(next_id))
+    shapes.extend(paint_native_chart(next_id))
     shapes.extend(paint_manual_year_ticks(next_id))
     shapes.extend(paint_net_hull_labels(next_id))
     shapes.extend(paint_chart_title(next_id))

@@ -53,7 +53,7 @@ from . import (
     ships_act_captive_demand,        # src 60:  SHIPS Act Captive Demand - MSTF supports ~100 more vessels than mandated (styled chart + mandate table)
     assumptions_income_statement_1,  # src 77:  Assumptions & Methodology - Income Statement (1/2) (table)
     assumptions_income_statement_2,  # src 78:  Assumptions & Methodology - Income Statement (2/2) (table)
-    approach_unit_economics,         # src 120: Approach (1/2) - determining unit economics
+    approach_unit_economics_teaching_factory_table,  # src 120: Approach (1/2) - determining unit economics (native factory table)
     freight_charges,                 # src 134: Freight Charges - ~70% of westbound charges are vessel-related (styled chart + cost table)
     coordination_archetypes_teaching_factory_table,  # src 166: Coordination Archetypes - entities in the Coordination step (native factory table)
     key_inputs,                      # src 167: Key Inputs (table)
@@ -102,7 +102,7 @@ SLIDE_RENDERS: list[tuple] = [
     (ships_act_captive_demand, ships_act_captive_demand.render),
     (assumptions_income_statement_1, assumptions_income_statement_1.render),
     (assumptions_income_statement_2, assumptions_income_statement_2.render),
-    (approach_unit_economics, approach_unit_economics.render),
+    (approach_unit_economics_teaching_factory_table, approach_unit_economics_teaching_factory_table.render),
     (freight_charges, freight_charges.render),
     (coordination_archetypes_teaching_factory_table, coordination_archetypes_teaching_factory_table.render),
     (key_inputs, key_inputs.render),

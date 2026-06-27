@@ -36,7 +36,7 @@ from . import (
     funding_components_teaching,              # funding inputs/sources/colors of money (flow diagram)
     value_chain_participation_teaching,       # value-chain participation - grouped icons (picture-dense)
     # ── Commercial Strategy Market Analysis (20260325) ──
-    overview,                        # src 2:   Overview (2 summary tables + logo)
+    overview_teaching,               # src 2:   Overview (2 summary tables)
     key_terms_glossary_teaching_factory_table,  # src 5:   For Reference | Key Terms Glossary (native factory table)
     key_findings_demand_build_economics_teaching_factory_table,  # src 8:   Key Findings (1/3) - demand, build cost, vessel economics (native factory table)
     key_findings_financial_outlook_teaching_factory_table,  # src 9:   Key Findings (2/3) - ComboCo financial outlook (native factory table)
@@ -87,7 +87,7 @@ SLIDE_RENDERS: list[tuple] = [
     (funding_components_teaching, funding_components_teaching.render),
     (value_chain_participation_teaching, value_chain_participation_teaching.render),
     # ── Commercial Strategy Market Analysis (20260325) ──
-    (overview, overview.render),
+    (overview_teaching, overview_teaching.render),
     (key_terms_glossary_teaching_factory_table, key_terms_glossary_teaching_factory_table.render),
     (key_findings_demand_build_economics_teaching_factory_table, key_findings_demand_build_economics_teaching_factory_table.render),
     (key_findings_financial_outlook_teaching_factory_table, key_findings_financial_outlook_teaching_factory_table.render),

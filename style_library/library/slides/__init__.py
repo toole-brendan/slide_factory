@@ -68,6 +68,7 @@ SLIDE_RENDERS: list[tuple] = [
     (archetype_comps_vocc_performance_teaching, archetype_comps_vocc_performance_teaching.render),
     (status_quo_outlook_offshore_2_teaching, status_quo_outlook_offshore_2_teaching.render),
     (archetype_comps_newbuild_prices_teaching, archetype_comps_newbuild_prices_teaching.render),
+    (status_quo_outlook_offshore_1_teaching, status_quo_outlook_offshore_1_teaching.render),
     # ── Teaching exemplars (render first) ──
     (fleet_overview_teaching, fleet_overview_teaching.render),
     (status_quo_fleet_outlook_teaching, status_quo_fleet_outlook_teaching.render),
@@ -95,8 +96,7 @@ SLIDE_RENDERS: list[tuple] = [
     # NOTE: archetype_comps_newbuild_prices_teaching + archetype_comps_vocc_performance_teaching promoted to the render-first block above
     (archetype_comps_shipbuilder_margins_teaching, archetype_comps_shipbuilder_margins_teaching.render),
     (status_quo_outlook_oceangoing_teaching, status_quo_outlook_oceangoing_teaching.render),
-    (status_quo_outlook_offshore_1_teaching, status_quo_outlook_offshore_1_teaching.render),
-    # NOTE: status_quo_outlook_offshore_2_teaching promoted to the render-first block above
+    # NOTE: status_quo_outlook_offshore_1_teaching + status_quo_outlook_offshore_2_teaching promoted to the render-first block above
     (ships_act_volume_teaching_factory_chart, ships_act_volume_teaching_factory_chart.render),
     (ships_act_plus_volume_teaching_factory_chart, ships_act_plus_volume_teaching_factory_chart.render),
     (ships_act_captive_demand_teaching_factory_chart, ships_act_captive_demand_teaching_factory_chart.render),

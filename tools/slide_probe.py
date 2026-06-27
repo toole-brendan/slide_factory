@@ -56,7 +56,7 @@ _CORE_ROOT = str(Path(__file__).resolve().parents[1])
 if _CORE_ROOT not in sys.path:
     sys.path.insert(0, _CORE_ROOT)
 from deck_core.ooxml import NS_MAP as NS  # noqa: E402
-from deck_core.style import SLIDE_W as DEFAULT_SLIDE_W, SLIDE_H as DEFAULT_SLIDE_H  # noqa: E402
+from deck_core.layout import SLIDE_W as DEFAULT_SLIDE_W, SLIDE_H as DEFAULT_SLIDE_H  # noqa: E402
 
 
 # ── Constants ───────────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ CHROME_SP_IDS = {2: "Breadcrumb", 3: "Title", 4: "PrelimChip",
 # House body box (single source of truth = deck_core.style.BODY). Used by the
 # optional --table-fit info section to report a table's estimated honest bottom
 # against the body floor.
-from deck_core.style import (  # noqa: E402
+from deck_core.layout import (  # noqa: E402
     BODY_X, BODY_Y, BODY_CX, BODY_CY, BODY_R, BODY_B,
 )
 

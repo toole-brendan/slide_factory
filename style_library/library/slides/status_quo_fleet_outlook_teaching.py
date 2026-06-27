@@ -58,24 +58,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from deck_core.authoring import (
-    IN,
-    PT,
-    BLACK,
-    WHITE,
-    GRAY_1,
-    FONT,
-    slide,
-    run,
-    paragraph,
-    line_break,
-    text_box,
-    connector,
-    breadcrumb,
-    title_placeholder,
-    prelim_chip,
-    graphic_frame,
-    column_chart,
+    Chrome, IN, PT, body_slide, column_chart, connector, graphic_frame, line_break,
+    paragraph, run, text_box,
 )
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+GRAY_1 = "F2F2F2"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -631,11 +623,8 @@ def paint_chrome(next_id) -> list[str]:
     """House chrome for the status-quo scenario page."""
 
     return [
-        breadcrumb("US-Built Ship Demand", "Status Quo"),
-        title_placeholder(
-            "Status Quo Fleet Outlook",
-            "Following completion of orderbook deliveries, fleet is expected to shrink by ~144K GT p.a. ’31-’50 (<2% of 10M GT target).",
-        ),
+        "",
+        "",
     ]
 
 
@@ -762,7 +751,7 @@ def paint_scenario_chrome(next_id) -> list[str]:
     """Scenario chip + Preliminary chip; both intentionally paint late."""
 
     return [
-        prelim_chip(),
+        "",
         _textbox(
             next_id(),
             "ScenarioChip",
@@ -793,5 +782,13 @@ def _body() -> str:
     return "".join(shapes)
 
 
+CHROME = Chrome(
+    section="US-Built Ship Demand",
+    topic="Status Quo",
+    title="Status Quo Fleet Outlook",
+    takeaway="Following completion of orderbook deliveries, fleet is expected to shrink by ~144K GT p.a. ’31-’50 (<2% of 10M GT target).",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

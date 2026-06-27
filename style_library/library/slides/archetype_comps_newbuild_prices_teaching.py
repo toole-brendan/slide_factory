@@ -1,26 +1,24 @@
-"""Teaching exemplar: archetype-comparison bubble chart with external legend.
+"""Teaching exemplar: archetype-comparison native bubble chart with external legend.
 
 ROLE
   archetype_comparison / margin_recovery_timeline
 
 USE WHEN
-  A slide needs one large style-dense performance chart, a compact manual
-  archetype legend, and a constituent-company source note, but does NOT need a
-  narrative rail. This is the cleaner, chart-dominant sibling of the VOCC
-  performance teaching exemplar.
+  A slide needs one large performance bubble chart, a compact manual archetype
+  legend, and a constituent-company source note, but does NOT need a narrative
+  rail. This is the cleaner, chart-dominant sibling of the VOCC performance
+  teaching exemplar.
 
 TEACHES
-  - rebuilding a source bubble chart with native `bubble_chart(...)`
-  - documenting a dense native bubble-chart contract without hiding it behind
-    converter-era empty `_CHART0_DATA` series
+  - rebuilding a source bubble chart through the native `bubble_chart(...)` factory
+  - embedding all chart data, point styles, axes, and bubble-size values in Python
+  - generating an editable embedded `.xlsx` at build time with no sidecar assets
   - full-width bubble-chart placement for a chart-only archetype comparison
-  - manual year ticks below a native chart
+  - manual year ticks below a native chart with hidden native x-axis labels
   - manual y-axis title outside the chart frame
   - mixed legend grammar: solid archetype dots, a patterned archetype dot, and
     a revenue bubble-size ring
   - compact off-house source note with colored constituent labels
-  - preserving source visual semantics while making all chart data readable
-    to an AI author
 
 TEXT-FIT PRECEDENT
   chart_dominant_body:
@@ -34,7 +32,7 @@ TEXT-FIT PRECEDENT
     geometry: approx. 2.46in wide x 1.50in high, bottom-right of chart body
     type: Arial 10pt no-wrap labels
     content: 5 archetype marks plus one $10B revenue bubble-size key
-    copy_when: native chart legend is too opaque or style-driven to explain
+    copy_when: native chart legend is too opaque or template-driven to explain
                marker color, pattern, and size clearly
 
   source_note:
@@ -46,41 +44,31 @@ TEXT-FIT PRECEDENT
 
 SOURCE NOTE
   Teaching rewrite of the source-faithful `archetype_comps_newbuild_prices.py`
-  module. The provided `slide32_chart17.xml` + `slide32_chart17.xlsb` pair is
-  rebuilt with native `bubble_chart(...)`; the source XML/XLSB values, point fills,
-  axes, bubble scale, and plot layout are transcribed into Python constants. The surrounding slide
-  contract (`LAYOUT`, `CHARTS`, `_body()`, `render()`), visible coordinates,
-  legend, footnote, and chrome are preserved.
+  module. The chart values and styling controls were transcribed from the source
+  chart/workbook pair into explicit Python constants. This module does not read
+  any chart asset files at runtime: `bubble_chart()` builds the chart XML and its
+  editable embedded workbook directly from `CHART_STYLE`.
 
 FIDELITY NOTE
-  This is a practical teaching rewrite, not a byte-identical source port. It
-  keeps the chart XML/workbook pair for visual fidelity and PowerPoint Edit Data
-  support. The chart data is explicit in Python; the module exposes
-  a semantic native-chart contract so future authors understand why the chart is
-  opaque and which manual labels/legend/source-note belong outside the chart
-  frame.
+  This is a practical factory-native rebuild, not a byte-identical chart-template
+  port. It preserves the visible chart semantics, 73 source points, point fills,
+  the standalone-terminal hatch, fixed axes, manual plot layout, bubble scale,
+  manual year ticks, legend, source note, Preliminary chip, and body chrome.
+  Tiny differences can remain in PowerPoint's native bubble rendering versus the
+  original chart part.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
-
 from deck_core.authoring import (
-    IN,
-    PT,
-    BLACK,
-    DK,
-    FONT,
-    slide,
-    run,
-    paragraph,
-    text_box,
-    breadcrumb,
-    title_placeholder,
-    prelim_chip,
-    graphic_frame,
-    bubble_chart,
+    Chrome, IN, PT, body_slide, bubble_chart, graphic_frame, paragraph, run, text_box,
 )
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+DK = "162029"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -104,23 +92,25 @@ TEACHING_METADATA = {
         "manual legend, rather than a chart-plus-commentary-rail layout."
     ),
     "teaches": [
-        "native editable bubble chart",
-        "opaque chart-cache contract documented in Python",
+        "native editable bubble_chart rebuilt from source XML/XLSB",
+        "source workbook rows embedded as Python constants",
+        "point-level bubble colors through data_point_colors",
+        "patterned bubble series for standalone terminal operators",
         "full-width chart-dominant layout",
-        "manual year ticks over a bubble chart",
+        "manual year ticks over a native bubble chart",
         "manual y-axis title outside the chart frame",
         "external legend for marker color, hatch pattern, and bubble size",
         "compact colored source note",
     ],
     "source_module": "archetype_comps_newbuild_prices.py",
     "source_chart_assets": ("slide32_chart17.xml", "slide32_chart17.xlsb"),
-    "rebuild_strategy": "rebuild source bubble chart with native bubble_chart",
+    "rebuild_strategy": "replace bundled source-chart assets with native bubble_chart",
 }
 
 TEXT_FIT = {
     "chart_frame": {
         "box_in": (12.540, 5.200),
-        "content": "native chart with 73 bubble points and no text rail",
+        "content": "native bubble chart with 73 bubble points and no text rail",
         "note": "The chart can span almost the full body because all explanation is externalized to legend + title.",
     },
     "manual_year_ticks": {
@@ -142,28 +132,24 @@ TEXT_FIT = {
 }
 
 COPY_RULES = [
-    "Keep the chart native when the important precedent is marker size plus per-point styling; do not force it into a native line/column factory.",
+    "Use native bubble_chart() when the exhibit is a revenue-scaled x/y bubble chart and the source point styles can be expressed as series fills, data-point fills, or pattern fills.",
     "Use a full-width chart frame when the chart is the evidence and no explanatory right rail is needed.",
-    "Use the slide-level legend as the semantic contract when the native chart groups points by cache bucket rather than clean archetype series.",
-    "Keep manual ticks and y-axis title outside the chart when the source native chart hides or suppresses native labels.",
+    "Use the slide-level legend as the semantic contract when the native chart series preserve source buckets rather than clean archetype groups.",
+    "Keep manual ticks and y-axis title outside the chart when the source chart hid or suppressed native labels.",
     "Use a colored source note for constituent detail when a full appendix table would overtake the exhibit.",
 ]
 
-CHART_TEMPLATE_CONTRACT = {
-    "why_native_bubble_chart": (
-        "The chart is a native bubbleChart with seven source series buckets, many "
-        "per-point styles, and revenue-scaled bubble sizes. The chart data is "
-        "explicit in Python and bubble_chart() generates the workbook."
-    ),
+NATIVE_CHART_CONTRACT = {
+    "factory": "bubble_chart",
     "visible_encoding": {
         "x": "calendar year, 2020-2024",
         "y": "EBIT margin (%)",
         "bubble_size": "revenue, with $10B shown by the external ring key",
         "marker_color": "value-chain archetype",
     },
-    "template_chart_xml": {
+    "source_chart_xml": {
         "chart_type": "bubbleChart",
-        "internal_series_count": 7,
+        "source_bucket_count": 7,
         "point_count": 73,
         "bubble_scale": 66,
         "x_axis_min_max": (2019, 2025),
@@ -193,35 +179,26 @@ class Box:
 
 
 @dataclass(frozen=True)
-class BubbleTemplateSeries:
-    """One internal series bucket in the preserved bubble-native chart.
+class BubbleSeries:
+    """One source chart bucket expressed as native bubble-chart inputs.
 
-    These buckets are a source-chart implementation detail, not the external
-    legend. Some archetype colors are applied through per-point overrides in the
-    chart XML, so the external legend remains the semantic source for authors.
+    The source chart grouped points in seven sparse buckets. We keep that draw
+    order for fidelity and use per-point fill overrides to carry the external
+    legend's archetype semantics.
     """
 
-    order: int
-    point_count: int
-    default_style: str
-    cache_columns: str
-    note: str
-
-@dataclass(frozen=True)
-class NativeBubbleSeries:
-    """One native bubble-chart series with sparse source-indexed points."""
-
     name: str
-    default_fill: Optional[str]
-    default_pattern: Optional[dict]
-    x_values: tuple[Optional[float], ...]
-    y_values: tuple[Optional[float], ...]
-    bubble_sizes: tuple[Optional[float], ...]
-    point_fills: tuple[Optional[str], ...]
+    x_values: tuple[int | float, ...]
+    y_values: tuple[float, ...]
+    bubble_sizes: tuple[float, ...]
+    color: str | None = None
+    pattern: dict[str, str] | None = None
+    data_point_colors: tuple[str | None, ...] | None = None
+    note: str = ""
 
     @property
     def point_count(self) -> int:
-        return sum(value is not None for value in self.x_values)
+        return len(self.x_values)
 
     def chart_dict(self) -> dict:
         out = {
@@ -230,12 +207,12 @@ class NativeBubbleSeries:
             "y_values": list(self.y_values),
             "bubble_sizes": list(self.bubble_sizes),
         }
-        if self.default_pattern is not None:
-            out["pattern"] = dict(self.default_pattern)
-        elif self.default_fill is not None:
-            out["color"] = self.default_fill
-        if any(fill is not None for fill in self.point_fills):
-            out["data_point_colors"] = list(self.point_fills)
+        if self.color is not None:
+            out["color"] = self.color
+        if self.pattern is not None:
+            out["pattern"] = dict(self.pattern)
+        if self.data_point_colors is not None:
+            out["data_point_colors"] = list(self.data_point_colors)
         return out
 
 
@@ -255,9 +232,9 @@ class LegendEntry:
     marker: str
     marker_box: Box
     label_box: Box
-    fill: Optional[str]
+    fill: str | None
     line_color: str = DK
-    pattern_fill: Optional[dict] = None
+    pattern_fill: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -290,350 +267,376 @@ SOURCE_NOTE = Box(0.495, 7.081, 5.102, 0.349)
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Native bubble-chart data and factory spec transcribed from the source chart XML.
-# No source XML/XLSB files are read at runtime; bubble_chart() builds the editable
-# embedded workbook directly from these Python constants.
+# Native chart data and factory specification.
 # ════════════════════════════════════════════════════════════════════════════
-BUBBLE_POINT_COUNT = 73
+# Source-chart transcription summary:
+#   chart part:       slide32_chart17.xml
+#   source workbook:  slide32_chart17.xlsb
+#   c:bubbleScale:    66
+#   x axis:           min=2019, max=2025, major=1, labels hidden
+#   y axis:           min=-50, max=70, major=10, labels shown
+#   plot layout:      manual inner plot rectangle below
+#   data layout:      source workbook column A carries years; each source bucket
+#                     then uses a y-value / bubble-size column pair. The native
+#                     workbook generated by bubble_chart() compacts those sparse
+#                     buckets into editable columns.
+SOURCE_PLOT_LAYOUT = {
+    "x": 0.036134570123217497,
+    "y": 0.032721202003338896,
+    "w": 0.95666620517790391,
+    "h": 0.92754590984974961,
+}
+SOURCE_BUBBLE_SCALE = 66
+SOURCE_X_AXIS_MIN = 2019
+SOURCE_X_AXIS_MAX = 2025
+SOURCE_X_AXIS_MAJOR_UNIT = 1
+SOURCE_Y_AXIS_MIN = -50
+SOURCE_Y_AXIS_MAX = 70
+SOURCE_Y_AXIS_MAJOR_UNIT = 10
+SOURCE_AXIS_LINE_WIDTH = 9_525
+SOURCE_BUBBLE_LINE_WIDTH = 3_175
+STANDALONE_PATTERN = {"prst": "pct50", "fg": "scheme:tx1", "bg": "scheme:bg1"}
 
-BUBBLE_TEMPLATE_SERIES: tuple[BubbleTemplateSeries, ...] = (
-    BubbleTemplateSeries(0, 3, f"solid {SHIPBUILDER_RED}", "A / B / C", "native bucket with red default marker"),
-    BubbleTemplateSeries(1, 12, f"solid {OWNER_OPERATOR_BLUE}", "A / D / E", "native bucket with owner/operator default marker and red point overrides"),
-    BubbleTemplateSeries(2, 20, f"solid {CHARTER_GREEN}", "A / F / G", "native bucket with charter default marker and multiple point overrides"),
-    BubbleTemplateSeries(3, 15, f"solid {OWNER_OPERATOR_BLUE}", "A / H / I", "native bucket with per-point overrides"),
-    BubbleTemplateSeries(4, 14, "pct50 hatch", "A / J / K", "native bucket for standalone terminal-operator hatch behavior"),
-    BubbleTemplateSeries(5, 6, f"solid {SHIPBUILDER_RED}", "A / L / M", "native bucket with per-point overrides"),
-    BubbleTemplateSeries(6, 3, f"solid {SHIPBUILDER_RED}", "A / N / O", "native bucket with per-point overrides"),
+BUBBLE_SOURCE_SERIES: tuple[BubbleSeries, ...] = (
+    BubbleSeries(
+        name="Source bucket 1 — shipbuilder residuals",
+        x_values=(2021, 2022, 2022),
+        y_values=(-2.9787234042553195, -33.20027982387556, 1.9083969465648851),
+        bubble_sizes=(19771.325688420737, 3856.7506229268834, 20790.68069640845),
+        color=SHIPBUILDER_RED,
+        note="Default red source bucket; three shipbuilder points.",
+    ),
+    BubbleSeries(
+        name="Source bucket 2 — mixed shipbuilder / owner-operator",
+        x_values=(2020, 2021, 2021, 2022, 2020, 2021, 2021, 2022, 2023, 2023, 2024, 2024),
+        y_values=(
+            -7.826086956521738,
+            -38.99333333333333,
+            4.1817392562581395,
+            0.3434112180997913,
+            10.954584404455868,
+            54.245502842762605,
+            37.24290927185272,
+            45.33351996143019,
+            -8.174809189880284,
+            6.617537812379283,
+            42.112632603175356,
+            12.68588852038087,
+        ),
+        bubble_sizes=(
+            21176.49225216599,
+            3785.9985360805663,
+            7821.8697999999995,
+            11784.824390166483,
+            29175.0,
+            10729.0,
+            48232.0,
+            64299.0,
+            5162.2,
+            33653.0,
+            8427.4,
+            37388.0,
+        ),
+        color=OWNER_OPERATOR_BLUE,
+        data_point_colors=(
+            SHIPBUILDER_RED,
+            SHIPBUILDER_RED,
+            SHIPBUILDER_RED,
+            SHIPBUILDER_RED,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        ),
+        note="Default owner/operator blue with first four shipbuilder points overridden red.",
+    ),
+    BubbleSeries(
+        name="Source bucket 3 — mixed archetype operating margins",
+        x_values=(
+            2021,
+            2022,
+            2023,
+            2024,
+            2020,
+            2020,
+            2021,
+            2022,
+            2022,
+            2023,
+            2024,
+            2021,
+            2021,
+            2022,
+            2022,
+            2022,
+            2023,
+            2023,
+            2023,
+            2024,
+        ),
+        y_values=(
+            7.840197254431562,
+            -0.13365410318096765,
+            3.0864197530864197,
+            2.3054755043227666,
+            18.261523046092183,
+            10.297043287370515,
+            42.15738351798452,
+            36.14512215764826,
+            50.73212274388066,
+            14.143675169182718,
+            13.392813131562084,
+            51.92159420289856,
+            55.61092637836599,
+            65.80422960725076,
+            59.455101588262075,
+            14.103882746207253,
+            59.61611909650924,
+            30.965074903765107,
+            21.258235671389425,
+            22.182558229929164,
+        ),
+        bubble_sizes=(
+            1089.4355999999998,
+            8004.243600000001,
+            25097.40737584917,
+            23479.89660725644,
+            3992.0,
+            14577.0,
+            26356.0,
+            3544.6,
+            36401.0,
+            19210.0,
+            20287.0,
+            690.0,
+            793.639,
+            993.0,
+            1113.859,
+            1555.6,
+            974.0,
+            1511.406,
+            1715.1,
+            2083.894,
+        ),
+        color=CHARTER_GREEN,
+        data_point_colors=(
+            SHIPBUILDER_RED,
+            SHIPBUILDER_RED,
+            SHIPBUILDER_RED,
+            SHIPBUILDER_RED,
+            OWNER_OPERATOR_BLUE,
+            OWNER_OPERATOR_BLUE,
+            OWNER_OPERATOR_BLUE,
+            OWNER_OPERATOR_BLUE,
+            OWNER_OPERATOR_BLUE,
+            OWNER_OPERATOR_BLUE,
+            OWNER_OPERATOR_BLUE,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        ),
+        note="Default charter green with shipbuilder and owner/operator point overrides.",
+    ),
+    BubbleSeries(
+        name="Source bucket 4 — owner-operator / integrated-terminal mix",
+        x_values=(2020, 2022, 2023, 2024, 2020, 2021, 2022, 2023, 2024, 2020, 2020, 2021, 2022, 2023, 2024),
+        y_values=(
+            2.517434937914611,
+            3.845388188453882,
+            1.324192336589031,
+            5.615161719790116,
+            13.204595717136847,
+            36.315755873340144,
+            48.91892752515603,
+            11.90149374243036,
+            17.827526070398974,
+            13.105694094747339,
+            31.652219595482006,
+            29.325000000000003,
+            19.03454587051018,
+            25.494276795005206,
+            29.764837625979844,
+        ),
+        bubble_sizes=(
+            7190.017000000001,
+            1025.5135,
+            16496.1230702495,
+            17280.39191804366,
+            1853.9,
+            3132.8,
+            12561.6,
+            2477.0,
+            2809.7,
+            460.319,
+            3807.0,
+            4000.0,
+            4371.0,
+            3844.0,
+            4465.0,
+        ),
+        color=OWNER_OPERATOR_BLUE,
+        data_point_colors=(
+            SHIPBUILDER_RED,
+            SHIPBUILDER_RED,
+            SHIPBUILDER_RED,
+            SHIPBUILDER_RED,
+            None,
+            None,
+            None,
+            None,
+            None,
+            CHARTER_GREEN,
+            TERMINAL_INTEGRATED_BLUE,
+            TERMINAL_INTEGRATED_BLUE,
+            TERMINAL_INTEGRATED_BLUE,
+            TERMINAL_INTEGRATED_BLUE,
+            TERMINAL_INTEGRATED_BLUE,
+        ),
+        note="Default owner/operator blue with shipbuilder, charter, and integrated-terminal overrides.",
+    ),
+    BubbleSeries(
+        name="Source bucket 5 — standalone-terminal pattern bucket",
+        x_values=(2020, 2023, 2024, 2024, 2020, 2020, 2021, 2021, 2022, 2022, 2023, 2023, 2024, 2024),
+        y_values=(
+            2.1914285714285713,
+            3.2152659783034894,
+            1.9931102362204725,
+            27.35885788449059,
+            32.75701021875992,
+            42.955828628362674,
+            40.61280117184256,
+            47.833780160857906,
+            35.1868290838553,
+            50.92657155595185,
+            31.215682587438888,
+            50.728753109918834,
+            37.84991786980203,
+            53.95908194270246,
+        ),
+        bubble_sizes=(
+            6445.019381093996,
+            8463.5362,
+            8413.2928,
+            2311.5,
+            1380.7877834240462,
+            1505.5,
+            1698.04861787784,
+            1865.0,
+            1559.4693328206115,
+            2243.0,
+            1361.686873471687,
+            2388.326,
+            1489.1151821002356,
+            2739.524,
+        ),
+        pattern=STANDALONE_PATTERN,
+        data_point_colors=(
+            SHIPBUILDER_RED,
+            SHIPBUILDER_RED,
+            SHIPBUILDER_RED,
+            CHARTER_GREEN,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        ),
+        note="Default standalone-terminal pct50 pattern with shipbuilder and charter overrides.",
+    ),
+    BubbleSeries(
+        name="Source bucket 6 — shipbuilder / charter mix",
+        x_values=(2020, 2023, 2024, 2020, 2021, 2024),
+        y_values=(6.697282816685799, 2.6524303821389523, 2.206755753526355, 42.43581410464738, 47.85417941916616, 53.34161735700197),
+        bubble_sizes=(1410.0531899999999, 5738.553180941462, 7291.6243757866105, 1230.8, 1470.3, 1014.0),
+        color=SHIPBUILDER_RED,
+        data_point_colors=(None, None, None, CHARTER_GREEN, CHARTER_GREEN, CHARTER_GREEN),
+        note="Default shipbuilder red with three charter-company overrides.",
+    ),
+    BubbleSeries(
+        name="Source bucket 7 — shipbuilder / charter residuals",
+        x_values=(2023, 2024, 2020),
+        y_values=(1.7566688353936235, 5.16068282607375, 43.17748917748918),
+        bubble_sizes=(1049.4636, 1018.11285, 462.0),
+        color=SHIPBUILDER_RED,
+        data_point_colors=(None, None, CHARTER_GREEN),
+        note="Default shipbuilder red with one charter-company override.",
+    ),
 )
 
-
-def _sparse_values(points: dict[int, float]) -> tuple[Optional[float], ...]:
-    values: list[Optional[float]] = [None] * BUBBLE_POINT_COUNT
-    for idx, value in points.items():
-        values[idx] = value
-    return tuple(values)
-
-
-def _sparse_fills(points: dict[int, str]) -> tuple[Optional[str], ...]:
-    fills: list[Optional[str]] = [None] * BUBBLE_POINT_COUNT
-    for idx, value in points.items():
-        fills[idx] = value
-    return tuple(fills)
-
-
-NATIVE_BUBBLE_SERIES: tuple[NativeBubbleSeries, ...] = (
-    NativeBubbleSeries(
-        name="Source bucket 1",
-        default_fill='C30C3E',
-        default_pattern=None,
-        x_values=_sparse_values({0: 2021, 1: 2022, 2: 2022}),
-        y_values=_sparse_values({0: -2.9787234042553195, 1: -33.20027982387556, 2: 1.9083969465648851}),
-        bubble_sizes=_sparse_values({0: 19771.325688420737, 1: 3856.7506229268834, 2: 20790.68069640845}),
-        point_fills=_sparse_fills({}),
-    ),
-    NativeBubbleSeries(
-        name="Source bucket 2",
-        default_fill='364D6E',
-        default_pattern=None,
-        x_values=_sparse_values({3: 2020,
- 4: 2021,
- 5: 2021,
- 6: 2022,
- 7: 2020,
- 8: 2021,
- 9: 2021,
- 10: 2022,
- 11: 2023,
- 12: 2023,
- 13: 2024,
- 14: 2024}),
-        y_values=_sparse_values({3: -7.826086956521738,
- 4: -38.99333333333333,
- 5: 4.1817392562581395,
- 6: 0.3434112180997913,
- 7: 10.954584404455868,
- 8: 54.245502842762605,
- 9: 37.24290927185272,
- 10: 45.33351996143019,
- 11: -8.174809189880284,
- 12: 6.617537812379283,
- 13: 42.112632603175356,
- 14: 12.68588852038087}),
-        bubble_sizes=_sparse_values({3: 21176.49225216599,
- 4: 3785.9985360805663,
- 5: 7821.8697999999995,
- 6: 11784.824390166483,
- 7: 29175,
- 8: 10729,
- 9: 48232,
- 10: 64299,
- 11: 5162.2,
- 12: 33653,
- 13: 8427.4,
- 14: 37388}),
-        point_fills=_sparse_fills({3: 'C30C3E', 4: 'C30C3E', 5: 'C30C3E', 6: 'C30C3E'}),
-    ),
-    NativeBubbleSeries(
-        name="Source bucket 3",
-        default_fill='27AE60',
-        default_pattern=None,
-        x_values=_sparse_values({15: 2021,
- 16: 2022,
- 17: 2023,
- 18: 2024,
- 19: 2020,
- 20: 2020,
- 21: 2021,
- 22: 2022,
- 23: 2022,
- 24: 2023,
- 25: 2024,
- 26: 2021,
- 27: 2021,
- 28: 2022,
- 29: 2022,
- 30: 2022,
- 31: 2023,
- 32: 2023,
- 33: 2023,
- 34: 2024}),
-        y_values=_sparse_values({15: 7.840197254431562,
- 16: -0.13365410318096765,
- 17: 3.0864197530864197,
- 18: 2.3054755043227666,
- 19: 18.261523046092183,
- 20: 10.297043287370515,
- 21: 42.15738351798452,
- 22: 36.14512215764826,
- 23: 50.73212274388066,
- 24: 14.143675169182718,
- 25: 13.392813131562084,
- 26: 51.92159420289856,
- 27: 55.61092637836599,
- 28: 65.80422960725076,
- 29: 59.455101588262075,
- 30: 14.103882746207253,
- 31: 59.61611909650924,
- 32: 30.965074903765107,
- 33: 21.258235671389425,
- 34: 22.182558229929164}),
-        bubble_sizes=_sparse_values({15: 1089.4355999999998,
- 16: 8004.243600000001,
- 17: 25097.40737584917,
- 18: 23479.89660725644,
- 19: 3992,
- 20: 14577,
- 21: 26356,
- 22: 3544.6,
- 23: 36401,
- 24: 19210,
- 25: 20287,
- 26: 690,
- 27: 793.639,
- 28: 993,
- 29: 1113.859,
- 30: 1555.6,
- 31: 974,
- 32: 1511.406,
- 33: 1715.1,
- 34: 2083.894}),
-        point_fills=_sparse_fills({15: 'C30C3E',
- 16: 'C30C3E',
- 17: 'C30C3E',
- 18: 'C30C3E',
- 19: '364D6E',
- 20: '364D6E',
- 21: '364D6E',
- 22: '364D6E',
- 23: '364D6E',
- 24: '364D6E',
- 25: '364D6E'}),
-    ),
-    NativeBubbleSeries(
-        name="Source bucket 4",
-        default_fill='364D6E',
-        default_pattern=None,
-        x_values=_sparse_values({35: 2020,
- 36: 2022,
- 37: 2023,
- 38: 2024,
- 39: 2020,
- 40: 2021,
- 41: 2022,
- 42: 2023,
- 43: 2024,
- 44: 2020,
- 45: 2020,
- 46: 2021,
- 47: 2022,
- 48: 2023,
- 49: 2024}),
-        y_values=_sparse_values({35: 2.517434937914611,
- 36: 3.845388188453882,
- 37: 1.324192336589031,
- 38: 5.615161719790116,
- 39: 13.204595717136847,
- 40: 36.315755873340144,
- 41: 48.91892752515603,
- 42: 11.90149374243036,
- 43: 17.827526070398974,
- 44: 13.105694094747339,
- 45: 31.652219595482006,
- 46: 29.325000000000003,
- 47: 19.03454587051018,
- 48: 25.494276795005206,
- 49: 29.764837625979844}),
-        bubble_sizes=_sparse_values({35: 7190.017000000001,
- 36: 1025.5135,
- 37: 16496.1230702495,
- 38: 17280.39191804366,
- 39: 1853.9,
- 40: 3132.8,
- 41: 12561.6,
- 42: 2477,
- 43: 2809.7,
- 44: 460.319,
- 45: 3807,
- 46: 4000,
- 47: 4371,
- 48: 3844,
- 49: 4465}),
-        point_fills=_sparse_fills({35: 'C30C3E',
- 36: 'C30C3E',
- 37: 'C30C3E',
- 38: 'C30C3E',
- 44: '27AE60',
- 45: '6F8DB9',
- 46: '6F8DB9',
- 47: '6F8DB9',
- 48: '6F8DB9',
- 49: '6F8DB9'}),
-    ),
-    NativeBubbleSeries(
-        name="Source bucket 5",
-        default_fill=None,
-        default_pattern={'bg': 'scheme:bg1', 'fg': 'scheme:tx1', 'prst': 'pct50'},
-        x_values=_sparse_values({50: 2020,
- 51: 2023,
- 52: 2024,
- 53: 2024,
- 54: 2020,
- 55: 2020,
- 56: 2021,
- 57: 2021,
- 58: 2022,
- 59: 2022,
- 60: 2023,
- 61: 2023,
- 62: 2024,
- 63: 2024}),
-        y_values=_sparse_values({50: 2.1914285714285713,
- 51: 3.2152659783034894,
- 52: 1.9931102362204725,
- 53: 27.35885788449059,
- 54: 32.75701021875992,
- 55: 42.955828628362674,
- 56: 40.61280117184256,
- 57: 47.833780160857906,
- 58: 35.1868290838553,
- 59: 50.92657155595185,
- 60: 31.215682587438888,
- 61: 50.728753109918834,
- 62: 37.84991786980203,
- 63: 53.95908194270246}),
-        bubble_sizes=_sparse_values({50: 6445.019381093996,
- 51: 8463.5362,
- 52: 8413.2928,
- 53: 2311.5,
- 54: 1380.7877834240462,
- 55: 1505.5,
- 56: 1698.04861787784,
- 57: 1865,
- 58: 1559.4693328206115,
- 59: 2243,
- 60: 1361.686873471687,
- 61: 2388.326,
- 62: 1489.1151821002356,
- 63: 2739.524}),
-        point_fills=_sparse_fills({50: 'C30C3E', 51: 'C30C3E', 52: 'C30C3E', 53: '27AE60'}),
-    ),
-    NativeBubbleSeries(
-        name="Source bucket 6",
-        default_fill='C30C3E',
-        default_pattern=None,
-        x_values=_sparse_values({64: 2020, 65: 2023, 66: 2024, 67: 2020, 68: 2021, 69: 2024}),
-        y_values=_sparse_values({64: 6.697282816685799,
- 65: 2.6524303821389523,
- 66: 2.206755753526355,
- 67: 42.43581410464738,
- 68: 47.85417941916616,
- 69: 53.34161735700197}),
-        bubble_sizes=_sparse_values({64: 1410.0531899999999,
- 65: 5738.553180941462,
- 66: 7291.6243757866105,
- 67: 1230.8,
- 68: 1470.3,
- 69: 1014}),
-        point_fills=_sparse_fills({67: '27AE60', 68: '27AE60', 69: '27AE60'}),
-    ),
-    NativeBubbleSeries(
-        name="Source bucket 7",
-        default_fill='C30C3E',
-        default_pattern=None,
-        x_values=_sparse_values({70: 2023, 71: 2024, 72: 2020}),
-        y_values=_sparse_values({70: 1.7566688353936235, 71: 5.16068282607375, 72: 43.17748917748918}),
-        bubble_sizes=_sparse_values({70: 1049.4636, 71: 1018.11285, 72: 462}),
-        point_fills=_sparse_fills({72: '27AE60'}),
-    ),
-)
-
-SOURCE_CHART_AUDIT = {
-    "source_xml": "slide32_chart17.xml",
-    "chart_type": "bubbleChart",
-    "internal_series_count": 7,
-    "point_count": BUBBLE_POINT_COUNT,
-    "bubble_scale": 66,
-    "x_axis_min_max": (2019, 2025),
-    "y_axis_min_max": (-50, 70),
-    "plot_layout": {'h': 0.9275459098497496,
- 'w': 0.9566662051779039,
- 'x': 0.036134570123217497,
- 'y': 0.032721202003338896},
+# Readable data mirror for agents/tools that expect the converted-slide dict
+# shape. CHARTS consumes the same values through bubble_chart().
+_CHART0_DATA = {
+    "categories": None,
+    "series": [series.chart_dict() for series in BUBBLE_SOURCE_SERIES],
 }
 
 CHART_STYLE = {
-    "series": [series.chart_dict() for series in NATIVE_BUBBLE_SERIES],
+    "series": [series.chart_dict() for series in BUBBLE_SOURCE_SERIES],
     "show_legend": False,
     "x_axis_format": "General",
-    "y_axis_format": "#,##0;\"-\"#,##0",
+    "y_axis_format": '#,##0;"-"#,##0',
     "bubble_size_format": "General",
-    "x_axis_min": 2019,
-    "x_axis_max": 2025,
-    "x_axis_major_unit": 1,
-    "y_axis_min": -50,
-    "y_axis_max": 70,
-    "y_axis_major_unit": 10,
+    "x_axis_min": SOURCE_X_AXIS_MIN,
+    "x_axis_max": SOURCE_X_AXIS_MAX,
+    "x_axis_major_unit": SOURCE_X_AXIS_MAJOR_UNIT,
+    "y_axis_min": SOURCE_Y_AXIS_MIN,
+    "y_axis_max": SOURCE_Y_AXIS_MAX,
+    "y_axis_major_unit": SOURCE_Y_AXIS_MAJOR_UNIT,
     "show_x_axis_labels": False,
     "show_y_axis_labels": True,
-    "x_axis_crosses_at": 0,
-    "y_axis_crosses": "min",
-    "bubble_scale": 66,
-    "show_negative_bubbles": False,
     "show_gridlines": False,
     "axis_line_color": "scheme:tx1",
-    "axis_line_width": 9_525,
+    "axis_line_width": SOURCE_AXIS_LINE_WIDTH,
     "axis_label_size_pt": 10,
     "axis_label_color": BLACK,
+    "x_axis_crosses_at": 0,
+    "y_axis_crosses": "min",
+    "bubble_scale": SOURCE_BUBBLE_SCALE,
+    "show_negative_bubbles": False,
     "bubble_line_color": "scheme:tx1",
-    "bubble_line_width": 3_175,
-    "plot_layout": dict(SOURCE_CHART_AUDIT["plot_layout"]),
+    "bubble_line_width": SOURCE_BUBBLE_LINE_WIDTH,
+    "plot_layout": dict(SOURCE_PLOT_LAYOUT),
 }
 
 CHARTS = [bubble_chart(**CHART_STYLE)]
 
-_CHART0_DATA = {
-    "categories": None,
-    "series": [series.chart_dict() for series in NATIVE_BUBBLE_SERIES],
+SOURCE_CHART_AUDIT = {
+    "source_xml": "slide32_chart17.xml",
+    "source_workbook": "slide32_chart17.xlsb",
+    "workbook_layout": "Column A = year; B/C, D/E, F/G, H/I, J/K, L/M, and N/O are y-value/bubble-size source buckets.",
+    "xml_style": {
+        "chart_type": "bubbleChart",
+        "series_count": 7,
+        "point_count": 73,
+        "bubbleScale": SOURCE_BUBBLE_SCALE,
+        "manualLayout": SOURCE_PLOT_LAYOUT,
+        "xAxisMin": SOURCE_X_AXIS_MIN,
+        "xAxisMax": SOURCE_X_AXIS_MAX,
+        "xAxisMajorUnit": SOURCE_X_AXIS_MAJOR_UNIT,
+        "xAxisTickLabels": "hidden; manual year ticks are slide text",
+        "xAxisCrossesAt": 0,
+        "yAxisMin": SOURCE_Y_AXIS_MIN,
+        "yAxisMax": SOURCE_Y_AXIS_MAX,
+        "yAxisMajorUnit": SOURCE_Y_AXIS_MAJOR_UNIT,
+        "axisLineWidth": SOURCE_AXIS_LINE_WIDTH,
+        "bubbleLineWidth": SOURCE_BUBBLE_LINE_WIDTH,
+        "standalonePattern": STANDALONE_PATTERN,
+    },
 }
 
 CHART_READINGS: tuple[ChartReading, ...] = (
@@ -723,32 +726,40 @@ SOURCE_RUNS: tuple[SourceRun, ...] = (
 )
 
 
-
 # ════════════════════════════════════════════════════════════════════════════
-# Validation helpers. These keep the manual teaching contract synchronized with
-# the native bubble chart and the surrounding slide furniture.
+# Validation helpers. These keep the native chart data synchronized with the
+# source chart semantics and the surrounding slide furniture.
 # ════════════════════════════════════════════════════════════════════════════
 def _validate_semantics() -> None:
-    expected_series = CHART_TEMPLATE_CONTRACT["template_chart_xml"]["internal_series_count"]
-    expected_points = CHART_TEMPLATE_CONTRACT["template_chart_xml"]["point_count"]
-    if len(BUBBLE_TEMPLATE_SERIES) != expected_series:
-        raise ValueError("Bubble chart contract expects seven internal series buckets.")
-    if len(NATIVE_BUBBLE_SERIES) != expected_series:
-        raise ValueError("Native bubble chart must carry seven source series buckets.")
-    if sum(series.point_count for series in NATIVE_BUBBLE_SERIES) != expected_points:
+    expected_series = NATIVE_CHART_CONTRACT["source_chart_xml"]["source_bucket_count"]
+    expected_points = NATIVE_CHART_CONTRACT["source_chart_xml"]["point_count"]
+    if len(BUBBLE_SOURCE_SERIES) != expected_series:
+        raise ValueError("Native bubble chart should preserve seven source buckets.")
+    if sum(series.point_count for series in BUBBLE_SOURCE_SERIES) != expected_points:
         raise ValueError("Bubble chart point-count contract should total 73 source workbook rows.")
-    if CHART_STYLE["bubble_scale"] != 66:
-        raise ValueError("Native bubble chart should keep the source bubble scale of 66.")
-    if CHART_STYLE["x_axis_min"] != 2019 or CHART_STYLE["x_axis_max"] != 2025:
-        raise ValueError("Native bubble chart x-axis bounds must match the source chart.")
-    if CHART_STYLE["y_axis_min"] != -50 or CHART_STYLE["y_axis_max"] != 70:
-        raise ValueError("Native bubble chart y-axis bounds must match the source chart.")
+    for series in BUBBLE_SOURCE_SERIES:
+        if not (len(series.x_values) == len(series.y_values) == len(series.bubble_sizes)):
+            raise ValueError(f"Bubble series {series.name!r} has mismatched x/y/size lengths.")
+        if series.data_point_colors is not None and len(series.data_point_colors) != series.point_count:
+            raise ValueError(f"Bubble series {series.name!r} has misaligned point-color overrides.")
+    if CHART_STYLE["bubble_scale"] != SOURCE_BUBBLE_SCALE:
+        raise ValueError("Bubble scale must match slide32_chart17.xml.")
+    if CHART_STYLE["plot_layout"] != SOURCE_PLOT_LAYOUT:
+        raise ValueError("Manual plot layout must match slide32_chart17.xml.")
+    if (CHART_STYLE["x_axis_min"], CHART_STYLE["x_axis_max"]) != (SOURCE_X_AXIS_MIN, SOURCE_X_AXIS_MAX):
+        raise ValueError("X-axis bounds must match slide32_chart17.xml.")
+    if (CHART_STYLE["y_axis_min"], CHART_STYLE["y_axis_max"]) != (SOURCE_Y_AXIS_MIN, SOURCE_Y_AXIS_MAX):
+        raise ValueError("Y-axis bounds must match slide32_chart17.xml.")
     if tuple(tick.label for tick in YEAR_TICKS) != ("2020", "2021", "2022", "2023", "2024"):
         raise ValueError("Manual year ticks should remain the five source years.")
     if len(LEGEND_ENTRIES) != 6:
         raise ValueError("Legend should include five archetype markers plus one revenue-size ring.")
     if next(entry for entry in LEGEND_ENTRIES if entry.marker == "hatched_archetype_dot").pattern_fill is None:
         raise ValueError("Standalone terminal-operator legend entry must keep the pct50 hatch fill.")
+    if "<c:bubbleChart" not in CHARTS[0]["chart_xml"]:
+        raise ValueError("CHARTS[0] should be generated by the native bubble_chart factory.")
+    if not CHARTS[0].get("embed_xlsx"):
+        raise ValueError("Native bubble chart should generate an editable embedded xlsx.")
 
 
 _validate_semantics()
@@ -768,7 +779,7 @@ def _one_line(
     bold: bool = False,
     italic: bool = False,
     color: str = BLACK,
-    align: Optional[str] = None,
+    align: str | None = None,
 ) -> str:
     return paragraph(
         [run(text, size=size, bold=bold or None, italic=italic or None, color=color, font=FONT)],
@@ -802,11 +813,8 @@ def paint_chrome(next_id) -> list[str]:
     """House chrome for the value-chain performance section."""
 
     return [
-        breadcrumb("Commercial Maritime Value Chain", "Performance"),
-        title_placeholder(
-            "Archetype Comps (1/3)",
-            "Despite seeing improvement from rising new build prices and increased orders, shipbuilders only achieved low-to-mid-single digit EBIT margins by ‘24.",
-        ),
+        "",
+        "",
     ]
 
 
@@ -944,7 +952,7 @@ def paint_source_note(next_id) -> list[str]:
 def paint_preliminary_chip(next_id) -> list[str]:
     """House Preliminary chip, intentionally painted after body content."""
 
-    return [prelim_chip()]
+    return [""]
 
 
 def _body() -> str:
@@ -961,5 +969,13 @@ def _body() -> str:
     return "".join(shapes)
 
 
+CHROME = Chrome(
+    section="Commercial Maritime Value Chain",
+    topic="Performance",
+    title="Archetype Comps (1/3)",
+    takeaway="Despite seeing improvement from rising new build prices and increased orders, shipbuilders only achieved low-to-mid-single digit EBIT margins by ‘24.",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

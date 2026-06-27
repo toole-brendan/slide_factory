@@ -48,18 +48,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Union
 
-from deck_core.primitives import (
-    slide,
-    table,
-    trow,
-    tcell,
-    tcell_rich,
-    tpara,
-    trun,
-    breadcrumb,
-    title_placeholder,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, table, tcell, tcell_rich, tpara, trow, trun,
 )
-from deck_core.style import IN, PT, BLACK, WHITE, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 CHARTS: list = []
@@ -544,12 +541,9 @@ def _archetype_rows() -> list[dict]:
 # Paint sections. Document order is PowerPoint paint order.
 # ════════════════════════════════════════════════════════════════════════════
 def paint_chrome(out: list[str]) -> None:
-    out.append(breadcrumb("Commercial Maritime Value Chain", "Coordination Archetypes"))
+    out.append("")
     out.append(
-        title_placeholder(
-            "Coordination Archetypes",
-            "Numerous entities play in the Coordination step of the value chain.",
-        )
+        ""
     )
 
 
@@ -589,5 +583,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Commercial Maritime Value Chain",
+    topic="Coordination Archetypes",
+    title="Coordination Archetypes",
+    takeaway="Numerous entities play in the Coordination step of the value chain.",
+    preliminary=False,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

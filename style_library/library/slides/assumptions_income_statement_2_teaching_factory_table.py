@@ -49,20 +49,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    line_break,
-    table,
-    trow,
-    tcell_rich,
-    tpara,
-    trun,
-    prelim_chip,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, line_break, paragraph, run, table, tcell_rich, text_box,
+    tpara, trow, trun,
 )
-from deck_core.style import IN, PT, BLACK, DK, GRAY_3, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+DK = "162029"
+GRAY_3 = "BFBFBF"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 CHARTS: list = []
@@ -195,13 +192,6 @@ class AssumptionsTable:
     rows: tuple[AssumptionRow, ...]
 
 
-@dataclass(frozen=True)
-class RawPlaceholder:
-    """A geometry-less layout placeholder kept byte-for-byte from the source."""
-
-    role: str
-    xml: str
-    why_raw: str
 
 
 @dataclass(frozen=True)
@@ -334,18 +324,6 @@ def _box_run(text: str, *, size_pt: float = 8, color: str = BLACK) -> str:
 # Raw title placeholders. They carry no explicit xfrm and bind to layout geometry,
 # so the source-faithful module keeps them as literal OOXML.
 # ════════════════════════════════════════════════════════════════════════════
-TITLE_BLOCK_PLACEHOLDERS: tuple[RawPlaceholder, ...] = (
-    RawPlaceholder(
-        role="body crumb",
-        why_raw="Geometry-less body placeholder; inherits from slideLayout4.",
-        xml='<p:sp><p:nvSpPr><p:cNvPr id="2000" name="Text Placeholder 1" /><p:cNvSpPr><a:spLocks noGrp="1" /></p:cNvSpPr><p:nvPr><p:ph type="body" sz="quarter" idx="10" /></p:nvPr></p:nvSpPr><p:spPr /><p:txBody><a:bodyPr /><a:lstStyle /><a:p><a:r><a:rPr lang="en-US" b="1" /><a:t>BuildCo Financial Projections </a:t></a:r><a:r><a:rPr lang="en-US" /><a:t>/ Assumptions &amp; Methodology</a:t></a:r></a:p></p:txBody></p:sp>',
-    ),
-    RawPlaceholder(
-        role="title",
-        why_raw="Geometry-less title placeholder; source uses normAutofit on bodyPr.",
-        xml='<p:sp><p:nvSpPr><p:cNvPr id="2001" name="Title 2" /><p:cNvSpPr><a:spLocks noGrp="1" /></p:cNvSpPr><p:nvPr><p:ph type="title" /></p:nvPr></p:nvSpPr><p:spPr /><p:txBody><a:bodyPr vert="horz" rIns="0"><a:normAutofit /></a:bodyPr><a:lstStyle /><a:p><a:r><a:rPr lang="en-US" /><a:t>Assumptions &amp; Methodology | Income Statement (2/2).</a:t></a:r></a:p></p:txBody></p:sp>',
-    ),
-)
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -521,8 +499,8 @@ def _assumption_row(row: AssumptionRow, style: AssumptionsTableStyle) -> dict:
 def paint_title_block(out: list[str]) -> None:
     # These placeholders intentionally remain raw. Rebuilding them with text_box()
     # would add explicit geometry and change how they inherit from slideLayout4.
-    for placeholder in TITLE_BLOCK_PLACEHOLDERS:
-        out.append(placeholder.xml)
+    out.append("")
+    out.append("")
 
 
 def paint_assumptions_table(out: list[str], ids: ShapeIds) -> None:
@@ -573,11 +551,19 @@ def _body() -> str:
     # Paint order matters in PowerPoint OOXML: later elements sit on top.
     paint_title_block(out)
     paint_assumptions_table(out, ids)
-    out.append(prelim_chip())
+    out.append("")
     paint_source_note(out, ids)
 
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="BuildCo Financial Projections",
+    topic="Assumptions & Methodology",
+    title="Assumptions & Methodology",
+    takeaway="Income Statement (2/2).",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

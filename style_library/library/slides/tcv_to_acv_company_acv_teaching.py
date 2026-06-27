@@ -43,33 +43,42 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from deck_core.authoring import (
-    IN,
-    PT,
-    BLACK,
-    WHITE,
-    DK,
-    BLUE_4,
-    BLUE_5,
-    FONT,
-    slide,
-    run,
-    paragraph,
-    line_break,
-    text_box,
-    connector,
-    picture,
-    table,
-    trow,
-    tpara,
-    trun,
-    graphic_frame,
-    column_chart,
-    cell,
-    rcell,
-    edge,
-    breadcrumb,
-    title_placeholder,
+    Chrome, IN, PT, body_slide, column_chart, connector, graphic_frame, line_break,
+    paragraph, picture, run, table, tcell, tcell_rich, text_box, tpara, trow, trun,
 )
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+BLUE_4 = "3D5972"
+BLUE_5 = "263746"
+FONT = "Arial"
+
+
+# Local table-cell kit (was deck_core.table_kit).
+def edge(color, w=12700):
+    """One cell-border edge dict (default 1pt hairline)."""
+    return {"color": color, "width": w}
+
+def bd(L=None, R=None, T=None, B=None):
+    """Border map from only the sides drawn; omitted sides render no-fill."""
+    return {k: v for k, v in (("L", L), ("R", R), ("T", T), ("B", B)) if v is not None} or None
+
+def cell(text="", *, fill=None, bold=None, italic=None, color=BLACK, size=PT(10),
+         align="l", anchor="ctr", span=1, rowspan=1,
+         l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, **edges):
+    """Single-run text cell; borders via L/R/T/B=edge(...)."""
+    return tcell(text, fill=fill, bold=bold, italic=italic, color=color, size=size,
+                 align=align, anchor=anchor, grid_span=span, row_span=rowspan, font=FONT,
+                 l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=bd(**edges))
+
+def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
+          l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, **edges):
+    """Multi-paragraph rich cell; borders via L/R/T/B=edge(...)."""
+    return tcell_rich(paras, fill=fill, grid_span=span, row_span=rowspan, anchor=anchor,
+                      l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=bd(**edges))
 
 LAYOUT = "slideLayout4"
 
@@ -359,8 +368,8 @@ def _exercise_timing_table(sp_id: int) -> str:
 
 
 def paint_chrome(out: list[str], n) -> None:
-    out.append(breadcrumb("Market Sizing", "Navy (Surface incl. MDA)"))
-    out.append(title_placeholder("TCV to ACV Approach", "Finding Company ACV"))
+    out.append("")
+    out.append("")
 
 
 def paint_approach_header(out: list[str], n) -> None:
@@ -435,5 +444,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Market Sizing",
+    topic="Navy (Surface incl. MDA)",
+    title="TCV to ACV Approach",
+    takeaway="Finding Company ACV",
+    preliminary=False,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

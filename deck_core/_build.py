@@ -29,7 +29,7 @@ from pathlib import Path
 from xml.sax.saxutils import escape as _escape
 
 from deck_core.ooxml import XML_DECL, NS
-from deck_core.style import SLIDE_W, SLIDE_H
+from deck_core.layout import SLIDE_W, SLIDE_H
 
 DEFAULT_LAYOUT = "slideLayout4"   # body slides (auto-number; no manual page number)
 

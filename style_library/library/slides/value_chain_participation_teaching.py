@@ -48,28 +48,32 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from deck_core.authoring import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    connector,
-    picture,
-    table,
-    trow,
-    tpara,
-    trun,
-    breadcrumb,
-    title_placeholder,
-    prelim_chip,
-    IN,
-    PT,
-    BLACK,
-    WHITE,
-    GRAY_2,
-    FONT,
-    edge,
-    rcell,
+    Chrome, IN, PT, body_slide, connector, paragraph, picture, run, table, tcell_rich,
+    text_box, tpara, trow, trun,
 )
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+GRAY_2 = "D9D9D9"
+FONT = "Arial"
+
+
+# Local table-cell kit (was deck_core.table_kit).
+def edge(color, w=12700):
+    """One cell-border edge dict (default 1pt hairline)."""
+    return {"color": color, "width": w}
+
+def bd(L=None, R=None, T=None, B=None):
+    """Border map from only the sides drawn; omitted sides render no-fill."""
+    return {k: v for k, v in (("L", L), ("R", R), ("T", T), ("B", B)) if v is not None} or None
+
+def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
+          l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, **edges):
+    """Multi-paragraph rich cell; borders via L/R/T/B=edge(...)."""
+    return tcell_rich(paras, fill=fill, grid_span=span, row_span=rowspan, anchor=anchor,
+                      l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=bd(**edges))
 
 LAYOUT = "slideLayout4"
 
@@ -443,9 +447,9 @@ def paint_connectors_and_callouts(out: list[str], n) -> None:
 
 
 def paint_chrome(out: list[str]) -> None:
-    out.append(breadcrumb("Commercial Maritime Value Chain", "Overview"))
-    out.append(title_placeholder("Value Chain Participation", "Shipbuilders largely not observed to vertically integrate beyond chartering, whereas large shippers and VOCCs integrate across the value chain."))
-    out.append(prelim_chip())
+    out.append("")
+    out.append("")
+    out.append("")
 
 
 def _body() -> str:
@@ -463,5 +467,13 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Commercial Maritime Value Chain",
+    topic="Overview",
+    title="Value Chain Participation",
+    takeaway="Shipbuilders largely not observed to vertically integrate beyond chartering, whereas large shippers and VOCCs integrate across the value chain.",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

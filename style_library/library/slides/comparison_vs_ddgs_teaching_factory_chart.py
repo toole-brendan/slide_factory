@@ -44,26 +44,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    picture,
-    line_break,
-    table,
-    trow,
-    tcell,
-    tcell_rich,
-    tpara,
-    trun,
-    tbreak,
-    breadcrumb,
-    title_placeholder,
-    sources_line,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, column_chart, graphic_frame, line_break, paragraph,
+    picture, run, table, tbreak, tcell, tcell_rich, text_box, tpara, trow, trun,
 )
-from deck_core.charts import graphic_frame, column_chart
-from deck_core.style import IN, PT, BLACK, WHITE, DK, GRAY_1, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+GRAY_1 = "F2F2F2"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -214,7 +206,7 @@ TEXT_FIT = {
     "source_note": {
         "box_in": (12.367, 0.322),
         "font_pt": 8,
-        "content": "single long Note/Source line via sources_line()",
+        "content": "single long Note/Source line via source_note()",
     },
 }
 
@@ -532,15 +524,9 @@ def _manual_label(out: list[str], ids: ShapeIds, label: ManualLabel) -> None:
 # Paint sections. Document order is PowerPoint paint order.
 # ════════════════════════════════════════════════════════════════════════════
 def paint_chrome(out: list[str], ids: ShapeIds) -> None:
-    out.append(breadcrumb("Golden Dome Requirements", "Platform Quantities"))
+    out.append("")
     out.append(
-        title_placeholder(
-            "Comparison vs. DDGs",
-            (
-                "Total GD MR procurement cost is roughly the same as four Arleigh "
-                "Burke-class destroyers while delivering 10x+ the interceptor capacity"
-            ),
-        )
+        ""
     )
 
 
@@ -776,7 +762,7 @@ def paint_capability_comparison_table(out: list[str], ids: ShapeIds) -> None:
 
 
 def paint_sources(out: list[str], ids: ShapeIds) -> None:
-    out.append(sources_line(NOTE_SOURCE_TEXT))
+    out.append("")
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -798,5 +784,16 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Golden Dome Requirements",
+    topic="Platform Quantities",
+    title="Comparison vs. DDGs",
+    takeaway="Total GD MR procurement cost is roughly the same as four Arleigh "
+                "Burke-class destroyers while delivering 10x+ the interceptor capacity",
+    preliminary=False,
+    sources=NOTE_SOURCE_TEXT,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

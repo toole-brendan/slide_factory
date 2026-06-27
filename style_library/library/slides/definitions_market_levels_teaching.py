@@ -36,7 +36,7 @@ SOURCE NOTE
 
 FIDELITY NOTE
   The source title is a raw layout placeholder with no explicit xfrm. It is kept
-  verbatim here as `RAW_TITLE_PLACEHOLDER_XML`. Rebuild it with title_placeholder()
+  now rebuilt with slide_title() (house chrome via body_slide)
   only when migrating the slide away from source-fidelity mode.
 """
 from __future__ import annotations
@@ -45,32 +45,45 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from deck_core.authoring import (
-    IN,
-    PT,
-    BLACK,
-    WHITE,
-    DK,
-    BLUE_1,
-    BLUE_2,
-    BLUE_3,
-    BLUE_4,
-    BLUE_5,
-    FONT,
-    slide,
-    run,
-    paragraph,
-    text_box,
-    picture,
-    table,
-    trow,
-    cell,
-    rcell,
-    edge,
-    tpara,
-    trun,
-    tbreak,
-    breadcrumb,
+    Chrome, IN, PT, body_slide, paragraph, picture, run, table, tbreak, tcell, tcell_rich,
+    text_box, tpara, trow, trun,
 )
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+BLUE_1 = "E2E9EF"
+BLUE_2 = "B6C8D8"
+BLUE_3 = "6E91B1"
+BLUE_4 = "3D5972"
+BLUE_5 = "263746"
+FONT = "Arial"
+
+
+# Local table-cell kit (was deck_core.table_kit).
+def edge(color, w=12700):
+    """One cell-border edge dict (default 1pt hairline)."""
+    return {"color": color, "width": w}
+
+def bd(L=None, R=None, T=None, B=None):
+    """Border map from only the sides drawn; omitted sides render no-fill."""
+    return {k: v for k, v in (("L", L), ("R", R), ("T", T), ("B", B)) if v is not None} or None
+
+def cell(text="", *, fill=None, bold=None, italic=None, color=BLACK, size=PT(10),
+         align="l", anchor="ctr", span=1, rowspan=1,
+         l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, **edges):
+    """Single-run text cell; borders via L/R/T/B=edge(...)."""
+    return tcell(text, fill=fill, bold=bold, italic=italic, color=color, size=size,
+                 align=align, anchor=anchor, grid_span=span, row_span=rowspan, font=FONT,
+                 l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=bd(**edges))
+
+def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
+          l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, **edges):
+    """Multi-paragraph rich cell; borders via L/R/T/B=edge(...)."""
+    return tcell_rich(paras, fill=fill, grid_span=span, row_span=rowspan, anchor=anchor,
+                      l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=bd(**edges))
 
 LAYOUT = "slideLayout4"
 
@@ -107,15 +120,6 @@ COPY_RULES = (
     "Keep definition prose short; this slide is a reference, not a methodology page.",
 )
 
-RAW_TITLE_PLACEHOLDER_XML = (
-    '<p:sp><p:nvSpPr><p:cNvPr id="2000" name="Title 3" />'
-    '<p:cNvSpPr><a:spLocks noGrp="1" /></p:cNvSpPr>'
-    '<p:nvPr><p:ph type="title" /></p:nvPr></p:nvSpPr><p:spPr />'
-    '<p:txBody><a:bodyPr vert="horz" /><a:lstStyle /><a:p><a:pPr marL="0" />'
-    '<a:r><a:rPr lang="en-US" dirty="0"><a:solidFill><a:srgbClr val="000000" />'
-    '</a:solidFill></a:rPr><a:t>Definitions | Sizing breaks the market down into five levels </a:t>'
-    '</a:r></a:p></p:txBody></p:sp>'
-)
 
 
 @dataclass(frozen=True)
@@ -239,8 +243,8 @@ def paint_funnel_layers(out: list[str], ids: ShapeIds) -> None:
 
 
 def paint_chrome_and_raw_title(out: list[str], ids: ShapeIds) -> None:
-    out.append(breadcrumb("Market Sizing", "Navy (Surface incl. MDA)"))
-    out.append(RAW_TITLE_PLACEHOLDER_XML)
+    out.append("")
+    out.append("")
 
 
 def paint_definition_table(out: list[str], ids: ShapeIds) -> None:
@@ -281,5 +285,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Market Sizing",
+    topic="Navy (Surface incl. MDA)",
+    title="Definitions",
+    takeaway="Sizing breaks the market down into five levels",
+    preliminary=False,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

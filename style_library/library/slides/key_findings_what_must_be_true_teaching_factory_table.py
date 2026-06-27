@@ -45,22 +45,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    table,
-    trow,
-    tcell,
-    tcell_rich,
-    tpara,
-    trun,
-    breadcrumb,
-    title_placeholder,
-    prelim_chip,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, paragraph, run, table, tcell, tcell_rich, text_box, tpara,
+    trow, trun,
 )
-from deck_core.style import IN, PT, BLACK, WHITE, DK, GRAY_1, GRAY_3, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+GRAY_1 = "F2F2F2"
+GRAY_3 = "BFBFBF"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 CHARTS: list = []
@@ -586,9 +583,9 @@ def _matrix_rows():
 # Paint sections. Document order is PowerPoint paint order.
 # ════════════════════════════════════════════════════════════════════════════
 def paint_chrome(out: list[str]) -> None:
-    out.append(breadcrumb(_SECTION, _TOPIC))
-    out.append(title_placeholder(_TITLE, _TAKEAWAY))
-    out.append(prelim_chip())
+    out.append("")
+    out.append("")
+    out.append("")
 
 
 def paint_matrix(out: list[str], ids: ShapeIds) -> None:
@@ -660,5 +657,13 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section=_SECTION,
+    topic=_TOPIC,
+    title=_TITLE,
+    takeaway=_TAKEAWAY,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

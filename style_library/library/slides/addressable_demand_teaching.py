@@ -37,22 +37,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    line_break,
-    table,
-    trow,
-    tcell,
-    tcell_rich,
-    tpara,
-    trun,
-    breadcrumb,
-    title_placeholder,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, line_break, paragraph, run, table, tcell, tcell_rich,
+    text_box, tpara, trow, trun,
 )
-from deck_core.style import IN, PT, BLACK, WHITE, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -495,12 +489,9 @@ def _border_for(label: NativeLabelTable) -> dict[str, dict[str, int | str]]:
 # Paint sections. Document order is PowerPoint paint order.
 # ════════════════════════════════════════════════════════════════════════════
 def paint_chrome(out: list[str]) -> None:
-    out.append(breadcrumb("US-Built Ship Demand", "Status Quo"))
+    out.append("")
     out.append(
-        title_placeholder(
-            "Addressable Demand",
-            "US-built and flagged oceangoing commercial vessels and high-volume offshore vessels meet desired regulatory and/or serial production requirements.",
-        )
+        ""
     )
 
 
@@ -600,5 +591,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="US-Built Ship Demand",
+    topic="Status Quo",
+    title="Addressable Demand",
+    takeaway="US-built and flagged oceangoing commercial vessels and high-volume offshore vessels meet desired regulatory and/or serial production requirements.",
+    preliminary=False,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

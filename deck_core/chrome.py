@@ -1,0 +1,188 @@
+"""deck_core.chrome - the author-facing house furniture for a body slide.
+
+An author edits chrome as readable fields, never raw OOXML: a ``Chrome(...)`` record
+(breadcrumb section/topic, the slide title + takeaway, the Preliminary chip, the
+Sources band) plus ``body_slide(chrome, body)`` to assemble it around the body. For a
+source slide whose title is a bare layout placeholder, ``layout_title`` /
+``layout_placeholder`` keep that readable too. The locked geometry, ids, colors, and
+sizes are private to this module - authors set chrome TEXT, never those.
+
+    CHROME = Chrome(
+        section="US-Built Ship Demand",
+        topic="Status Quo",
+        title="Status Quo Fleet Outlook",
+        takeaway="Fleet shrinks ~144K GT p.a. '31-'50 (<2% of the 10M GT target).",
+        preliminary=True,
+        sources=Sources(source="Clarksons (US fleet size and GT data)"),
+    )
+
+    def render() -> str:
+        return body_slide(CHROME, _body())
+"""
+from __future__ import annotations
+from dataclasses import dataclass
+
+from deck_core.layout import LEFT_MARGIN, CONTENT_W
+from deck_core.primitives import esc, placeholder_sp, slide
+
+# ── Locked chrome constants (private; verbatim from the template) ───────────
+_DK = "162029"
+_BLACK = "000000"
+_BREADCRUMB = "44505C"
+_PRELIM = "FFFFCC"
+_SZ_BREADCRUMB = 1000
+_SZ_SLIDE_TITLE = 2000
+_SZ_PRELIM = 1200
+_SZ_SOURCES = 800
+_BREADCRUMB_X, _BREADCRUMB_Y, _BREADCRUMB_CX, _BREADCRUMB_CY = LEFT_MARGIN, 263_452, CONTENT_W, 153_888
+_TITLE_X, _TITLE_Y, _TITLE_CX, _TITLE_CY = LEFT_MARGIN, 554_500, CONTENT_W, 640_080
+_PRELIM_X, _PRELIM_Y, _PRELIM_CX, _PRELIM_CY = 10_267_829, 111_556, 1_467_612, 290_000
+_SOURCES_X, _SOURCES_Y, _SOURCES_CX, _SOURCES_CY = LEFT_MARGIN, 5_930_000, CONTENT_W, 540_000
+_SP_ID_BREADCRUMB = 2
+_SP_ID_TITLE = 3
+_SP_ID_PRELIM = 4
+_SP_ID_SOURCES = 9999
+
+
+def _chrome_run(text, *, size, bold=False, color=_DK):
+    """Locked chrome run: Arial, kern=1200, explicit size + color. Body text uses
+    run(); chrome uses this so the staples stay byte-stable."""
+    b = ' b="1"' if bold else ""
+    return (f'<a:r><a:rPr lang="en-US" sz="{size}"{b} kern="1200" dirty="0">'
+            f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>'
+            f'<a:latin typeface="Arial"/><a:ea typeface="Arial"/><a:cs typeface="Arial"/>'
+            f'</a:rPr><a:t>{esc(text)}</a:t></a:r>')
+
+
+def breadcrumb(section, topic_label, *, sp_id=_SP_ID_BREADCRUMB):
+    """Top strip bound to slideLayout4 body placeholder idx=10: bold {Section}
+    + non-bold " / {Topic Label}", Arial 10pt, breadcrumb color."""
+    return (f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="Breadcrumb"/>'
+            f'<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
+            f'<p:nvPr><p:ph type="body" sz="quarter" idx="10"/></p:nvPr></p:nvSpPr>'
+            f'<p:spPr><a:xfrm><a:off x="{_BREADCRUMB_X}" y="{_BREADCRUMB_Y}"/>'
+            f'<a:ext cx="{_BREADCRUMB_CX}" cy="{_BREADCRUMB_CY}"/></a:xfrm></p:spPr>'
+            f'<p:txBody><a:bodyPr/><a:lstStyle/><a:p>'
+            + _chrome_run(section, size=_SZ_BREADCRUMB, bold=True, color=_BREADCRUMB)
+            + _chrome_run(f" / {topic_label}", size=_SZ_BREADCRUMB, color=_BREADCRUMB)
+            + '</a:p></p:txBody></p:sp>')
+
+
+def slide_title(topic, takeaway, *, sp_id=_SP_ID_TITLE):
+    """Slide title bound to the layout title placeholder: single run
+    "{Topic} | {Finding}", Arial 20pt, dark."""
+    return (f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="Title"/>'
+            f'<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
+            f'<p:nvPr><p:ph type="title"/></p:nvPr></p:nvSpPr>'
+            f'<p:spPr><a:xfrm><a:off x="{_TITLE_X}" y="{_TITLE_Y}"/>'
+            f'<a:ext cx="{_TITLE_CX}" cy="{_TITLE_CY}"/></a:xfrm></p:spPr>'
+            f'<p:txBody><a:bodyPr rIns="0"/><a:lstStyle/><a:p>'
+            + _chrome_run(f"{topic} | {takeaway}", size=_SZ_SLIDE_TITLE, color=_DK)
+            + '</a:p></p:txBody></p:sp>')
+
+
+def preliminary_chip(*, sp_id=_SP_ID_PRELIM, text="Preliminary"):
+    """Top-right draft chip: draft-yellow fill, 1.5pt black border, 12pt bold.
+    Required on every body slide; exempt on cover / divider."""
+    return (f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="PrelimChip"/>'
+            f'<p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>'
+            f'<p:spPr><a:xfrm><a:off x="{_PRELIM_X}" y="{_PRELIM_Y}"/>'
+            f'<a:ext cx="{_PRELIM_CX}" cy="{_PRELIM_CY}"/></a:xfrm>'
+            f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+            f'<a:solidFill><a:srgbClr val="{_PRELIM}"/></a:solidFill>'
+            f'<a:ln w="19050"><a:solidFill><a:srgbClr val="{_BLACK}"/></a:solidFill></a:ln></p:spPr>'
+            f'<p:txBody><a:bodyPr wrap="square" anchor="ctr" lIns="45720" tIns="9144" '
+            f'rIns="45720" bIns="9144"/><a:lstStyle/><a:p><a:pPr algn="ctr"/>'
+            + _chrome_run(text, size=_SZ_PRELIM, bold=True, color=_BLACK)
+            + '</a:p></p:txBody></p:sp>')
+
+
+def source_note(text, *, sp_id=_SP_ID_SOURCES, y=_SOURCES_Y):
+    """Bottom strip: "Source: ...; ..." (singular "Source" per house style, even
+    with many sources; semicolon-separated, no parenthetical numbering; a Note line
+    may be combined via a pipe), Arial 8pt, top-anchored. Pass y to lift it above
+    content that reaches the default band."""
+    return (f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="Source"/>'
+            f'<p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>'
+            f'<p:spPr><a:xfrm><a:off x="{_SOURCES_X}" y="{y}"/>'
+            f'<a:ext cx="{_SOURCES_CX}" cy="{_SOURCES_CY}"/></a:xfrm>'
+            f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+            f'<a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>'
+            f'<p:txBody><a:bodyPr wrap="square" anchor="t" lIns="91440" tIns="45720" '
+            f'rIns="91440" bIns="45720"/><a:lstStyle/><a:p>'
+            + _chrome_run(text, size=_SZ_SOURCES, color=_DK)
+            + '</a:p></p:txBody></p:sp>')
+
+
+def layout_title(text, *, sp_id, name, body_pr_xml='<a:bodyPr/>'):
+    """A slide title that INHERITS its geometry from the slide layout (no explicit
+    xfrm) - for a source slide (e.g. slideLayout3) whose title is a bare layout
+    placeholder. The layout, not the module, owns title placement. Readable
+    replacement for a hand-inlined raw <p:sp> title."""
+    para = f'<a:p><a:r><a:rPr lang="en-US"/><a:t>{esc(text)}</a:t></a:r></a:p>'
+    return placeholder_sp(sp_id, name, ph_type="title", body_pr_xml=body_pr_xml,
+                          paragraphs=[para])
+
+
+def layout_placeholder(sp_id, name, *, ph_type=None, ph_sz=None, ph_idx=None,
+                       geom=None, paragraphs=None, body_pr_xml='<a:bodyPr/>'):
+    """A shape bound to a layout placeholder by (type, sz, idx), inheriting the
+    layout's geometry unless `geom` overrides it. Readable wrapper over the
+    placeholder primitive for richer layout-owned placeholders (subtitles, etc.)."""
+    return placeholder_sp(sp_id, name, ph_type=ph_type, ph_sz=ph_sz, ph_idx=ph_idx,
+                          geom=geom, paragraphs=paragraphs, body_pr_xml=body_pr_xml)
+
+
+@dataclass(frozen=True)
+class Sources:
+    """The house Sources band, as fields. `source` is a string or a tuple of
+    strings (joined with "; "); `note` prepends a "Note: ..." segment; `y` lifts
+    the band above content that reaches the default floor."""
+    source: object = None          # str | tuple[str, ...] | None
+    note: object = None            # str | None
+    y: object = None               # int | None
+
+    def text(self) -> str:
+        parts = []
+        if self.note:
+            parts.append(f"Note: {self.note}")
+        if self.source:
+            src = self.source if isinstance(self.source, str) else "; ".join(self.source)
+            parts.append(f"Source: {src}")
+        return " | ".join(parts)
+
+
+@dataclass(frozen=True)
+class Chrome:
+    """The editable house furniture of a body slide. Fields are plain text; the
+    geometry/ids/colors are private to deck_core.chrome. `section`/`topic` are
+    optional - omit them on a slide that carries no breadcrumb."""
+    title: str
+    takeaway: str = ""
+    section: object = None         # str | None - breadcrumb left segment
+    topic: object = None           # str | None - breadcrumb right segment
+    preliminary: bool = True
+    preliminary_text: str = "Preliminary"
+    sources: object = None         # Sources | str | None
+
+
+def body_slide(chrome: Chrome, body_xml: str) -> str:
+    """Assemble a complete <p:sld> from a Chrome record and the body XML: the
+    optional breadcrumb, the slide title, the optional Preliminary chip, the body,
+    and the optional Sources band. The body box clears the chrome regions, so
+    chrome and body never overlap."""
+    pieces = []
+    if chrome.section is not None:
+        pieces.append(breadcrumb(chrome.section, chrome.topic))
+    pieces.append(slide_title(chrome.title, chrome.takeaway))
+    if chrome.preliminary:
+        pieces.append(preliminary_chip(text=chrome.preliminary_text))
+    pieces.append(body_xml)
+    src = chrome.sources
+    if src is not None:
+        if isinstance(src, Sources):
+            pieces.append(source_note(src.text(), y=src.y) if src.y is not None
+                          else source_note(src.text()))
+        else:
+            pieces.append(source_note(src))
+    return slide("".join(pieces))

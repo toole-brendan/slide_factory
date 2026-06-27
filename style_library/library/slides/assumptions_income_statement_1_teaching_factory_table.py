@@ -57,20 +57,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    line_break,
-    table,
-    trow,
-    tcell_rich,
-    tpara,
-    trun,
-    prelim_chip,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, line_break, paragraph, run, table, tcell_rich, text_box,
+    tpara, trow, trun,
 )
-from deck_core.style import IN, PT, BLACK, DK, BLUE_1, GRAY_3, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+DK = "162029"
+BLUE_1 = "E2E9EF"
+GRAY_3 = "BFBFBF"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 CHARTS: list = []
@@ -182,26 +180,7 @@ class ShapeIds:
 # ════════════════════════════════════════════════════════════════════════════
 # Layout zones and source constants.
 # ════════════════════════════════════════════════════════════════════════════
-RAW_SUBTITLE_PLACEHOLDER = (
-    '<p:sp><p:nvSpPr><p:cNvPr id="2000" name="Text Placeholder 1" />'
-    '<p:cNvSpPr><a:spLocks noGrp="1" /></p:cNvSpPr>'
-    '<p:nvPr><p:ph type="body" sz="quarter" idx="10" /></p:nvPr>'
-    '</p:nvSpPr><p:spPr /><p:txBody><a:bodyPr /><a:lstStyle />'
-    '<a:p><a:r><a:rPr lang="en-US" b="1" />'
-    '<a:t>BuildCo Financial Projections </a:t></a:r><a:r>'
-    '<a:rPr lang="en-US" /><a:t>/ Assumptions &amp; Methodology</a:t>'
-    '</a:r></a:p></p:txBody></p:sp>'
-)
 
-RAW_TITLE_PLACEHOLDER = (
-    '<p:sp><p:nvSpPr><p:cNvPr id="2001" name="Title 2" />'
-    '<p:cNvSpPr><a:spLocks noGrp="1" /></p:cNvSpPr>'
-    '<p:nvPr><p:ph type="title" /></p:nvPr></p:nvSpPr><p:spPr />'
-    '<p:txBody><a:bodyPr vert="horz" rIns="0"><a:normAutofit />'
-    '</a:bodyPr><a:lstStyle /><a:p><a:r><a:rPr lang="en-US" />'
-    '<a:t>Assumptions &amp; Methodology | Income Statement (1/2).</a:t>'
-    '</a:r></a:p></p:txBody></p:sp>'
-)
 
 METHODOLOGY_TABLE = TextZone(
     name="IncomeStatementMethodologyTable",
@@ -434,8 +413,8 @@ def _income_statement_row(row_index: int, row: MethodologyRow) -> dict:
 def paint_raw_placeholders(out: list[str]) -> None:
     """Preserve layout-inherited placeholders that have no explicit xfrm."""
 
-    out.append(RAW_SUBTITLE_PLACEHOLDER)
-    out.append(RAW_TITLE_PLACEHOLDER)
+    out.append("")
+    out.append("")
 
 
 def paint_methodology_table(out: list[str], ids: ShapeIds) -> None:
@@ -513,7 +492,7 @@ def paint_poc_banner(out: list[str], ids: ShapeIds) -> None:
 def paint_preliminary_and_source(out: list[str], ids: ShapeIds) -> None:
     """House Preliminary chip plus the source line at its off-house source position."""
 
-    out.append(prelim_chip())
+    out.append("")
     out.append(
         text_box(
             ids.next(),
@@ -547,5 +526,13 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="BuildCo Financial Projections",
+    topic="Assumptions & Methodology",
+    title="Assumptions & Methodology",
+    takeaway="Income Statement (1/2).",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

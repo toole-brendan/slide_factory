@@ -55,11 +55,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide, run, paragraph, text_box, custom_geometry, connector, line_break, table, trow, tcell, tcell_rich, tpara, trun, tbreak, breadcrumb, title_placeholder, prelim_chip,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, column_chart, connector, custom_geometry, graphic_frame,
+    line_break, paragraph, run, table, tbreak, tcell, tcell_rich, text_box, tpara, trow,
+    trun,
 )
-from deck_core.charts import graphic_frame, column_chart
-from deck_core.style import IN, PT, BLACK, WHITE, DK, GRAY_1, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+GRAY_1 = "F2F2F2"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -361,13 +369,84 @@ _ANNOTATION_BOXES = [    # dated analysis-status annotation
     (7.196, 0.122, 3.9, 0.29, GRAY_1, BLACK, "Jan. ’26 analysis; Matson reported ’25 results end of Feb ‘26"),   # F2F2F2 off-white
 ]
 
-# Two think-cell status-icon geometries (check / cross), de-duplicated out of the
-# body into custom_geometry() calls. The bézier path data is intrinsic (custGeom),
-# so each path stays verbatim in ONE named constant; position / fill are params.
+# ── status icons: a colored disc with the check/cross knocked out ──
+# The source ships these as think-cell freeform <a:custGeom> shapes. We keep the
+# EXACT source vector (renders pixel-identical) but store it as a compact path DSL
+# instead of the multi-KB exported blob: think-cell's <a:gdLst>/<a:cxnLst> connection
+# metadata (the bulk of the export) draws nothing and is dropped, and the visible
+# path uses literal coordinates, so it round-trips losslessly.
+#   DSL: "Mx,y" moveTo | "Lx,y" lineTo | "Cx1,y1 x2,y2 x3,y3" cubic bezier | "Z" close
 _GLYPH_X = IN(8.302)       # status-icon column x (all 5 icons share it)   [shared x5]
 _GLYPH_SZ = IN(0.3)        # status-icon box (square)
-_GEOM_CHECK = "<a:custGeom><a:avLst /><a:gdLst><a:gd name=\"T0\" fmla=\"*/ 4549 w 4878\" /><a:gd name=\"T1\" fmla=\"*/ 3658 h 4877\" /><a:gd name=\"T2\" fmla=\"*/ 3659 w 4878\" /><a:gd name=\"T3\" fmla=\"*/ 4548 h 4877\" /><a:gd name=\"T4\" fmla=\"*/ 2439 w 4878\" /><a:gd name=\"T5\" fmla=\"*/ 4877 h 4877\" /><a:gd name=\"T6\" fmla=\"*/ 1220 w 4878\" /><a:gd name=\"T7\" fmla=\"*/ 4548 h 4877\" /><a:gd name=\"T8\" fmla=\"*/ 330 w 4878\" /><a:gd name=\"T9\" fmla=\"*/ 3658 h 4877\" /><a:gd name=\"T10\" fmla=\"*/ 0 w 4878\" /><a:gd name=\"T11\" fmla=\"*/ 2439 h 4877\" /><a:gd name=\"T12\" fmla=\"*/ 330 w 4878\" /><a:gd name=\"T13\" fmla=\"*/ 1219 h 4877\" /><a:gd name=\"T14\" fmla=\"*/ 1220 w 4878\" /><a:gd name=\"T15\" fmla=\"*/ 329 h 4877\" /><a:gd name=\"T16\" fmla=\"*/ 2439 w 4878\" /><a:gd name=\"T17\" fmla=\"*/ 0 h 4877\" /><a:gd name=\"T18\" fmla=\"*/ 3659 w 4878\" /><a:gd name=\"T19\" fmla=\"*/ 329 h 4877\" /><a:gd name=\"T20\" fmla=\"*/ 4549 w 4878\" /><a:gd name=\"T21\" fmla=\"*/ 1219 h 4877\" /><a:gd name=\"T22\" fmla=\"*/ 4878 w 4878\" /><a:gd name=\"T23\" fmla=\"*/ 2439 h 4877\" /><a:gd name=\"T24\" fmla=\"*/ 4549 w 4878\" /><a:gd name=\"T25\" fmla=\"*/ 3658 h 4877\" /><a:gd name=\"T26\" fmla=\"*/ 3963 w 4878\" /><a:gd name=\"T27\" fmla=\"*/ 1917 h 4877\" /><a:gd name=\"T28\" fmla=\"*/ 4013 w 4878\" /><a:gd name=\"T29\" fmla=\"*/ 1809 h 4877\" /><a:gd name=\"T30\" fmla=\"*/ 3963 w 4878\" /><a:gd name=\"T31\" fmla=\"*/ 1701 h 4877\" /><a:gd name=\"T32\" fmla=\"*/ 3747 w 4878\" /><a:gd name=\"T33\" fmla=\"*/ 1475 h 4877\" /><a:gd name=\"T34\" fmla=\"*/ 3634 w 4878\" /><a:gd name=\"T35\" fmla=\"*/ 1426 h 4877\" /><a:gd name=\"T36\" fmla=\"*/ 3521 w 4878\" /><a:gd name=\"T37\" fmla=\"*/ 1475 h 4877\" /><a:gd name=\"T38\" fmla=\"*/ 2046 w 4878\" /><a:gd name=\"T39\" fmla=\"*/ 2950 h 4877\" /><a:gd name=\"T40\" fmla=\"*/ 1358 w 4878\" /><a:gd name=\"T41\" fmla=\"*/ 2262 h 4877\" /><a:gd name=\"T42\" fmla=\"*/ 1244 w 4878\" /><a:gd name=\"T43\" fmla=\"*/ 2212 h 4877\" /><a:gd name=\"T44\" fmla=\"*/ 1131 w 4878\" /><a:gd name=\"T45\" fmla=\"*/ 2262 h 4877\" /><a:gd name=\"T46\" fmla=\"*/ 915 w 4878\" /><a:gd name=\"T47\" fmla=\"*/ 2488 h 4877\" /><a:gd name=\"T48\" fmla=\"*/ 866 w 4878\" /><a:gd name=\"T49\" fmla=\"*/ 2596 h 4877\" /><a:gd name=\"T50\" fmla=\"*/ 915 w 4878\" /><a:gd name=\"T51\" fmla=\"*/ 2704 h 4877\" /><a:gd name=\"T52\" fmla=\"*/ 1938 w 4878\" /><a:gd name=\"T53\" fmla=\"*/ 3727 h 4877\" /><a:gd name=\"T54\" fmla=\"*/ 2046 w 4878\" /><a:gd name=\"T55\" fmla=\"*/ 3776 h 4877\" /><a:gd name=\"T56\" fmla=\"*/ 2154 w 4878\" /><a:gd name=\"T57\" fmla=\"*/ 3727 h 4877\" /><a:gd name=\"T58\" fmla=\"*/ 3963 w 4878\" /><a:gd name=\"T59\" fmla=\"*/ 1917 h 4877\" /></a:gdLst><a:ahLst /><a:cxnLst><a:cxn ang=\"0\"><a:pos x=\"T0\" y=\"T1\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T2\" y=\"T3\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T4\" y=\"T5\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T6\" y=\"T7\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T8\" y=\"T9\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T10\" y=\"T11\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T12\" y=\"T13\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T14\" y=\"T15\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T16\" y=\"T17\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T18\" y=\"T19\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T20\" y=\"T21\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T22\" y=\"T23\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T24\" y=\"T25\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T26\" y=\"T27\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T28\" y=\"T29\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T30\" y=\"T31\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T32\" y=\"T33\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T34\" y=\"T35\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T36\" y=\"T37\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T38\" y=\"T39\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T40\" y=\"T41\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T42\" y=\"T43\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T44\" y=\"T45\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T46\" y=\"T47\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T48\" y=\"T49\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T50\" y=\"T51\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T52\" y=\"T53\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T54\" y=\"T55\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T56\" y=\"T57\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T58\" y=\"T59\" /></a:cxn></a:cxnLst><a:rect l=\"0\" t=\"0\" r=\"r\" b=\"b\" /><a:pathLst><a:path w=\"4878\" h=\"4877\"><a:moveTo><a:pt x=\"4549\" y=\"3658\" /></a:moveTo><a:cubicBezTo><a:pt x=\"4329\" y=\"4032\" /><a:pt x=\"4032\" y=\"4328\" /><a:pt x=\"3659\" y=\"4548\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3285\" y=\"4768\" /><a:pt x=\"2879\" y=\"4877\" /><a:pt x=\"2439\" y=\"4877\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"2000\" y=\"4877\" /><a:pt x=\"1594\" y=\"4768\" /><a:pt x=\"1220\" y=\"4548\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"846\" y=\"4328\" /><a:pt x=\"550\" y=\"4032\" /><a:pt x=\"330\" y=\"3658\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"110\" y=\"3284\" /><a:pt x=\"0\" y=\"2878\" /><a:pt x=\"0\" y=\"2439\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"0\" y=\"1999\" /><a:pt x=\"110\" y=\"1593\" /><a:pt x=\"330\" y=\"1219\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"550\" y=\"846\" /><a:pt x=\"846\" y=\"549\" /><a:pt x=\"1220\" y=\"329\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1594\" y=\"110\" /><a:pt x=\"2000\" y=\"0\" /><a:pt x=\"2439\" y=\"0\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"2879\" y=\"0\" /><a:pt x=\"3285\" y=\"110\" /><a:pt x=\"3659\" y=\"329\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"4032\" y=\"549\" /><a:pt x=\"4329\" y=\"846\" /><a:pt x=\"4549\" y=\"1219\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"4768\" y=\"1593\" /><a:pt x=\"4878\" y=\"1999\" /><a:pt x=\"4878\" y=\"2439\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"4878\" y=\"2878\" /><a:pt x=\"4768\" y=\"3284\" /><a:pt x=\"4549\" y=\"3658\" /></a:cubicBezTo><a:close /><a:moveTo><a:pt x=\"3963\" y=\"1917\" /></a:moveTo><a:cubicBezTo><a:pt x=\"3996\" y=\"1891\" /><a:pt x=\"4013\" y=\"1855\" /><a:pt x=\"4013\" y=\"1809\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"4013\" y=\"1763\" /><a:pt x=\"3996\" y=\"1727\" /><a:pt x=\"3963\" y=\"1701\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3747\" y=\"1475\" /><a:pt x=\"3747\" y=\"1475\" /><a:pt x=\"3747\" y=\"1475\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3714\" y=\"1442\" /><a:pt x=\"3677\" y=\"1426\" /><a:pt x=\"3634\" y=\"1426\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3591\" y=\"1426\" /><a:pt x=\"3554\" y=\"1442\" /><a:pt x=\"3521\" y=\"1475\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"2046\" y=\"2950\" /><a:pt x=\"2046\" y=\"2950\" /><a:pt x=\"2046\" y=\"2950\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1358\" y=\"2262\" /><a:pt x=\"1358\" y=\"2262\" /><a:pt x=\"1358\" y=\"2262\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1325\" y=\"2229\" /><a:pt x=\"1287\" y=\"2212\" /><a:pt x=\"1244\" y=\"2212\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1202\" y=\"2212\" /><a:pt x=\"1164\" y=\"2229\" /><a:pt x=\"1131\" y=\"2262\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"915\" y=\"2488\" /><a:pt x=\"915\" y=\"2488\" /><a:pt x=\"915\" y=\"2488\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"882\" y=\"2514\" /><a:pt x=\"866\" y=\"2550\" /><a:pt x=\"866\" y=\"2596\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"866\" y=\"2642\" /><a:pt x=\"882\" y=\"2678\" /><a:pt x=\"915\" y=\"2704\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1938\" y=\"3727\" /><a:pt x=\"1938\" y=\"3727\" /><a:pt x=\"1938\" y=\"3727\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1964\" y=\"3760\" /><a:pt x=\"2000\" y=\"3776\" /><a:pt x=\"2046\" y=\"3776\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"2092\" y=\"3776\" /><a:pt x=\"2128\" y=\"3760\" /><a:pt x=\"2154\" y=\"3727\" /></a:cubicBezTo><a:lnTo><a:pt x=\"3963\" y=\"1917\" /></a:lnTo><a:close /></a:path></a:pathLst></a:custGeom>"   # green check (Haken)
-_GEOM_CROSS = "<a:custGeom><a:avLst /><a:gdLst><a:gd name=\"T0\" fmla=\"*/ 2438 w 4877\" /><a:gd name=\"T1\" fmla=\"*/ 0 h 4877\" /><a:gd name=\"T2\" fmla=\"*/ 3658 w 4877\" /><a:gd name=\"T3\" fmla=\"*/ 329 h 4877\" /><a:gd name=\"T4\" fmla=\"*/ 4548 w 4877\" /><a:gd name=\"T5\" fmla=\"*/ 1219 h 4877\" /><a:gd name=\"T6\" fmla=\"*/ 4877 w 4877\" /><a:gd name=\"T7\" fmla=\"*/ 2439 h 4877\" /><a:gd name=\"T8\" fmla=\"*/ 4548 w 4877\" /><a:gd name=\"T9\" fmla=\"*/ 3658 h 4877\" /><a:gd name=\"T10\" fmla=\"*/ 3658 w 4877\" /><a:gd name=\"T11\" fmla=\"*/ 4548 h 4877\" /><a:gd name=\"T12\" fmla=\"*/ 2438 w 4877\" /><a:gd name=\"T13\" fmla=\"*/ 4877 h 4877\" /><a:gd name=\"T14\" fmla=\"*/ 1219 w 4877\" /><a:gd name=\"T15\" fmla=\"*/ 4548 h 4877\" /><a:gd name=\"T16\" fmla=\"*/ 329 w 4877\" /><a:gd name=\"T17\" fmla=\"*/ 3658 h 4877\" /><a:gd name=\"T18\" fmla=\"*/ 0 w 4877\" /><a:gd name=\"T19\" fmla=\"*/ 2439 h 4877\" /><a:gd name=\"T20\" fmla=\"*/ 329 w 4877\" /><a:gd name=\"T21\" fmla=\"*/ 1219 h 4877\" /><a:gd name=\"T22\" fmla=\"*/ 1219 w 4877\" /><a:gd name=\"T23\" fmla=\"*/ 329 h 4877\" /><a:gd name=\"T24\" fmla=\"*/ 2438 w 4877\" /><a:gd name=\"T25\" fmla=\"*/ 0 h 4877\" /><a:gd name=\"T26\" fmla=\"*/ 3638 w 4877\" /><a:gd name=\"T27\" fmla=\"*/ 3078 h 4877\" /><a:gd name=\"T28\" fmla=\"*/ 2989 w 4877\" /><a:gd name=\"T29\" fmla=\"*/ 2439 h 4877\" /><a:gd name=\"T30\" fmla=\"*/ 3638 w 4877\" /><a:gd name=\"T31\" fmla=\"*/ 1799 h 4877\" /><a:gd name=\"T32\" fmla=\"*/ 3668 w 4877\" /><a:gd name=\"T33\" fmla=\"*/ 1716 h 4877\" /><a:gd name=\"T34\" fmla=\"*/ 3638 w 4877\" /><a:gd name=\"T35\" fmla=\"*/ 1632 h 4877\" /><a:gd name=\"T36\" fmla=\"*/ 3245 w 4877\" /><a:gd name=\"T37\" fmla=\"*/ 1239 h 4877\" /><a:gd name=\"T38\" fmla=\"*/ 3166 w 4877\" /><a:gd name=\"T39\" fmla=\"*/ 1209 h 4877\" /><a:gd name=\"T40\" fmla=\"*/ 3078 w 4877\" /><a:gd name=\"T41\" fmla=\"*/ 1239 h 4877\" /><a:gd name=\"T42\" fmla=\"*/ 2438 w 4877\" /><a:gd name=\"T43\" fmla=\"*/ 1888 h 4877\" /><a:gd name=\"T44\" fmla=\"*/ 1799 w 4877\" /><a:gd name=\"T45\" fmla=\"*/ 1239 h 4877\" /><a:gd name=\"T46\" fmla=\"*/ 1716 w 4877\" /><a:gd name=\"T47\" fmla=\"*/ 1209 h 4877\" /><a:gd name=\"T48\" fmla=\"*/ 1632 w 4877\" /><a:gd name=\"T49\" fmla=\"*/ 1239 h 4877\" /><a:gd name=\"T50\" fmla=\"*/ 1239 w 4877\" /><a:gd name=\"T51\" fmla=\"*/ 1632 h 4877\" /><a:gd name=\"T52\" fmla=\"*/ 1209 w 4877\" /><a:gd name=\"T53\" fmla=\"*/ 1711 h 4877\" /><a:gd name=\"T54\" fmla=\"*/ 1239 w 4877\" /><a:gd name=\"T55\" fmla=\"*/ 1799 h 4877\" /><a:gd name=\"T56\" fmla=\"*/ 1888 w 4877\" /><a:gd name=\"T57\" fmla=\"*/ 2439 h 4877\" /><a:gd name=\"T58\" fmla=\"*/ 1239 w 4877\" /><a:gd name=\"T59\" fmla=\"*/ 3078 h 4877\" /><a:gd name=\"T60\" fmla=\"*/ 1209 w 4877\" /><a:gd name=\"T61\" fmla=\"*/ 3161 h 4877\" /><a:gd name=\"T62\" fmla=\"*/ 1239 w 4877\" /><a:gd name=\"T63\" fmla=\"*/ 3245 h 4877\" /><a:gd name=\"T64\" fmla=\"*/ 1632 w 4877\" /><a:gd name=\"T65\" fmla=\"*/ 3638 h 4877\" /><a:gd name=\"T66\" fmla=\"*/ 1711 w 4877\" /><a:gd name=\"T67\" fmla=\"*/ 3668 h 4877\" /><a:gd name=\"T68\" fmla=\"*/ 1799 w 4877\" /><a:gd name=\"T69\" fmla=\"*/ 3638 h 4877\" /><a:gd name=\"T70\" fmla=\"*/ 2438 w 4877\" /><a:gd name=\"T71\" fmla=\"*/ 2989 h 4877\" /><a:gd name=\"T72\" fmla=\"*/ 3078 w 4877\" /><a:gd name=\"T73\" fmla=\"*/ 3638 h 4877\" /><a:gd name=\"T74\" fmla=\"*/ 3161 w 4877\" /><a:gd name=\"T75\" fmla=\"*/ 3668 h 4877\" /><a:gd name=\"T76\" fmla=\"*/ 3245 w 4877\" /><a:gd name=\"T77\" fmla=\"*/ 3638 h 4877\" /><a:gd name=\"T78\" fmla=\"*/ 3638 w 4877\" /><a:gd name=\"T79\" fmla=\"*/ 3245 h 4877\" /><a:gd name=\"T80\" fmla=\"*/ 3668 w 4877\" /><a:gd name=\"T81\" fmla=\"*/ 3166 h 4877\" /><a:gd name=\"T82\" fmla=\"*/ 3638 w 4877\" /><a:gd name=\"T83\" fmla=\"*/ 3078 h 4877\" /></a:gdLst><a:ahLst /><a:cxnLst><a:cxn ang=\"0\"><a:pos x=\"T0\" y=\"T1\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T2\" y=\"T3\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T4\" y=\"T5\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T6\" y=\"T7\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T8\" y=\"T9\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T10\" y=\"T11\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T12\" y=\"T13\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T14\" y=\"T15\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T16\" y=\"T17\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T18\" y=\"T19\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T20\" y=\"T21\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T22\" y=\"T23\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T24\" y=\"T25\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T26\" y=\"T27\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T28\" y=\"T29\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T30\" y=\"T31\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T32\" y=\"T33\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T34\" y=\"T35\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T36\" y=\"T37\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T38\" y=\"T39\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T40\" y=\"T41\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T42\" y=\"T43\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T44\" y=\"T45\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T46\" y=\"T47\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T48\" y=\"T49\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T50\" y=\"T51\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T52\" y=\"T53\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T54\" y=\"T55\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T56\" y=\"T57\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T58\" y=\"T59\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T60\" y=\"T61\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T62\" y=\"T63\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T64\" y=\"T65\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T66\" y=\"T67\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T68\" y=\"T69\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T70\" y=\"T71\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T72\" y=\"T73\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T74\" y=\"T75\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T76\" y=\"T77\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T78\" y=\"T79\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T80\" y=\"T81\" /></a:cxn><a:cxn ang=\"0\"><a:pos x=\"T82\" y=\"T83\" /></a:cxn></a:cxnLst><a:rect l=\"0\" t=\"0\" r=\"r\" b=\"b\" /><a:pathLst><a:path w=\"4877\" h=\"4877\"><a:moveTo><a:pt x=\"2438\" y=\"0\" /></a:moveTo><a:cubicBezTo><a:pt x=\"2878\" y=\"0\" /><a:pt x=\"3284\" y=\"110\" /><a:pt x=\"3658\" y=\"329\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"4032\" y=\"549\" /><a:pt x=\"4328\" y=\"846\" /><a:pt x=\"4548\" y=\"1219\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"4767\" y=\"1593\" /><a:pt x=\"4877\" y=\"1999\" /><a:pt x=\"4877\" y=\"2439\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"4877\" y=\"2878\" /><a:pt x=\"4767\" y=\"3284\" /><a:pt x=\"4548\" y=\"3658\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"4328\" y=\"4032\" /><a:pt x=\"4032\" y=\"4328\" /><a:pt x=\"3658\" y=\"4548\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3284\" y=\"4768\" /><a:pt x=\"2878\" y=\"4877\" /><a:pt x=\"2438\" y=\"4877\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1999\" y=\"4877\" /><a:pt x=\"1593\" y=\"4768\" /><a:pt x=\"1219\" y=\"4548\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"845\" y=\"4328\" /><a:pt x=\"549\" y=\"4032\" /><a:pt x=\"329\" y=\"3658\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"109\" y=\"3284\" /><a:pt x=\"0\" y=\"2878\" /><a:pt x=\"0\" y=\"2439\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"0\" y=\"1999\" /><a:pt x=\"109\" y=\"1593\" /><a:pt x=\"329\" y=\"1219\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"549\" y=\"846\" /><a:pt x=\"845\" y=\"549\" /><a:pt x=\"1219\" y=\"329\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1593\" y=\"110\" /><a:pt x=\"1999\" y=\"0\" /><a:pt x=\"2438\" y=\"0\" /></a:cubicBezTo><a:close /><a:moveTo><a:pt x=\"3638\" y=\"3078\" /></a:moveTo><a:cubicBezTo><a:pt x=\"2989\" y=\"2439\" /><a:pt x=\"2989\" y=\"2439\" /><a:pt x=\"2989\" y=\"2439\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3638\" y=\"1799\" /><a:pt x=\"3638\" y=\"1799\" /><a:pt x=\"3638\" y=\"1799\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3658\" y=\"1773\" /><a:pt x=\"3668\" y=\"1745\" /><a:pt x=\"3668\" y=\"1716\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3668\" y=\"1686\" /><a:pt x=\"3658\" y=\"1659\" /><a:pt x=\"3638\" y=\"1632\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3245\" y=\"1239\" /><a:pt x=\"3245\" y=\"1239\" /><a:pt x=\"3245\" y=\"1239\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3225\" y=\"1219\" /><a:pt x=\"3199\" y=\"1209\" /><a:pt x=\"3166\" y=\"1209\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3133\" y=\"1209\" /><a:pt x=\"3104\" y=\"1219\" /><a:pt x=\"3078\" y=\"1239\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"2438\" y=\"1888\" /><a:pt x=\"2438\" y=\"1888\" /><a:pt x=\"2438\" y=\"1888\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1799\" y=\"1239\" /><a:pt x=\"1799\" y=\"1239\" /><a:pt x=\"1799\" y=\"1239\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1773\" y=\"1219\" /><a:pt x=\"1745\" y=\"1209\" /><a:pt x=\"1716\" y=\"1209\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1686\" y=\"1209\" /><a:pt x=\"1658\" y=\"1219\" /><a:pt x=\"1632\" y=\"1239\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1239\" y=\"1632\" /><a:pt x=\"1239\" y=\"1632\" /><a:pt x=\"1239\" y=\"1632\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1219\" y=\"1652\" /><a:pt x=\"1209\" y=\"1678\" /><a:pt x=\"1209\" y=\"1711\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1209\" y=\"1744\" /><a:pt x=\"1219\" y=\"1773\" /><a:pt x=\"1239\" y=\"1799\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1888\" y=\"2439\" /><a:pt x=\"1888\" y=\"2439\" /><a:pt x=\"1888\" y=\"2439\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1239\" y=\"3078\" /><a:pt x=\"1239\" y=\"3078\" /><a:pt x=\"1239\" y=\"3078\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1219\" y=\"3104\" /><a:pt x=\"1209\" y=\"3132\" /><a:pt x=\"1209\" y=\"3161\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1209\" y=\"3191\" /><a:pt x=\"1219\" y=\"3219\" /><a:pt x=\"1239\" y=\"3245\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1632\" y=\"3638\" /><a:pt x=\"1632\" y=\"3638\" /><a:pt x=\"1632\" y=\"3638\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1652\" y=\"3658\" /><a:pt x=\"1678\" y=\"3668\" /><a:pt x=\"1711\" y=\"3668\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"1744\" y=\"3668\" /><a:pt x=\"1773\" y=\"3658\" /><a:pt x=\"1799\" y=\"3638\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"2438\" y=\"2989\" /><a:pt x=\"2438\" y=\"2989\" /><a:pt x=\"2438\" y=\"2989\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3078\" y=\"3638\" /><a:pt x=\"3078\" y=\"3638\" /><a:pt x=\"3078\" y=\"3638\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3104\" y=\"3658\" /><a:pt x=\"3132\" y=\"3668\" /><a:pt x=\"3161\" y=\"3668\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3191\" y=\"3668\" /><a:pt x=\"3219\" y=\"3658\" /><a:pt x=\"3245\" y=\"3638\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3638\" y=\"3245\" /><a:pt x=\"3638\" y=\"3245\" /><a:pt x=\"3638\" y=\"3245\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3658\" y=\"3225\" /><a:pt x=\"3668\" y=\"3199\" /><a:pt x=\"3668\" y=\"3166\" /></a:cubicBezTo><a:cubicBezTo><a:pt x=\"3668\" y=\"3134\" /><a:pt x=\"3658\" y=\"3104\" /><a:pt x=\"3638\" y=\"3078\" /></a:cubicBezTo><a:close /></a:path></a:pathLst></a:custGeom>"   # red cross (Kreuz)
+
+
+def _cust_geom_from_d(w: int, h: int, d: str) -> str:
+    """Compact path string -> a DrawingML <a:custGeom> (a real freeform vector, not
+    a text glyph). Commands: Mx,y / Lx,y / Cx1,y1 x2,y2 x3,y3 / Z. Coordinates are
+    verbatim from the source slide; only think-cell's non-rendering gdLst/cxnLst is
+    dropped, so the icon renders identically to the source."""
+    def pt(token: str) -> str:
+        x, y = token.split(",", 1)
+        return f'<a:pt x="{x}" y="{y}"/>'
+    toks = d.split()
+    out = [f'<a:custGeom><a:avLst/><a:pathLst><a:path w="{w}" h="{h}">']
+    i = 0
+    while i < len(toks):
+        tok = toks[i]
+        op = tok[0]
+        if op == "M":
+            out.append(f"<a:moveTo>{pt(tok[1:])}</a:moveTo>")
+            i += 1
+        elif op == "L":
+            out.append(f"<a:lnTo>{pt(tok[1:])}</a:lnTo>")
+            i += 1
+        elif op == "C":
+            out.append("<a:cubicBezTo>" + pt(tok[1:]) + pt(toks[i + 1]) + pt(toks[i + 2]) + "</a:cubicBezTo>")
+            i += 3
+        elif tok == "Z":
+            out.append("<a:close/>")
+            i += 1
+        else:
+            raise ValueError(f"Unsupported path token: {tok!r}")
+    out.append("</a:path></a:pathLst></a:custGeom>")
+    return "".join(out)
+
+# Verbatim source path data (slide 134 "Haken, check" / "Cross, kreuz"), compacted.
+_CHECK_D = (
+    "M4549,3658 C4329,4032 4032,4328 3659,4548 C3285,4768 2879,4877 2439,4877 C2000,4877 1594,4768 1220,4548 C846,4328 "
+    "550,4032 330,3658 C110,3284 0,2878 0,2439 C0,1999 110,1593 330,1219 C550,846 846,549 1220,329 C1594,110 2000,0 2439,0 "
+    "C2879,0 3285,110 3659,329 C4032,549 4329,846 4549,1219 C4768,1593 4878,1999 4878,2439 C4878,2878 4768,3284 4549,3658 Z "
+    "M3963,1917 C3996,1891 4013,1855 4013,1809 C4013,1763 3996,1727 3963,1701 C3747,1475 3747,1475 3747,1475 C3714,1442 "
+    "3677,1426 3634,1426 C3591,1426 3554,1442 3521,1475 C2046,2950 2046,2950 2046,2950 C1358,2262 1358,2262 1358,2262 "
+    "C1325,2229 1287,2212 1244,2212 C1202,2212 1164,2229 1131,2262 C915,2488 915,2488 915,2488 C882,2514 866,2550 866,2596 "
+    "C866,2642 882,2678 915,2704 C1938,3727 1938,3727 1938,3727 C1964,3760 2000,3776 2046,3776 C2092,3776 2128,3760 "
+    "2154,3727 L3963,1917 Z"
+)
+_CROSS_D = (
+    "M2438,0 C2878,0 3284,110 3658,329 C4032,549 4328,846 4548,1219 C4767,1593 4877,1999 4877,2439 C4877,2878 4767,3284 "
+    "4548,3658 C4328,4032 4032,4328 3658,4548 C3284,4768 2878,4877 2438,4877 C1999,4877 1593,4768 1219,4548 C845,4328 "
+    "549,4032 329,3658 C109,3284 0,2878 0,2439 C0,1999 109,1593 329,1219 C549,846 845,549 1219,329 C1593,110 1999,0 2438,0 "
+    "Z M3638,3078 C2989,2439 2989,2439 2989,2439 C3638,1799 3638,1799 3638,1799 C3658,1773 3668,1745 3668,1716 C3668,1686 "
+    "3658,1659 3638,1632 C3245,1239 3245,1239 3245,1239 C3225,1219 3199,1209 3166,1209 C3133,1209 3104,1219 3078,1239 "
+    "C2438,1888 2438,1888 2438,1888 C1799,1239 1799,1239 1799,1239 C1773,1219 1745,1209 1716,1209 C1686,1209 1658,1219 "
+    "1632,1239 C1239,1632 1239,1632 1239,1632 C1219,1652 1209,1678 1209,1711 C1209,1744 1219,1773 1239,1799 C1888,2439 "
+    "1888,2439 1888,2439 C1239,3078 1239,3078 1239,3078 C1219,3104 1209,3132 1209,3161 C1209,3191 1219,3219 1239,3245 "
+    "C1632,3638 1632,3638 1632,3638 C1652,3658 1678,3668 1711,3668 C1744,3668 1773,3658 1799,3638 C2438,2989 2438,2989 "
+    "2438,2989 C3078,3638 3078,3638 3078,3638 C3104,3658 3132,3668 3161,3668 C3191,3668 3219,3658 3245,3638 C3638,3245 "
+    "3638,3245 3638,3245 C3658,3225 3668,3199 3668,3166 C3668,3134 3658,3104 3638,3078 Z"
+)
+_GEOM_CHECK = _cust_geom_from_d(4878, 4877, _CHECK_D)   # green check (Haken)
+_GEOM_CROSS = _cust_geom_from_d(4877, 4877, _CROSS_D)   # red cross (Kreuz)
+
+# (kind, y_in, fill) x5 — three shoreside crosses, two vessel-ops checks (body call order)
+_STATUS_ICONS = (
+    ("cross", 2.367, "C00000"),
+    ("cross", 2.995, "C00000"),
+    ("cross", 3.637, "C00000"),
+    ("check", 4.264, "2E7D32"),
+    ("check", 4.911, "2E7D32"),
+)
+_STATUS_GEOMS = {"check": ("Haken, check", _GEOM_CHECK), "cross": ("Cross, kreuz", _GEOM_CROSS)}
 
 
 # ── table-cell layout commentary ──
@@ -405,8 +484,8 @@ def _body() -> str:
         out.append(text_box(n(), "Label", _CAT_X, IN(_y), IN(_cx), _CAT_H, [paragraph([run(_t, size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
     out.append(text_box(n(), "Text Placeholder 25", IN(0.837), IN(5.307), IN(0.997), _TXT_H, [paragraph([run("Fuel Surcharge", size=PT(10), color=BLACK, font=FONT), run("1", size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
     # ── chrome ──
-    out.append(breadcrumb("Carrier Entry Point Attractiveness", "Matson Test Case"))
-    out.append(title_placeholder("Freight Charges", "~70% of westbound freight charges are directly related to vessel operations; other charges pertain to shoreside activities."))
+    out.append("")
+    out.append("")
     # Native comparison table: col_widths defines the four columns and each
     # trow(h=...) is a minimum. Repeated cell insets/anchor can encode row/
     # column padding and vertical alignment; align/mar_l/indent place text.
@@ -454,18 +533,16 @@ def _body() -> str:
             cell("Pasha’s rates calculator breaks out each charge, allowing for isolation of Basic Ocean Rate and Fuel Adjustment Factor", bold=True, italic=True, align="ctr", span=4),
         ], h=IN(0.636)),
     ]))
-    # status icons (check/cross) — custom_geometry() over 2 deduped path constants
-    out.append(custom_geometry(n(), "Haken, check", _GLYPH_X, IN(4.264), _GLYPH_SZ, _GLYPH_SZ, _GEOM_CHECK, fill="2E7D32"))   # 2E7D32 green
-    out.append(custom_geometry(n(), "Haken, check", _GLYPH_X, IN(4.911), _GLYPH_SZ, _GLYPH_SZ, _GEOM_CHECK, fill="2E7D32"))   # 2E7D32 green
-    out.append(custom_geometry(n(), "Cross, kreuz", _GLYPH_X, IN(2.367), _GLYPH_SZ, _GLYPH_SZ, _GEOM_CROSS, fill="C00000"))   # C00000 dark red
-    out.append(custom_geometry(n(), "Cross, kreuz", _GLYPH_X, IN(2.995), _GLYPH_SZ, _GLYPH_SZ, _GEOM_CROSS, fill="C00000"))   # C00000 dark red
-    out.append(custom_geometry(n(), "Cross, kreuz", _GLYPH_X, IN(3.637), _GLYPH_SZ, _GLYPH_SZ, _GEOM_CROSS, fill="C00000"))   # C00000 dark red
+    # status icons: a colored disc with the check/cross knocked out (verbatim source path)
+    for _kind, _y, _fill in _STATUS_ICONS:
+        _name, _geom = _STATUS_GEOMS[_kind]
+        out.append(custom_geometry(n(), _name, _GLYPH_X, IN(_y), _GLYPH_SZ, _GLYPH_SZ, _geom, fill=_fill))
     for _x, _y, _cx, _cy, _fill, _lc, _t in _GROUP_CAPTIONS:
         out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr"))
     for _x, _y, _cx, _cy, _fill, _lc, _t in _ANNOTATION_BOXES:
         out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr"))
     out.append(text_box(n(), "Rectangle 326", IN(0.439), IN(4.009), IN(1.965), IN(1.264), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color="969696", anchor="ctr"))   # 969696 gray outline
-    out.append(prelim_chip())
+    out.append("")
     out.append(text_box(n(), "Rectangle 407", IN(0.495), IN(6.681), IN(12.367), IN(0.317), [paragraph([run("Note: (1) Matson and Pasha charge a Fuel Surcharge of 16.5% as of September 2025; Basic Ocean Rates largely derived from Pasha Hawaii, whereas Terminal Charges are specific to Matson", size=PT(8), color=BLACK, font=FONT), line_break(), run("Source: ", size=PT(8), color=BLACK, font=FONT), run("Pasha Hawaii", size=PT(8), color=BLACK, font=FONT), run("; ", size=PT(8), color=BLACK, font=FONT), run("Aloha Freight", size=PT(8), color=BLACK, font=FONT), run("; ", size=PT(8), color=BLACK, font=FONT), run("Hawaii Department of Transportation", size=PT(8), color=BLACK, font=FONT)], line_spacing=100000)], fill=None, line_color="none"))   # 000000 black
     out.append(text_box(n(), "Rectangle 453", IN(6.153), IN(4.094), IN(6.643), IN(1.959), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color="FB6B3C", line_width=19050, anchor="ctr"))   # FB6B3C orange outline
     out.append(text_box(n(), "Rectangle 465", IN(7.548), IN(5.909), IN(5.054), IN(0.293), [paragraph([run("Directly related to vessel operations; percentage varies based on basic ocean rate, fuel surcharge, discounts, and other factors ", size=PT(10), bold=True, color="FB6B3C", font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white
@@ -478,5 +555,13 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Carrier Entry Point Attractiveness",
+    topic="Matson Test Case",
+    title="Freight Charges",
+    takeaway="~70% of westbound freight charges are directly related to vessel operations; other charges pertain to shoreside activities.",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

@@ -46,31 +46,34 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from deck_core.authoring import (
-    slide,
-    run,
-    paragraph,
-    line_break,
-    text_box,
-    connector,
-    table,
-    trow,
-    tpara,
-    trun,
-    tbreak,
-    breadcrumb,
-    title_placeholder,
-    prelim_chip,
-    IN,
-    PT,
-    BLACK,
-    WHITE,
-    BLUE_1,
-    GRAY_1,
-    GRAY_2,
-    FONT,
-    edge,
-    rcell,
+    Chrome, IN, PT, body_slide, connector, line_break, paragraph, run, table, tbreak,
+    tcell_rich, text_box, tpara, trow, trun,
 )
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+BLUE_1 = "E2E9EF"
+GRAY_1 = "F2F2F2"
+GRAY_2 = "D9D9D9"
+FONT = "Arial"
+
+
+# Local table-cell kit (was deck_core.table_kit).
+def edge(color, w=12700):
+    """One cell-border edge dict (default 1pt hairline)."""
+    return {"color": color, "width": w}
+
+def bd(L=None, R=None, T=None, B=None):
+    """Border map from only the sides drawn; omitted sides render no-fill."""
+    return {k: v for k, v in (("L", L), ("R", R), ("T", T), ("B", B)) if v is not None} or None
+
+def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
+          l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, **edges):
+    """Multi-paragraph rich cell; borders via L/R/T/B=edge(...)."""
+    return tcell_rich(paras, fill=fill, grid_span=span, row_span=rowspan, anchor=anchor,
+                      l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=bd(**edges))
 
 LAYOUT = "slideLayout4"
 
@@ -302,9 +305,9 @@ def paint_stage_headers(out: list[str], n) -> None:
 
 
 def paint_chrome(out: list[str]) -> None:
-    out.append(breadcrumb("Commercial Maritime Value Chain", "Overview"))
-    out.append(title_placeholder("Value Chain (Maritime Transport)", "Shipbuilders capture the least value (2-6% EBIT margins); margin expansion likely requires vertical integration."))
-    out.append(prelim_chip())
+    out.append("")
+    out.append("")
+    out.append("")
 
 
 def paint_archetype_nodes(out: list[str], n) -> None:
@@ -370,5 +373,13 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Commercial Maritime Value Chain",
+    topic="Overview",
+    title="Value Chain (Maritime Transport)",
+    takeaway="Shipbuilders capture the least value (2-6% EBIT margins); margin expansion likely requires vertical integration.",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

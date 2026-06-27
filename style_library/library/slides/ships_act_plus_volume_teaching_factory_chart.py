@@ -31,7 +31,7 @@ TEXT-FIT PRECEDENT
     type: Arial 12pt, bold, centered, 100% line spacing
     content: one sentence; works as a pale-blue chart overlay caption
   source_note:
-    geometry: house sources_line()
+    geometry: house source_note()
     type: house source-note styling
     content: one very long Note/Source line; this is dense but source-faithful
   confidence_scale:
@@ -62,20 +62,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 from xml.sax.saxutils import escape as _xml_escape
 
-from deck_core.ooxml import XML_DECL, NS_CHART
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    connector,
-    breadcrumb,
-    title_placeholder,
-    prelim_chip,
-    sources_line,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, connector, graphic_frame, paragraph, run, text_box,
 )
-from deck_core.charts import graphic_frame, _build_embed_xlsx
-from deck_core.style import IN, PT, BLACK, WHITE, DK, FONT
+
+from deck_core.charts import _build_embed_xlsx
+
+from deck_core.ooxml import NS_CHART, XML_DECL
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -944,12 +944,9 @@ def paint_legend_panel_and_keys(out: list[str], ids: ShapeIds) -> None:
 
 
 def paint_chrome_and_summary(out: list[str], ids: ShapeIds) -> None:
-    out.append(breadcrumb("US-Built Ship Demand", "With SHIPS Act"))
+    out.append("")
     out.append(
-        title_placeholder(
-            "SHIPS Act “Plus” Volume",
-            "Demand declines after mid-2030s as SCF and other programs reach fleet caps; path to Phase 2 and beyond requires additional demand signals.",
-        )
+        ""
     )
     out.append(
         text_box(
@@ -993,7 +990,7 @@ def paint_pattern_swatch_and_chips(out: list[str], ids: ShapeIds) -> None:
             anchor="ctr",
         )
     )
-    out.append(prelim_chip())
+    out.append("")
     out.append(
         text_box(
             ids.next(),
@@ -1028,7 +1025,7 @@ def paint_late_rules_and_scale(out: list[str], ids: ShapeIds) -> None:
 
 
 def paint_notes_and_callouts(out: list[str], ids: ShapeIds) -> None:
-    out.append(sources_line(SOURCE_NOTE))
+    out.append("")
     for callout in CALLOUTS:
         out.append(
             text_box(
@@ -1074,5 +1071,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="US-Built Ship Demand",
+    topic="With SHIPS Act",
+    title="SHIPS Act “Plus” Volume",
+    takeaway="Demand declines after mid-2030s as SCF and other programs reach fleet caps; path to Phase 2 and beyond requires additional demand signals.",
+    sources=SOURCE_NOTE,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

@@ -50,26 +50,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    connector,
-    line_break,
-    table,
-    trow,
-    tcell,
-    tcell_rich,
-    tpara,
-    trun,
-    tbreak,
-    breadcrumb,
-    title_placeholder,
-    prelim_chip,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, column_chart, connector, graphic_frame, line_break,
+    paragraph, run, table, tbreak, tcell, tcell_rich, text_box, tpara, trow, trun,
 )
-from deck_core.charts import graphic_frame, column_chart
-from deck_core.style import IN, PT, BLACK, WHITE, BREADCRUMB, GRAY_2, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+BREADCRUMB = "44505C"
+GRAY_2 = "D9D9D9"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -524,10 +516,7 @@ def _empty_para(align: str = "ctr"):
 def paint_opening_chrome(out: list[str], ids: ShapeIds) -> None:
     # Source paint order puts the title before the off-house note and breadcrumb.
     out.append(
-        title_placeholder(
-            "SHIPS Act Captive Demand",
-            "MSTF can support ~100 more vessels than legally mandated demand for SHIPS Act.",
-        )
+        ""
     )
     out.append(
         text_box(
@@ -557,7 +546,7 @@ def paint_opening_chrome(out: list[str], ids: ShapeIds) -> None:
             line_color="none",
         )
     )
-    out.append(breadcrumb("US-Built Ship Demand", "With SHIPS Act"))
+    out.append("")
 
 
 def paint_mandate_table(out: list[str], ids: ShapeIds) -> None:
@@ -832,7 +821,7 @@ def paint_scenario_annotations(out: list[str], ids: ShapeIds) -> None:
             anchor="ctr",
         )
     )
-    out.append(prelim_chip())
+    out.append("")
     out.append(
         text_box(
             ids.next(),
@@ -916,5 +905,13 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="US-Built Ship Demand",
+    topic="With SHIPS Act",
+    title="SHIPS Act Captive Demand",
+    takeaway="MSTF can support ~100 more vessels than legally mandated demand for SHIPS Act.",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

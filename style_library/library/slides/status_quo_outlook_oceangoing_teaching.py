@@ -59,11 +59,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide, run, paragraph, text_box, line_break, table, trow, tcell, tcell_rich, tpara, trun, breadcrumb, title_placeholder, prelim_chip,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, column_chart, graphic_frame, line_break, paragraph, run,
+    table, tcell, tcell_rich, text_box, tpara, trow, trun,
 )
-from deck_core.charts import graphic_frame, column_chart
-from deck_core.style import IN, PT, BLACK, WHITE, GRAY_1, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+GRAY_1 = "F2F2F2"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -610,8 +616,8 @@ def _body() -> str:
     out.append(text_box(n(), "Text Placeholder 25", IN(1.674), IN(2.837), IN(0.115), IN(0.167), [paragraph([run("4", size=PT(10), font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # 000000 black
     out.append(text_box(n(), "Text Placeholder 25", IN(1.946), IN(2.837), IN(0.115), IN(0.167), [paragraph([run("4", size=PT(10), font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # 000000 black
     # ── chrome ──
-    out.append(breadcrumb("US-Built Ship Demand", "Without SHIPS Act"))
-    out.append(title_placeholder("Status Quo Outlook (Oceangoing Commercial)", "Replacing retirements unlikely to support serial production, preventing meaningful newbuild cost reductions."))
+    out.append("")
+    out.append("")
     # ── table — avg retirement replacements required per year ’26-’50 ──
     out.append(_replacement_table(n()))
     # ── legend — Retirements frame + Orderbook frame, archetype keys +
@@ -636,7 +642,7 @@ def _body() -> str:
     out.append(text_box(n(), "TextBox 716", IN(10.694), IN(1.442), IN(2.101), IN(0.234), [paragraph([run("Does not support serial production", size=PT(10), font=FONT)], line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none"))   # 000000 black
     out.append(text_box(n(), "Rectangle 717", IN(10.438), IN(1.187), IN(0.301), IN(0.26), [paragraph([run("#", size=PT(16), bold=True, color="007770", font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color="none", anchor="ctr"))   # 007770 teal
     out.append(text_box(n(), "TextBox 718", IN(10.694), IN(1.2), IN(2.101), IN(0.234), [paragraph([run("Supports serial production", size=PT(10), font=FONT)], line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none"))   # 000000 black
-    out.append(prelim_chip())
+    out.append("")
     # ── Hanwha callout (wedge over the chart) ──
     out.append(text_box(n(), "Speech Bubble: Rectangle 2", IN(2.239), IN(3.166), IN(1.501), IN(0.416), [paragraph([run("12x purchased by Hanwha Shipping", size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color=BLACK, prst="wedgeRectCallout", geom_adj={"adj1": "val -59329", "adj2": "val -21373"}, anchor="ctr"))   # 000000 black outline
     # ── scenario chip (top-right) ──
@@ -644,5 +650,13 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="US-Built Ship Demand",
+    topic="Without SHIPS Act",
+    title="Status Quo Outlook (Oceangoing Commercial)",
+    takeaway="Replacing retirements unlikely to support serial production, preventing meaningful newbuild cost reductions.",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

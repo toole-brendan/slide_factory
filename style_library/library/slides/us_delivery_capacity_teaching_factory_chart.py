@@ -45,23 +45,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    line_break,
-    table,
-    trow,
-    tcell_rich,
-    tpara,
-    trun,
-    breadcrumb,
-    title_placeholder,
-    prelim_chip,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, column_chart, graphic_frame, line_break, paragraph, run,
+    table, tcell_rich, text_box, tpara, trow, trun,
 )
-from deck_core.charts import graphic_frame, column_chart
-from deck_core.style import IN, PT, BLACK, WHITE, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -759,12 +752,9 @@ def paint_shipyard_legend(out: list[str], ids: ShapeIds) -> None:
 
 
 def paint_chrome_and_source(out: list[str], ids: ShapeIds) -> None:
-    out.append(breadcrumb("US-Built Ship Demand", "With SHIPS Act"))
+    out.append("")
     out.append(
-        title_placeholder(
-            "US Delivery Capacity",
-            "Expansion largely driven by Saronic; Competitor growth enabled by ownership / partnerships with major ROK shipbuilders and completion of USN/USCG activity.",
-        )
+        ""
     )
     out.append(
         text_box(
@@ -933,7 +923,7 @@ def paint_scope_chip(out: list[str], ids: ShapeIds) -> None:
             anchor="ctr",
         )
     )
-    out.append(prelim_chip())
+    out.append("")
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -956,5 +946,13 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="US-Built Ship Demand",
+    topic="With SHIPS Act",
+    title="US Delivery Capacity",
+    takeaway="Expansion largely driven by Saronic; Competitor growth enabled by ownership / partnerships with major ROK shipbuilders and completion of USN/USCG activity.",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

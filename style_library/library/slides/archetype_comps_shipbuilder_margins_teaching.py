@@ -52,18 +52,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, column_chart, connector, graphic_frame, paragraph, run,
     text_box,
-    connector,
-    breadcrumb,
-    title_placeholder,
-    prelim_chip,
 )
-from deck_core.charts import graphic_frame, column_chart
-from deck_core.style import IN, PT, BLACK, WHITE, DK, BREADCRUMB, GRAY_1, GRAY_2, GRAY_3, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+BREADCRUMB = "44505C"
+GRAY_1 = "F2F2F2"
+GRAY_2 = "D9D9D9"
+GRAY_3 = "BFBFBF"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -609,8 +612,8 @@ def _category_center_x(panel: ChartPanel, idx: int) -> float:
 
 
 def paint_chrome(out: list[str], ids: ShapeIds) -> None:
-    out.append(breadcrumb("Commercial Maritime Value Chain", "Performance"))
-    out.append(title_placeholder("Archetype Comps (3/3)", "Shipbuilder margin profile holds across geographies and vessel types."))
+    out.append("")
+    out.append("")
     out.append(
         text_box(
             ids.next(),
@@ -777,10 +780,18 @@ def _body() -> str:
     paint_manual_axis_and_data_labels(out, ids)
     paint_group_headers_and_panel_labels(out, ids)
     paint_axis_legends_and_dividers(out, ids)
-    out.append(prelim_chip())
+    out.append("")
 
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Commercial Maritime Value Chain",
+    topic="Performance",
+    title="Archetype Comps (3/3)",
+    takeaway="Shipbuilder margin profile holds across geographies and vessel types.",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

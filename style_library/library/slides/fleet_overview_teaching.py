@@ -52,23 +52,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from deck_core.authoring import (
-    IN,
-    PT,
-    BLACK,
-    WHITE,
-    GRAY_1,
-    FONT,
-    slide,
-    run,
-    paragraph,
-    line_break,
+    Chrome, IN, PT, bar_chart, body_slide, graphic_frame, line_break, paragraph, run,
     text_box,
-    breadcrumb,
-    title_placeholder,
-    prelim_chip,
-    graphic_frame,
-    bar_chart,
 )
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+GRAY_1 = "F2F2F2"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -503,11 +496,8 @@ def paint_chrome_and_source(next_id) -> list[str]:
     """House chrome plus the source-faithful off-house note block."""
 
     return [
-        breadcrumb("US-Built Ship Demand", "Status Quo"),
-        title_placeholder(
-            "US-Flagged, US-Built Fleet Overview",
-            "Entire US-flagged and US-built fleet (~6.6M GT) is less than 1 year’s capacity target (10M GT); addressable fleet is ~3.9M GT.",
-        ),
+        "",
+        "",
         _textbox(
             next_id(),
             "SourceNote",
@@ -635,7 +625,7 @@ def paint_scenario_and_prelim(next_id) -> list[str]:
             line_color=BLACK,
             anchor="ctr",
         ),
-        prelim_chip(),
+        "",
     ]
 
 
@@ -653,5 +643,13 @@ def _body() -> str:
     return "".join(shapes)
 
 
+CHROME = Chrome(
+    section="US-Built Ship Demand",
+    topic="Status Quo",
+    title="US-Flagged, US-Built Fleet Overview",
+    takeaway="Entire US-flagged and US-built fleet (~6.6M GT) is less than 1 year’s capacity target (10M GT); addressable fleet is ~3.9M GT.",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

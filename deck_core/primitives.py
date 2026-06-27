@@ -1,48 +1,33 @@
 """Minimal OOXML primitives — self-contained string builders, shared by all decks.
 
-Public surface:
-    - slide(shapes_xml)                — wrap shape XML in <p:sld> boilerplate
-    - cover_layout(title, subtitle=…)  — cover slide composition (slideLayout1)
-    - section_divider_layout(section)  — divider slide composition (slideLayout2)
-
-The standalone page_number() builder was removed: body slides (slideLayout4)
-auto-number from the base layout. section_divider_layout keeps its OPTIONAL
-page-counter block because dividers (slideLayout2) do not auto-number.
-
-Body builders and the content-slide chrome now live here as importable
-functions (run / paragraph / text_box / custom_geometry / table / house_table /
-connector / picture; the
-breadcrumb / title_placeholder / prelim_chip / sources_line chrome pieces),
-with the design tokens in deck_core.style. They are conveniences, not a
-cage: a slide may still compose raw OOXML directly, or mix raw strings with
-these builders, whenever that reads better.
+Body builders and the content-slide chrome live here as importable functions:
+run / paragraph / text_box / custom_geometry / table / connector / picture, plus
+the breadcrumb / title_placeholder / prelim_chip / sources_line chrome pieces.
+Mechanical geometry/units come from deck_core.layout; the locked-chrome colors,
+sizes, and geometry are private constants below. They are conveniences, not a
+cage: a slide may still compose raw OOXML directly, or mix raw strings with these
+builders, whenever that reads better.
 """
 from __future__ import annotations
 from xml.sax.saxutils import escape as _xml_escape
 
 from deck_core.ooxml import XML_DECL, NS
-from deck_core.style import (
-    SLIDE_W, SLIDE_H, LEFT_MARGIN,
-    DK, WHITE, BREADCRUMB, BLACK, PRELIM, LNSPC_BODY, LNSPC_SINGLE, FONT, DENSE_BODY_10PT,
-    BLUE_5, GRAY_1,
-    SZ_BREADCRUMB, SZ_SLIDE_TITLE, SZ_PRELIM, SZ_SOURCES,
-    BREADCRUMB_X, BREADCRUMB_Y, BREADCRUMB_CX, BREADCRUMB_CY,
-    TITLE_X, TITLE_Y, TITLE_CX, TITLE_CY,
-    PRELIM_X, PRELIM_Y, PRELIM_CX, PRELIM_CY,
-    SOURCES_X, SOURCES_Y, SOURCES_CX, SOURCES_CY,
-    SP_ID_BREADCRUMB, SP_ID_TITLE, SP_ID_PRELIM, SP_ID_SOURCES,
-)
+from deck_core.layout import DEFAULT_FONT as FONT
+
+# Mechanical defaults for the emitters below (line spacing, default body size).
+LNSPC_BODY = 115_000     # 115% — body paragraph default
+LNSPC_SINGLE = 100_000   # 100% — table-cell default
+DENSE_BODY_10PT = 1000   # 10pt — default run() / table-cell body size
+
+# Default text/border color for the emitters below. The house chrome (breadcrumb
+# / title / Preliminary chip / sources) now lives in deck_core.chrome, with its
+# own private geometry, colors, sizes, and ids.
+BLACK = "000000"          # default run()/cell text + 1pt/1.5pt border color
 
 
 # ── Private constants ─────────────────────────────────────────────────
-# Canvas (SLIDE_W/SLIDE_H), margin (LEFT_MARGIN), the XML decl, and the slide
-# namespace string are imported from deck_core.style / deck_core.ooxml above
-# (single source of truth — no per-module copies).
-
-_SZ_COVER_TITLE = 2800       # 28pt
-_SZ_COVER_SUBTITLE = 2000    # 20pt
-_SZ_DIVIDER_TITLE = 2800
-_SZ_DIVIDER_SUBTITLE = 2000
+# The XML decl + slide namespace come from deck_core.ooxml; the default font from
+# deck_core.layout. No per-module copies.
 
 _C_DK1 = "162029"
 
@@ -85,198 +70,6 @@ def slide(shapes_xml: str, *, ext_lst: str = "") -> str:
         f'<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>'
         f'</p:sld>'
     )
-
-
-def cover_layout(title: str, subtitle: str | None = None, *,
-                 footer: str | None = None) -> str:
-    """Cover (deck-title) slide composition.
-
-    Binds to the Saronic Cover layout (slideLayout1). The slide module
-    MUST declare `LAYOUT = "slideLayout1"` at module scope so build()
-    points the slide's rels at the Cover layout.
-
-    Placeholder mapping (positioning inherited from slideLayout1):
-        body idx=12  → title (28pt) on line 1; subtitle (20pt italic)
-                       on line 2 inside the same placeholder.
-        title (idx=) → small footer/date line at the bottom.
-    """
-    title_text = _xml_escape(title)
-    paragraphs = (
-        f'<a:p>'
-        f'<a:pPr><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
-        f'<a:r>'
-        f'<a:rPr lang="en-US" sz="{_SZ_COVER_TITLE}" kern="1200" dirty="0"/>'
-        f'<a:t>{title_text}</a:t>'
-        f'</a:r>'
-        f'</a:p>'
-    )
-    if subtitle:
-        subtitle_text = _xml_escape(subtitle)
-        paragraphs += (
-            f'<a:p>'
-            f'<a:pPr><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
-            f'<a:r>'
-            f'<a:rPr lang="en-US" sz="{_SZ_COVER_SUBTITLE}" i="1" kern="1200" dirty="0"/>'
-            f'<a:t>{subtitle_text}</a:t>'
-            f'</a:r>'
-            f'</a:p>'
-        )
-
-    big_title_sp = (
-        f'<p:sp>'
-        f'<p:nvSpPr>'
-        f'<p:cNvPr id="100" name="CoverTitle"/>'
-        f'<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
-        f'<p:nvPr><p:ph type="body" sz="quarter" idx="12"/></p:nvPr>'
-        f'</p:nvSpPr>'
-        # Override the layout placeholder geometry. The inherited width
-        # (cx=7_776_399) wraps a multi-word title, so widen to the full content
-        # width. Top-anchor (anchor="t") and pin the block low (y=4_140_000,
-        # ~where the bottom-anchored 2-line cover used to sit) so a subtitle that
-        # wraps to a 2nd line grows DOWNWARD instead of pushing the title up.
-        f'<p:spPr>'
-        f'<a:xfrm><a:off x="453080" y="4140000"/>'
-        f'<a:ext cx="11285842" cy="2162129"/></a:xfrm>'
-        f'</p:spPr>'
-        f'<p:txBody>'
-        f'<a:bodyPr anchor="t"/>'
-        f'<a:lstStyle/>'
-        f'{paragraphs}'
-        f'</p:txBody>'
-        f'</p:sp>'
-    )
-
-    if footer:
-        footer_text = _xml_escape(footer)
-        footer_sp = (
-            f'<p:sp>'
-            f'<p:nvSpPr>'
-            f'<p:cNvPr id="101" name="CoverFooter"/>'
-            f'<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
-            f'<p:nvPr><p:ph type="title"/></p:nvPr>'
-            f'</p:nvSpPr>'
-            f'<p:spPr/>'
-            f'<p:txBody>'
-            f'<a:bodyPr/>'
-            f'<a:lstStyle/>'
-            f'<a:p>'
-            f'<a:pPr><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
-            f'<a:r>'
-            f'<a:rPr lang="en-US" kern="1200" dirty="0"/>'
-            f'<a:t>{footer_text}</a:t>'
-            f'</a:r>'
-            f'</a:p>'
-            f'</p:txBody>'
-            f'</p:sp>'
-        )
-        return big_title_sp + footer_sp
-    return big_title_sp
-
-
-def section_divider_layout(section: str, subtitle: str | None = None, *,
-                           page_num: int | None = None,
-                           total_pages: int | None = None) -> str:
-    """Section-divider (transition) slide composition.
-
-    Binds to the Saronic Section Divider layout (slideLayout2). The
-    slide module MUST declare `LAYOUT = "slideLayout2"` at module
-    scope so build() points the slide's rels at the divider layout.
-
-    Placeholder mapping: the section name (line 1, 28pt) and subtitle (line 2,
-    20pt italic) share ONE placeholder (body idx=11 — the slideLayout2 analog of
-    the cover's idx=12: sz=3600, bottom-anchored), overridden to the cover's
-    geometry so the two lines land exactly where cover_layout's title/subtitle do
-    (off 453080/3260838, full content width 11285842, inherited bottom anchor).
-
-    If `page_num` and `total_pages` are both passed, an explicit page
-    counter is rendered at the bottom-right (dividers do not auto-number,
-    so this optional override is kept).
-    """
-    section_text = _xml_escape(section)
-    # Title (line 1) + subtitle (line 2) share ONE top-anchored placeholder,
-    # exactly like cover_layout, so the two lines land where the cover's do and a
-    # wrapping subtitle grows downward rather than pushing the title up.
-    paragraphs = (
-        f'<a:p>'
-        f'<a:pPr><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
-        f'<a:r>'
-        f'<a:rPr lang="en-US" sz="{_SZ_DIVIDER_TITLE}" kern="1200" dirty="0"/>'
-        f'<a:t>{section_text}</a:t>'
-        f'</a:r>'
-        f'</a:p>'
-    )
-    if subtitle:
-        subtitle_text = _xml_escape(subtitle)
-        paragraphs += (
-            f'<a:p>'
-            f'<a:pPr><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
-            f'<a:r>'
-            f'<a:rPr lang="en-US" sz="{_SZ_DIVIDER_SUBTITLE}" i="1" kern="1200" dirty="0"/>'
-            f'<a:t>{subtitle_text}</a:t>'
-            f'</a:r>'
-            f'</a:p>'
-        )
-
-    # Override idx=11 to the cover's title-block geometry: full content width,
-    # top-anchored (anchor="t") and pinned low (y=4_140_000) so it matches the
-    # cover and a wrapping subtitle grows downward (mirrors cover_layout).
-    out = (
-        f'<p:sp>'
-        f'<p:nvSpPr>'
-        f'<p:cNvPr id="110" name="DividerTitle"/>'
-        f'<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
-        f'<p:nvPr><p:ph type="body" sz="quarter" idx="11"/></p:nvPr>'
-        f'</p:nvSpPr>'
-        f'<p:spPr>'
-        f'<a:xfrm><a:off x="453080" y="4140000"/>'
-        f'<a:ext cx="11285842" cy="2162129"/></a:xfrm>'
-        f'</p:spPr>'
-        f'<p:txBody>'
-        f'<a:bodyPr anchor="t"/>'
-        f'<a:lstStyle/>'
-        f'{paragraphs}'
-        f'</p:txBody>'
-        f'</p:sp>'
-    )
-
-    if page_num is not None and total_pages is not None:
-        cx = 1_500_000
-        cy = 230_000
-        x = SLIDE_W - LEFT_MARGIN - cx
-        y = SLIDE_H - 290_000
-        pn_text = _xml_escape(f"{page_num} / {total_pages}")
-        out += (
-            f'<p:sp>'
-            f'<p:nvSpPr>'
-            f'<p:cNvPr id="4500" name="PageNumber"/>'
-            f'<p:cNvSpPr txBox="1"/>'
-            f'<p:nvPr/>'
-            f'</p:nvSpPr>'
-            f'<p:spPr>'
-            f'<a:xfrm><a:off x="{x}" y="{y}"/><a:ext cx="{cx}" cy="{cy}"/></a:xfrm>'
-            f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
-            f'<a:noFill/>'
-            f'<a:ln><a:noFill/></a:ln>'
-            f'</p:spPr>'
-            f'<p:txBody>'
-            f'<a:bodyPr wrap="square" anchor="t" lIns="91440" tIns="45720" '
-            f'rIns="91440" bIns="45720"/>'
-            f'<a:lstStyle/>'
-            f'<a:p>'
-            f'<a:pPr algn="r"><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
-            f'<a:r>'
-            f'<a:rPr lang="en-US" sz="{SZ_SOURCES}" kern="1200" dirty="0">'
-            f'<a:solidFill><a:srgbClr val="{_C_DK1}"/></a:solidFill>'
-            f'<a:latin typeface="Arial"/><a:ea typeface="Arial"/><a:cs typeface="Arial"/>'
-            f'</a:rPr>'
-            f'<a:t>{pn_text}</a:t>'
-            f'</a:r>'
-            f'</a:p>'
-            f'</p:txBody>'
-            f'</p:sp>'
-        )
-
-    return out
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -946,80 +739,3 @@ def _emit_table_frame(entry):
             f'<a:tableStyleId>{style_id}</a:tableStyleId>'
             f'</a:tblPr><a:tblGrid>{grid}</a:tblGrid>{rows_xml}'
             f'</a:tbl></a:graphicData></a:graphic></p:graphicFrame>')
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Content-slide chrome — reproduces the locked chrome the template used to
-# inline (breadcrumb / Preliminary chip / title / sources). Geometry, ids, and
-# sizes come from deck_core.style; only the TEXT changes per slide.
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-def _chrome_run(text, *, size, bold=False, color=DK):
-    """Locked chrome run: Arial, kern=1200, explicit size + color. Body text
-    uses run(); chrome uses this so the staples stay byte-stable."""
-    b = ' b="1"' if bold else ""
-    return (f'<a:r><a:rPr lang="en-US" sz="{size}"{b} kern="1200" dirty="0">'
-            f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>'
-            f'<a:latin typeface="Arial"/><a:ea typeface="Arial"/><a:cs typeface="Arial"/>'
-            f'</a:rPr><a:t>{esc(text)}</a:t></a:r>')
-
-
-def breadcrumb(section, topic_label, *, sp_id=SP_ID_BREADCRUMB):
-    """Top strip bound to slideLayout4 body placeholder idx=10: bold {Section}
-    + non-bold " / {Topic Label}", Arial 10pt, breadcrumb color."""
-    return (f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="Breadcrumb"/>'
-            f'<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
-            f'<p:nvPr><p:ph type="body" sz="quarter" idx="10"/></p:nvPr></p:nvSpPr>'
-            f'<p:spPr><a:xfrm><a:off x="{BREADCRUMB_X}" y="{BREADCRUMB_Y}"/>'
-            f'<a:ext cx="{BREADCRUMB_CX}" cy="{BREADCRUMB_CY}"/></a:xfrm></p:spPr>'
-            f'<p:txBody><a:bodyPr/><a:lstStyle/><a:p>'
-            + _chrome_run(section, size=SZ_BREADCRUMB, bold=True, color=BREADCRUMB)
-            + _chrome_run(f" / {topic_label}", size=SZ_BREADCRUMB, color=BREADCRUMB)
-            + '</a:p></p:txBody></p:sp>')
-
-
-def title_placeholder(topic, takeaway, *, sp_id=SP_ID_TITLE):
-    """Slide title bound to the layout title placeholder: single run
-    "{Topic} | {Finding}", Arial 20pt, dark."""
-    return (f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="Title"/>'
-            f'<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
-            f'<p:nvPr><p:ph type="title"/></p:nvPr></p:nvSpPr>'
-            f'<p:spPr><a:xfrm><a:off x="{TITLE_X}" y="{TITLE_Y}"/>'
-            f'<a:ext cx="{TITLE_CX}" cy="{TITLE_CY}"/></a:xfrm></p:spPr>'
-            f'<p:txBody><a:bodyPr rIns="0"/><a:lstStyle/><a:p>'
-            + _chrome_run(f"{topic} | {takeaway}", size=SZ_SLIDE_TITLE, color=DK)
-            + '</a:p></p:txBody></p:sp>')
-
-
-def prelim_chip(*, sp_id=SP_ID_PRELIM, text="Preliminary"):
-    """Top-right draft chip: draft-yellow fill, 1.5pt black border, 12pt bold.
-    Required on every body slide; exempt on cover / divider."""
-    return (f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="PrelimChip"/>'
-            f'<p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>'
-            f'<p:spPr><a:xfrm><a:off x="{PRELIM_X}" y="{PRELIM_Y}"/>'
-            f'<a:ext cx="{PRELIM_CX}" cy="{PRELIM_CY}"/></a:xfrm>'
-            f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
-            f'<a:solidFill><a:srgbClr val="{PRELIM}"/></a:solidFill>'
-            f'<a:ln w="19050"><a:solidFill><a:srgbClr val="{BLACK}"/></a:solidFill></a:ln></p:spPr>'
-            f'<p:txBody><a:bodyPr wrap="square" anchor="ctr" lIns="45720" tIns="9144" '
-            f'rIns="45720" bIns="9144"/><a:lstStyle/><a:p><a:pPr algn="ctr"/>'
-            + _chrome_run(text, size=SZ_PRELIM, bold=True, color=BLACK)
-            + '</a:p></p:txBody></p:sp>')
-
-
-def sources_line(text, *, sp_id=SP_ID_SOURCES, y=SOURCES_Y):
-    """Bottom strip: "Source: ...; ..." (singular "Source" per house style, even
-    with many sources; semicolon-separated, no parenthetical numbering; a Note line
-    may be combined via a pipe), Arial 8pt, top-anchored. Pass y to lift it above
-    content that reaches the default band."""
-    return (f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="Source"/>'
-            f'<p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>'
-            f'<p:spPr><a:xfrm><a:off x="{SOURCES_X}" y="{y}"/>'
-            f'<a:ext cx="{SOURCES_CX}" cy="{SOURCES_CY}"/></a:xfrm>'
-            f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
-            f'<a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>'
-            f'<p:txBody><a:bodyPr wrap="square" anchor="t" lIns="91440" tIns="45720" '
-            f'rIns="91440" bIns="45720"/><a:lstStyle/><a:p>'
-            + _chrome_run(text, size=SZ_SOURCES, color=DK)
-            + '</a:p></p:txBody></p:sp>')

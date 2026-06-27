@@ -37,30 +37,23 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from deck_core.authoring import (
-    IN,
-    PT,
-    BLACK,
-    WHITE,
-    DK,
-    BLUE_1,
-    BLUE_2,
-    BLUE_3,
-    BLUE_4,
-    BLUE_5,
-    GRAY_1,
-    GRAY_2,
-    GRAY_3,
-    FONT,
-    slide,
-    run,
-    paragraph,
-    line_break,
-    text_box,
-    connector,
-    picture,
-    breadcrumb,
-    title_placeholder,
+    Chrome, IN, PT, body_slide, connector, line_break, paragraph, picture, run, text_box,
 )
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+BLUE_1 = "E2E9EF"
+BLUE_2 = "B6C8D8"
+BLUE_3 = "6E91B1"
+BLUE_4 = "3D5972"
+BLUE_5 = "263746"
+GRAY_1 = "F2F2F2"
+GRAY_2 = "D9D9D9"
+GRAY_3 = "BFBFBF"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -321,7 +314,6 @@ FLOW_GRAMMAR = {
     "conversion_chain": "Total Funding → TAM by year → SAM → Company TCV",
 }
 
-RAW_TITLE_PLACEHOLDER = """<p:sp><p:nvSpPr><p:cNvPr id="2000" name="Title 3" /><p:cNvSpPr><a:spLocks noGrp="1" /></p:cNvSpPr><p:nvPr><p:ph type="title" /></p:nvPr></p:nvSpPr><p:spPr /><p:txBody><a:bodyPr vert="horz" /><a:lstStyle /><a:p><a:pPr marL="0" /><a:r><a:rPr lang="en-US" dirty="0"><a:solidFill><a:srgbClr val="000000" /></a:solidFill></a:rPr><a:t>Approach to find TCV | </a:t></a:r><a:r><a:rPr lang="en" dirty="0"><a:solidFill><a:srgbClr val="000000" /></a:solidFill></a:rPr><a:t>IAMD (OBBBA and SHIELD)</a:t></a:r><a:endParaRPr lang="en-US" dirty="0"><a:solidFill><a:srgbClr val="000000" /></a:solidFill></a:endParaRPr></a:p></p:txBody></p:sp>"""
 
 STEP_ONE = TextSpec("approach_step", "StepOne", Box(0.522, 1.882, 2.385, 0.701), (RunSpec("1. Identify relevant OBBBA items ", PT(10)), RunSpec("(items shown are not exhaustive)", PT(10), italic=True)), align=None)
 
@@ -400,8 +392,8 @@ ROUTE_CONNECTORS: tuple[ConnectorSpec, ...] = (
 
 
 def paint_chrome_and_raw_title(out: list[str], n) -> None:
-    out.append(breadcrumb("Market Sizing", "Navy (Surface incl. MDA)"))
-    out.append(RAW_TITLE_PLACEHOLDER)
+    out.append("")
+    out.append("")
 
 
 def paint_approach_rail(out: list[str], n) -> None:
@@ -449,5 +441,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Market Sizing",
+    topic="Navy (Surface incl. MDA)",
+    title="Approach to find TCV",
+    takeaway="IAMD (OBBBA and SHIELD)",
+    preliminary=False,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

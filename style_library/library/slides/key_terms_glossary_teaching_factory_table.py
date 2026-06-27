@@ -50,18 +50,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    table,
-    trow,
-    tcell,
-    tcell_rich,
-    tpara,
-    trun,
-    breadcrumb,
-    title_placeholder,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, table, tcell, tcell_rich, tpara, trow, trun,
 )
-from deck_core.style import IN, PT, BLACK, WHITE, DK, GRAY_2, GRAY_3, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+GRAY_2 = "D9D9D9"
+GRAY_3 = "BFBFBF"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 CHARTS: list = []
@@ -498,8 +498,8 @@ def paint_chrome(out: list[str]) -> None:
     # Paint order note: the source slide places chrome after the first table and
     # before the two remaining tables. Keep that order even though chrome is often
     # painted first in newly-authored modules.
-    out.append(title_placeholder("For Reference", "Key Terms Glossary."))
-    out.append(breadcrumb("Commercial Strategy", "Research Overview"))
+    out.append("")
+    out.append("")
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -518,5 +518,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Commercial Strategy",
+    topic="Research Overview",
+    title="For Reference",
+    takeaway="Key Terms Glossary.",
+    preliminary=False,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

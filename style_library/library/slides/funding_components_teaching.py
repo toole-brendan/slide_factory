@@ -47,24 +47,17 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from deck_core.authoring import (
-    slide,
-    run,
-    paragraph,
-    line_break,
-    text_box,
-    connector,
-    picture,
-    breadcrumb,
-    title_placeholder,
-    IN,
-    PT,
-    BLACK,
-    WHITE,
-    DK,
-    GRAY_1,
-    GRAY_3,
-    FONT,
+    Chrome, IN, PT, body_slide, connector, line_break, paragraph, picture, run, text_box,
 )
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+GRAY_1 = "F2F2F2"
+GRAY_3 = "BFBFBF"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -261,8 +254,8 @@ def _draw_box(out: list[str], n, shape: MatrixBox) -> None:
 
 
 def paint_chrome(out: list[str]) -> None:
-    out.append(breadcrumb("Market Sizing", "Navy (Surface incl. MDA)"))
-    out.append(title_placeholder("Components", "The following funding inputs, sources, and colors of money are considered for sizing the Navy (Surface) market"))
+    out.append("")
+    out.append("")
 
 
 def paint_row_bands_and_headers(out: list[str], n) -> None:
@@ -322,5 +315,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Market Sizing",
+    topic="Navy (Surface incl. MDA)",
+    title="Components",
+    takeaway="The following funding inputs, sources, and colors of money are considered for sizing the Navy (Surface) market",
+    preliminary=False,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

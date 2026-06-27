@@ -53,19 +53,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    table,
-    trow,
-    tcell,
-    tcell_rich,
-    tpara,
-    trun,
+from deck_core.authoring import (
+    IN, PT, layout_title, paragraph, run, slide, table, tcell, tcell_rich, text_box, tpara, trow, trun,
 )
-from deck_core.style import IN, PT, BLACK, DK, PRELIM, GRAY_1, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+DK = "162029"
+PRELIM = "FFFFCC"
+GRAY_1 = "F2F2F2"
+FONT = "Arial"
 
 LAYOUT = "slideLayout3"
 CHARTS: list = []
@@ -74,14 +72,6 @@ CHARTS: list = []
 # converter therefore kept this as a raw placeholder shape with no explicit xfrm.
 # Keeping it here is intentional: the teaching point is that the layout, not this
 # module, owns title placement on the 50% Block + Title slide.
-LAYOUT3_TITLE_PLACEHOLDER_XML = (
-    '<p:sp><p:nvSpPr><p:cNvPr id="2000" name="Title 4" />'
-    '<p:cNvSpPr><a:spLocks noGrp="1" /></p:cNvSpPr>'
-    '<p:nvPr><p:ph type="title" /></p:nvPr></p:nvSpPr><p:spPr />'
-    '<p:txBody><a:bodyPr vert="horz" /><a:lstStyle />'
-    '<a:p><a:r><a:rPr lang="en-US" /><a:t>Overview</a:t></a:r></a:p>'
-    '</p:txBody></p:sp>'
-)
 
 PRELIM_BORDER = "121415"
 DEFAULT_TABLE_ROW_H = 0.406
@@ -405,7 +395,7 @@ def _overview_table(sp_id: int, spec: OverviewTable) -> str:
 
 
 def paint_title(out: list[str]) -> None:
-    out.append(LAYOUT3_TITLE_PLACEHOLDER_XML)
+    out.append(layout_title("Overview", sp_id=2000, name="Title 4", body_pr_xml='<a:bodyPr vert="horz"/>'))
 
 
 def paint_overview_tables(out: list[str], ids: ShapeIds) -> None:
@@ -460,8 +450,6 @@ def _validate_teaching_module() -> None:
         raise ValueError("objectives table should retain ten bullets")
     if not all(line.runs[0].italic for line in OBJECTIVES_TABLE.lines[-3:]):
         raise ValueError("final three objectives must retain italic ongoing-effort prefixes")
-    if not LAYOUT3_TITLE_PLACEHOLDER_XML.startswith("<p:sp>"):
-        raise ValueError("Layout3 title placeholder should remain a layout-inherited p:sp")
 
 
 _validate_teaching_module()

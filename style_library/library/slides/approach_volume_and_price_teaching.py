@@ -41,31 +41,36 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from deck_core.authoring import (
-    IN,
-    PT,
-    BLACK,
-    WHITE,
-    DK,
-    PRELIM,
-    BLUE_3,
-    BLUE_5,
-    GRAY_1,
-    FONT,
-    slide,
-    run,
-    paragraph,
-    line_break,
-    text_box,
-    connector,
-    table,
-    trow,
-    tpara,
-    trun,
-    rcell,
-    edge,
-    breadcrumb,
-    title_placeholder,
+    Chrome, IN, PT, body_slide, connector, line_break, paragraph, run, table, tcell_rich,
+    text_box, tpara, trow, trun,
 )
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+PRELIM = "FFFFCC"
+BLUE_3 = "6E91B1"
+BLUE_5 = "263746"
+GRAY_1 = "F2F2F2"
+FONT = "Arial"
+
+
+# Local table-cell kit (was deck_core.table_kit).
+def edge(color, w=12700):
+    """One cell-border edge dict (default 1pt hairline)."""
+    return {"color": color, "width": w}
+
+def bd(L=None, R=None, T=None, B=None):
+    """Border map from only the sides drawn; omitted sides render no-fill."""
+    return {k: v for k, v in (("L", L), ("R", R), ("T", T), ("B", B)) if v is not None} or None
+
+def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
+          l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, **edges):
+    """Multi-paragraph rich cell; borders via L/R/T/B=edge(...)."""
+    return tcell_rich(paras, fill=fill, grid_span=span, row_span=rowspan, anchor=anchor,
+                      l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=bd(**edges))
 
 LAYOUT = "slideLayout4"
 
@@ -293,8 +298,8 @@ def _draw_callout(out: list[str], n, spec: CalloutSpec) -> None:
 
 
 def paint_chrome(out: list[str], n) -> None:
-    out.append(breadcrumb("Carrier Entry Point Attractiveness", "Matson Test Case"))
-    out.append(title_placeholder("Approach (2/2)", "To find annual volume and price per unit of cargo ($ / TEU)."))
+    out.append("")
+    out.append("")
 
 
 def paint_operator_glyphs_and_early_price_node(out: list[str], n) -> None:
@@ -363,5 +368,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Carrier Entry Point Attractiveness",
+    topic="Matson Test Case",
+    title="Approach (2/2)",
+    takeaway="To find annual volume and price per unit of cargo ($ / TEU).",
+    preliminary=False,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

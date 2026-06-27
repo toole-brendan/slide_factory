@@ -42,30 +42,23 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from deck_core.authoring import (
-    IN,
-    PT,
-    BLACK,
-    WHITE,
-    DK,
-    BLUE_1,
-    BLUE_2,
-    BLUE_3,
-    BLUE_4,
-    BLUE_5,
-    GRAY_1,
-    GRAY_2,
-    GRAY_3,
-    FONT,
-    slide,
-    run,
-    paragraph,
-    line_break,
-    text_box,
-    connector,
-    picture,
-    breadcrumb,
-    title_placeholder,
+    Chrome, IN, PT, body_slide, connector, line_break, paragraph, picture, run, text_box,
 )
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+BLUE_1 = "E2E9EF"
+BLUE_2 = "B6C8D8"
+BLUE_3 = "6E91B1"
+BLUE_4 = "3D5972"
+BLUE_5 = "263746"
+GRAY_1 = "F2F2F2"
+GRAY_2 = "D9D9D9"
+GRAY_3 = "BFBFBF"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -385,8 +378,8 @@ SCOPE_CHIP = TextSpec("scope_chip", "ScopeChip", Box(9.121, 0.074, 2.663, 0.500)
 
 
 def paint_chrome(out: list[str], n) -> None:
-    out.append(breadcrumb("Market Sizing", "Navy (Undersea)"))
-    out.append(title_placeholder("Approach to find TCV", "Unmanned-specified"))
+    out.append("")
+    out.append("")
 
 
 def paint_approach_rail(out: list[str], n) -> None:
@@ -436,5 +429,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Market Sizing",
+    topic="Navy (Undersea)",
+    title="Approach to find TCV",
+    takeaway="Unmanned-specified",
+    preliminary=False,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

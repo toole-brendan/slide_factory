@@ -56,18 +56,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    connector,
-    picture,
-    breadcrumb,
-    title_placeholder,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, column_chart, connector, graphic_frame, paragraph, picture,
+    run, text_box,
 )
-from deck_core.charts import graphic_frame, column_chart
-from deck_core.style import IN, PT, BLACK, WHITE, DK, PRELIM, GRAY_1, GRAY_2, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+PRELIM = "FFFFCC"
+GRAY_1 = "F2F2F2"
+GRAY_2 = "D9D9D9"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
@@ -812,12 +814,9 @@ def paint_chart_manual_labels(out: list[str], ids: ShapeIds) -> None:
 
 
 def paint_chrome_and_logos(out: list[str], ids: ShapeIds) -> None:
-    out.append(breadcrumb("Golden Dome Requirements", "Production Outlook"))
+    out.append("")
     out.append(
-        title_placeholder(
-            "Production Outlook (co-located sensors and interceptors)",
-            "All Phase 1 vessels started by FY30, Phase 2 by FY31, and Phase 3 by FY32",
-        )
+        ""
     )
     for logo in LOGOS:
         out.append(picture(ids.next(), logo.name, logo.r_id, *logo.box.emu()))
@@ -990,5 +989,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Golden Dome Requirements",
+    topic="Production Outlook",
+    title="Production Outlook (co-located sensors and interceptors)",
+    takeaway="All Phase 1 vessels started by FY30, Phase 2 by FY31, and Phase 3 by FY32",
+    preliminary=False,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

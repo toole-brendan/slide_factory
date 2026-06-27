@@ -49,21 +49,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    table,
-    trow,
-    tcell_rich,
-    tpara,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, paragraph, run, table, tcell_rich, text_box, tpara, trow,
     trun,
-    breadcrumb,
-    title_placeholder,
-    prelim_chip,
 )
-from deck_core.style import IN, PT, BLACK, DK, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+DK = "162029"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 CHARTS: list = []
@@ -447,9 +442,9 @@ def _findings_cell_style_edges(style: FindingsTableStyle) -> dict[str, str]:
 # Paint sections. Document order is PowerPoint paint order.
 # ════════════════════════════════════════════════════════════════════════════
 def paint_chrome(out: list[str]) -> None:
-    out.append(breadcrumb("Commercial Strategy", "Research Overview"))
-    out.append(title_placeholder("Key Findings (2/3)", "ComboCo financial outlook."))
-    out.append(prelim_chip())
+    out.append("")
+    out.append("")
+    out.append("")
 
 
 def paint_findings_table(out: list[str], ids: ShapeIds) -> None:
@@ -529,5 +524,13 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Commercial Strategy",
+    topic="Research Overview",
+    title="Key Findings (2/3)",
+    takeaway="ComboCo financial outlook.",
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

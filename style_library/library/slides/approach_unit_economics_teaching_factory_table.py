@@ -58,22 +58,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deck_core.primitives import (
-    slide,
-    run,
-    paragraph,
-    text_box,
-    connector,
-    line_break,
-    table,
-    trow,
-    tcell_rich,
-    tpara,
-    trun,
-    breadcrumb,
-    title_placeholder,
+from deck_core.authoring import (
+    Chrome, IN, PT, body_slide, connector, line_break, paragraph, run, table, tcell_rich,
+    text_box, tpara, trow, trun,
 )
-from deck_core.style import IN, PT, BLACK, WHITE, DK, BLUE_5, GRAY_3, GRAY_4, FONT
+
+
+# House colors (hex lives in the module; no shared palette).
+BLACK = "000000"
+WHITE = "FFFFFF"
+DK = "162029"
+BLUE_5 = "263746"
+GRAY_3 = "BFBFBF"
+GRAY_4 = "7F7F7F"
+FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 CHARTS: list = []
@@ -311,12 +309,9 @@ def rcell(
 # Paint sections. Document order is PowerPoint paint order.
 # ════════════════════════════════════════════════════════════════════════════
 def paint_chrome(out: list[str]) -> None:
-    out.append(breadcrumb("Carrier Entry Point Attractiveness", "Matson Test Case"))
+    out.append("")
     out.append(
-        title_placeholder(
-            "Approach (1/2)",
-            "Determining unit economics requires normalizing annual operating expenses and per-voyage cost of sales to a per-unit of cargo basis ($ / TEU).",
-        )
+        ""
     )
 
 
@@ -512,5 +507,14 @@ def _body() -> str:
     return "".join(out)
 
 
+CHROME = Chrome(
+    section="Carrier Entry Point Attractiveness",
+    topic="Matson Test Case",
+    title="Approach (1/2)",
+    takeaway="Determining unit economics requires normalizing annual operating expenses and per-voyage cost of sales to a per-unit of cargo basis ($ / TEU).",
+    preliminary=False,
+)
+
+
 def render() -> str:
-    return slide(_body())
+    return body_slide(CHROME, _body())

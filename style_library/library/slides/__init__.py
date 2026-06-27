@@ -55,7 +55,7 @@ from . import (
     assumptions_income_statement_2,  # src 78:  Assumptions & Methodology - Income Statement (2/2) (table)
     approach_unit_economics,         # src 120: Approach (1/2) - determining unit economics
     freight_charges,                 # src 134: Freight Charges - ~70% of westbound charges are vessel-related (styled chart + cost table)
-    coordination_archetypes,         # src 166: Coordination Archetypes - entities in the Coordination step (table)
+    coordination_archetypes_teaching_factory_table,  # src 166: Coordination Archetypes - entities in the Coordination step (native factory table)
     key_inputs,                      # src 167: Key Inputs (table)
     # ── Market Sizing: Golden Dome (20260116) ──
     comparison_vs_ddgs,              # src 8:   Comparison vs. DDGs - GD MR procurement cost vs four Arleigh Burkes (chart + 2 tables)
@@ -104,7 +104,7 @@ SLIDE_RENDERS: list[tuple] = [
     (assumptions_income_statement_2, assumptions_income_statement_2.render),
     (approach_unit_economics, approach_unit_economics.render),
     (freight_charges, freight_charges.render),
-    (coordination_archetypes, coordination_archetypes.render),
+    (coordination_archetypes_teaching_factory_table, coordination_archetypes_teaching_factory_table.render),
     (key_inputs, key_inputs.render),
     # ── Market Sizing: Golden Dome (20260116) ──
     (comparison_vs_ddgs, comparison_vs_ddgs.render),

@@ -12,7 +12,7 @@ TEACHES
   - fully declarative native stacked-column charting with column_chart(mode="stacked")
   - point-level series coloring to model phase transitions inside a stacked bar
   - manual category ticks, in-year labels, cumulative labels, and ring callouts
-  - manually overlaid reference line when the source was a combo chart
+  - manually overlaid solid reference line when the source was a combo chart
   - two-panel chart/backing geometry that doubles as assumptions-block background
   - off-house Preliminary and Note placement preserved when it is intentionally
     part of the source composition
@@ -40,15 +40,17 @@ SOURCE NOTE
   native `column_chart(mode="stacked", ...)` spec for the production-start bars.
   The source chart was a combo-style exhibit: stacked starts plus a Franklin
   capacity reference line. The bar stack is now native chart data; the capacity
-  line is an explicit, editable set of dashed connectors over the chart.
+  line is an explicit, editable set of solid connectors over the chart,
+  matching the source line series.
 
 FIDELITY NOTE
   This is a practical factory rebuild, not a byte-identical chart-template port.
   It preserves the visible chart semantics, the phase-colored stacked starts, the
   manual axis/year labels, cumulative rings, labels, assumption blocks, logos,
-  footnote, and off-house Preliminary chip. Tiny differences can remain in the
-  native chart's internal bar width/axis XML and in the overlaid capacity-line
-  placement versus the source combo chart part.
+  footnote, and off-house Preliminary chip. The source workbook rows and key XML
+  style values are carried explicitly in the module (`SOURCE_CHART_AUDIT`). Tiny
+  differences can remain in native chart XML ordering and connector interpolation
+  versus the source combo chart part.
 """
 from __future__ import annotations
 
@@ -86,10 +88,32 @@ PHASE_1 = "9DB1CF"
 PHASE_2 = "6F8DB9"
 PHASE_3 = "364D6E"
 FRANKLIN_CAPACITY_COLOR = BLACK
+FRANKLIN_CAPACITY_LINE_WIDTH = 19_050
 
-LOWER_START_LAYER_VALUES = [None, 5, 18, 25, 26, 26, 21, 8, 35, 35]
-UPPER_START_LAYER_VALUES = [None, None, None, None, None, None, 14, 27, None, None]
-FRANKLIN_CAPACITY_VALUES = [8, 17, 28, 50, 50, 50, 50, 50, 50, 50]
+# Exact chart-part styling values pulled from slide12_chart3.xml. Keeping these
+# as named constants makes the native chart auditable against the source OOXML.
+SOURCE_PLOT_LAYOUT = {
+    "x": 0.03242793791574279,
+    "y": 0.06984751598622725,
+    "w": 0.9603658536585366,
+    "h": 0.8603049680275455,
+}
+SOURCE_VALUE_AXIS_MIN = 0
+SOURCE_VALUE_AXIS_MAX = 70
+SOURCE_VALUE_AXIS_MAJOR_UNIT = 5
+SOURCE_GAP_WIDTH = 80
+SOURCE_BAR_OVERLAP = 100
+
+# Exact rows read from slide12_chart3.xlsb Sheet1 and mirrored in the chart
+# XML's cached values. Lists are passed to deck_core; tuples are retained for
+# validation so future edits cannot silently drift from the workbook.
+SOURCE_XLSB_LOWER_START_LAYER_VALUES = (None, 5, 18, 25, 26, 26, 21, 8, 35, 35)
+SOURCE_XLSB_UPPER_START_LAYER_VALUES = (None, None, None, None, None, None, 14, 27, None, None)
+SOURCE_XLSB_FRANKLIN_CAPACITY_VALUES = (8, 17, 28, 50, 50, 50, 50, 50, 50, 50)
+
+LOWER_START_LAYER_VALUES = list(SOURCE_XLSB_LOWER_START_LAYER_VALUES)
+UPPER_START_LAYER_VALUES = list(SOURCE_XLSB_UPPER_START_LAYER_VALUES)
+FRANKLIN_CAPACITY_VALUES = list(SOURCE_XLSB_FRANKLIN_CAPACITY_VALUES)
 
 # Point colors encode the phase schedule without turning every phase-year
 # intersection into its own sparse series. This mirrors the converted source:
@@ -99,11 +123,12 @@ PRODUCTION_START_SERIES: tuple[dict, ...] = (
         "name": "Production starts lower layer",
         "color": PHASE_1,
         "values": LOWER_START_LAYER_VALUES,
+        # Source dPt overrides: idx 6 = Phase 2; idx 7-9 = Phase 3.
         "data_point_colors": [
             PHASE_1,  # FY26 blank; harmless placeholder keeps list aligned
-            PHASE_1, PHASE_1, PHASE_1, PHASE_1, PHASE_1, PHASE_1,
+            PHASE_1, PHASE_1, PHASE_1, PHASE_1, PHASE_1,
             PHASE_2,
-            PHASE_3, PHASE_3,
+            PHASE_3, PHASE_3, PHASE_3,
         ],
         "hide_labels": True,
     },
@@ -111,11 +136,11 @@ PRODUCTION_START_SERIES: tuple[dict, ...] = (
         "name": "Production starts upper layer",
         "color": PHASE_2,
         "values": UPPER_START_LAYER_VALUES,
+        # Source dPt override: idx 6 = Phase 1; all other points use Phase 2.
         "data_point_colors": [
             PHASE_2, PHASE_2, PHASE_2, PHASE_2, PHASE_2, PHASE_2,
-            PHASE_2,
-            PHASE_3,
-            PHASE_3, PHASE_3,
+            PHASE_1,
+            PHASE_2, PHASE_2, PHASE_2,
         ],
         "hide_labels": True,
     },
@@ -127,9 +152,9 @@ PRODUCTION_START_SERIES: tuple[dict, ...] = (
 _CHART0_DATA = {
     "categories": CHART_CATEGORIES,
     "series": [
-        {"name": "Starts lower layer", "values": LOWER_START_LAYER_VALUES},
-        {"name": "Starts upper layer", "values": UPPER_START_LAYER_VALUES},
-        {"name": "Franklin capacity", "values": FRANKLIN_CAPACITY_VALUES},
+        {"name": "Starts lower layer", "values": list(LOWER_START_LAYER_VALUES)},
+        {"name": "Starts upper layer", "values": list(UPPER_START_LAYER_VALUES)},
+        {"name": "Franklin capacity", "values": list(FRANKLIN_CAPACITY_VALUES)},
     ],
 }
 
@@ -139,31 +164,96 @@ CHART_STYLE = {
     "series": [dict(series) for series in PRODUCTION_START_SERIES],
     "show_legend": False,
     "show_cat_labels": False,
-    "show_value_axis_labels": False,
+    "show_value_axis_labels": True,
     "show_gridlines": False,
+    # The source chart XML used per-point data-label offsets and hidden-label
+    # color overrides; those labels are manualized as slide text below.
     "show_value_labels": False,
     "value_axis_format": '#,##0;"-"#,##0',
     "cat_label_size_pt": 10,
-    "gap_width": 180,
-    "bar_overlap": 100,
+    "gap_width": SOURCE_GAP_WIDTH,
+    "bar_overlap": SOURCE_BAR_OVERLAP,
     "seg_line_color": None,
     "axis_line_color": BLACK,
     "axis_line_width": 9525,
-    "value_axis_min": 0,
-    "value_axis_max": 60,
-    "value_axis_major_unit": 10,
-    "plot_layout": {
-        # Solved from the manual FY tick centers: first/last category centers land
-        # at the same x positions as the source labels under the chart.
-        "x": 0.0324,
-        "y": 0.0681,
-        "w": 0.9603,
-        "h": 0.8616,
-    },
+    "value_axis_min": SOURCE_VALUE_AXIS_MIN,
+    "value_axis_max": SOURCE_VALUE_AXIS_MAX,
+    "value_axis_major_unit": SOURCE_VALUE_AXIS_MAJOR_UNIT,
+    "plot_layout": dict(SOURCE_PLOT_LAYOUT),
     "cat_header": "Fiscal year",
 }
 
 CHARTS = [column_chart(**CHART_STYLE)]
+
+
+SOURCE_CHART_AUDIT = {
+    "source_xml": "slide12_chart3.xml",
+    "source_workbook": "slide12_chart3.xlsb",
+    "workbook_rows": [
+        SOURCE_XLSB_LOWER_START_LAYER_VALUES,
+        SOURCE_XLSB_UPPER_START_LAYER_VALUES,
+        SOURCE_XLSB_FRANKLIN_CAPACITY_VALUES,
+    ],
+    "xml_style": {
+        "manualLayout": SOURCE_PLOT_LAYOUT,
+        "gapWidth": SOURCE_GAP_WIDTH,
+        "overlap": SOURCE_BAR_OVERLAP,
+        "valueAxisMin": SOURCE_VALUE_AXIS_MIN,
+        "valueAxisMax": SOURCE_VALUE_AXIS_MAX,
+        "valueAxisMajorUnit": SOURCE_VALUE_AXIS_MAJOR_UNIT,
+        "lineWidth": FRANKLIN_CAPACITY_LINE_WIDTH,
+        "lineDash": "solid",
+        "visibleDataLabels": ["5", "18", "25", "26", "26", "14", "35", "35"],
+        "hiddenDataLabels": ["21", "8", "27"],
+    },
+}
+
+
+def _validate_source_chart_alignment() -> None:
+    """Fail fast if a future edit drifts from the source XML/XLSB values."""
+
+    if len(CHART_CATEGORIES) != 10:
+        raise ValueError("Expected 10 FY categories from slide12_chart3.xml/.xlsb")
+
+    expected_rows = (
+        SOURCE_XLSB_LOWER_START_LAYER_VALUES,
+        SOURCE_XLSB_UPPER_START_LAYER_VALUES,
+        SOURCE_XLSB_FRANKLIN_CAPACITY_VALUES,
+    )
+    actual_rows = (
+        tuple(LOWER_START_LAYER_VALUES),
+        tuple(UPPER_START_LAYER_VALUES),
+        tuple(FRANKLIN_CAPACITY_VALUES),
+    )
+    if actual_rows != expected_rows:
+        raise ValueError("Chart series values no longer match slide12_chart3.xlsb")
+
+    for series in actual_rows:
+        if len(series) != len(CHART_CATEGORIES):
+            raise ValueError("Chart series length must match the 10 source workbook columns")
+
+    expected_lower_colors = [PHASE_1] * 6 + [PHASE_2] + [PHASE_3] * 3
+    expected_upper_colors = [PHASE_2] * 6 + [PHASE_1] + [PHASE_2] * 3
+    lower_colors = PRODUCTION_START_SERIES[0]["data_point_colors"]
+    upper_colors = PRODUCTION_START_SERIES[1]["data_point_colors"]
+    if lower_colors != expected_lower_colors:
+        raise ValueError("Lower start-layer point colors no longer match slide12_chart3.xml dPt overrides")
+    if upper_colors != expected_upper_colors:
+        raise ValueError("Upper start-layer point colors no longer match slide12_chart3.xml dPt overrides")
+
+    if CHART_STYLE["gap_width"] != SOURCE_GAP_WIDTH or CHART_STYLE["bar_overlap"] != SOURCE_BAR_OVERLAP:
+        raise ValueError("Chart gap/overlap must match slide12_chart3.xml")
+    if CHART_STYLE["value_axis_max"] != SOURCE_VALUE_AXIS_MAX:
+        raise ValueError("Value-axis maximum must match slide12_chart3.xml")
+    if CHART_STYLE["value_axis_major_unit"] != SOURCE_VALUE_AXIS_MAJOR_UNIT:
+        raise ValueError("Value-axis major unit must match slide12_chart3.xml")
+    if CHART_STYLE["plot_layout"] != SOURCE_PLOT_LAYOUT:
+        raise ValueError("Manual plot layout must match slide12_chart3.xml")
+    if FRANKLIN_CAPACITY_LINE_WIDTH != 19_050:
+        raise ValueError("Franklin capacity connector width must match slide12_chart3.xml")
+
+
+_validate_source_chart_alignment()
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -179,8 +269,9 @@ TEACHING_METADATA = {
     "teaches": [
         "native stacked column chart",
         "data-point colors for phase transitions",
-        "manual combo-chart reference line",
+        "manual solid combo-chart reference line",
         "manual category ticks",
+        "manualized source chart data labels",
         "manual cumulative data labels",
         "ellipse callout rings over a chart",
         "two-panel forecast assumptions",
@@ -405,6 +496,24 @@ ANNUAL_START_LABELS: tuple[AnnualStartLabel, ...] = (
     AnnualStartLabel(Box(9.731, 3.502, 0.191, 0.167), "35"),
 )
 
+# These were native chart dLbl entries in slide12_chart3.xml. The factory chart
+# keeps native labels disabled because the source uses per-point manualLayout
+# offsets plus hidden labels; re-authoring the visible labels as slide text keeps
+# them editable and avoids over-labeling hidden points.
+SOURCE_CHART_VALUE_LABELS: tuple[AnnualStartLabel, ...] = (
+    AnnualStartLabel(Box(2.513, 4.802, 0.191, 0.167), "5"),
+    AnnualStartLabel(Box(3.717, 4.239, 0.191, 0.167), "18"),
+    AnnualStartLabel(Box(4.920, 3.934, 0.191, 0.167), "25"),
+    AnnualStartLabel(Box(6.123, 3.892, 0.191, 0.167), "26"),
+    AnnualStartLabel(Box(7.326, 3.892, 0.191, 0.167), "26"),
+    AnnualStartLabel(Box(8.529, 3.916, 0.191, 0.167), "14"),
+    AnnualStartLabel(Box(10.936, 3.502, 0.191, 0.167), "35"),
+    AnnualStartLabel(Box(12.139, 3.502, 0.191, 0.167), "35"),
+)
+
+if tuple(label.label for label in SOURCE_CHART_VALUE_LABELS) != ("5", "18", "25", "26", "26", "14", "35", "35"):
+    raise ValueError("Manualized source chart data labels no longer match slide12_chart3.xml")
+
 LEGEND: tuple[LegendEntry, ...] = (
     LegendEntry("Phase 1", PHASE_1, Box(7.984, 1.811, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(8.236, 1.806, 0.505, LEGEND_LABEL_H)),
     LegendEntry("Phase 2", PHASE_2, Box(8.852, 1.811, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(9.104, 1.806, 0.505, LEGEND_LABEL_H)),
@@ -412,16 +521,16 @@ LEGEND: tuple[LegendEntry, ...] = (
     LegendEntry("Franklin capacity (vessel starts)", None, None, Box(10.840, 1.806, 1.939, LEGEND_LABEL_H)),
 )
 
-# The native bar chart uses the same manual plot layout. These points translate
-# Franklin capacity values to slide coordinates, using a 0-60 value axis. The
-# resulting dashed connectors are deliberately authored as shapes: PowerPoint
-# edits them directly, and authors can see exactly where the line lives.
-_CAPACITY_PLOT_LEFT = 0.8035
-_CAPACITY_PLOT_TOP = 2.1710
-_CAPACITY_PLOT_W = 12.0310
-_CAPACITY_PLOT_H = 3.0420
-_CAPACITY_AXIS_MAX = 60.0
-_CATEGORY_STEP = _CAPACITY_PLOT_W / 10.0
+# The native bar chart uses the exact manual plot layout from the source chart
+# part. These points translate Franklin capacity values to slide coordinates
+# using the source 0-70 value axis. The connectors are authored as regular slide
+# shapes so the combo-chart line remains editable after the factory rebuild.
+_CAPACITY_PLOT_LEFT = CHART_FRAME.x + SOURCE_PLOT_LAYOUT["x"] * CHART_FRAME.w
+_CAPACITY_PLOT_TOP = CHART_FRAME.y + SOURCE_PLOT_LAYOUT["y"] * CHART_FRAME.h
+_CAPACITY_PLOT_W = SOURCE_PLOT_LAYOUT["w"] * CHART_FRAME.w
+_CAPACITY_PLOT_H = SOURCE_PLOT_LAYOUT["h"] * CHART_FRAME.h
+_CAPACITY_AXIS_MAX = float(SOURCE_VALUE_AXIS_MAX)
+_CATEGORY_STEP = _CAPACITY_PLOT_W / len(CHART_CATEGORIES)
 _CAPACITY_POINTS: tuple[tuple[float, float], ...] = tuple(
     (
         _CAPACITY_PLOT_LEFT + _CATEGORY_STEP * (idx + 0.5),
@@ -590,8 +699,7 @@ def paint_capacity_reference_line(out: list[str], ids: ShapeIds) -> None:
                 IN(x2 - x1),
                 IN(y2 - y1),
                 color=FRANKLIN_CAPACITY_COLOR,
-                width=19_050,
-                dashed=True,
+                width=FRANKLIN_CAPACITY_LINE_WIDTH,
             )
         )
 
@@ -633,6 +741,20 @@ def paint_chart_manual_labels(out: list[str], ids: ShapeIds) -> None:
                 tick.label,
                 align="ctr",
                 wrap="none",
+            )
+        )
+
+    for label in SOURCE_CHART_VALUE_LABELS:
+        out.append(
+            _label_box(
+                ids,
+                "SourceChartValueLabel",
+                label.box,
+                label.label,
+                align="ctr",
+                anchor="b",
+                l_ins=17_463,
+                r_ins=17_463,
             )
         )
 

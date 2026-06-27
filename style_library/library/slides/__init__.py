@@ -45,12 +45,12 @@ from . import (
     archetype_comps_vocc_performance_teaching,  # src 33:  Archetype Comps (2/3) - VOCC performance '21-'22 (chart + table)
     archetype_comps_shipbuilder_margins_teaching,  # src 34:  Archetype Comps (3/3) - shipbuilder margin profile across geographies (5 native factory charts, dense)
     # NOTE: fleet_overview (src 42) + status_quo_fleet_outlook (src 43) promoted to *_teaching in the render-first block
-    status_quo_outlook_oceangoing,   # src 44:  Status Quo Outlook (Oceangoing Commercial) (chart + table)
+    status_quo_outlook_oceangoing_teaching_factory_chart,   # src 44:  Status Quo Outlook (Oceangoing Commercial) (styled_chart data-over-template + table)
     status_quo_outlook_offshore_1,   # src 45:  Status Quo Outlook (Addressable Offshore 1/2) (chart + table)
     status_quo_outlook_offshore_2_teaching,   # src 46:  Status Quo Outlook (Addressable Offshore 2/2) (chart)
-    ships_act_volume,                # src 51:  SHIPS Act Volume - bill-specified subsidy funding (chart + connectors)
-    ships_act_plus_volume,           # src 52:  SHIPS Act "Plus" Volume - demand declines after mid-2030s (chart + connectors)
-    ships_act_captive_demand,        # src 60:  SHIPS Act Captive Demand - MSTF supports ~100 more vessels than mandated (styled chart + mandate table)
+    ships_act_volume_teaching_factory_chart,  # src 51:  SHIPS Act Volume - bill-specified subsidy funding (styled_chart + connectors)
+    ships_act_plus_volume_teaching_factory_chart,  # src 52:  SHIPS Act "Plus" Volume - demand declines after mid-2030s (local stacked_area_chart + connectors)
+    ships_act_captive_demand_teaching_factory_chart,  # src 60:  SHIPS Act Captive Demand - MSTF supports ~100 more vessels than mandated (native column_chart + mandate table)
     assumptions_income_statement_1_teaching_factory_table,  # src 77:  Assumptions & Methodology - Income Statement (1/2) (native factory table)
     assumptions_income_statement_2_teaching_factory_table,  # src 78:  Assumptions & Methodology - Income Statement (2/2) (native factory table)
     approach_unit_economics_teaching_factory_table,  # src 120: Approach (1/2) - determining unit economics (native factory table)
@@ -59,7 +59,7 @@ from . import (
     key_inputs_teaching_factory_table,  # src 167: Key Inputs (native factory table)
     # ── Market Sizing: Golden Dome (20260116) ──
     comparison_vs_ddgs_teaching_factory_chart,  # src 8:   Comparison vs. DDGs - GD MR procurement cost vs four Arleigh Burkes (native factory chart + 2 tables)
-    production_outlook_colocated,    # src 11:  Production Outlook - co-located sensors and interceptors (chart)
+    production_outlook_colocated_teaching_factory_chart,  # src 11:  Production Outlook - co-located sensors and interceptors (native column_chart)
     production_outlook_separate_teaching_factory_chart,  # src 12:  Production Outlook - separate platforms (native column_chart factory variant)
 )
 
@@ -94,12 +94,12 @@ SLIDE_RENDERS: list[tuple] = [
     (key_findings_what_must_be_true_teaching_factory_table, key_findings_what_must_be_true_teaching_factory_table.render),
     # NOTE: archetype_comps_newbuild_prices_teaching + archetype_comps_vocc_performance_teaching promoted to the render-first block above
     (archetype_comps_shipbuilder_margins_teaching, archetype_comps_shipbuilder_margins_teaching.render),
-    (status_quo_outlook_oceangoing, status_quo_outlook_oceangoing.render),
+    (status_quo_outlook_oceangoing_teaching_factory_chart, status_quo_outlook_oceangoing_teaching_factory_chart.render),
     (status_quo_outlook_offshore_1, status_quo_outlook_offshore_1.render),
     # NOTE: status_quo_outlook_offshore_2_teaching promoted to the render-first block above
-    (ships_act_volume, ships_act_volume.render),
-    (ships_act_plus_volume, ships_act_plus_volume.render),
-    (ships_act_captive_demand, ships_act_captive_demand.render),
+    (ships_act_volume_teaching_factory_chart, ships_act_volume_teaching_factory_chart.render),
+    (ships_act_plus_volume_teaching_factory_chart, ships_act_plus_volume_teaching_factory_chart.render),
+    (ships_act_captive_demand_teaching_factory_chart, ships_act_captive_demand_teaching_factory_chart.render),
     (assumptions_income_statement_1_teaching_factory_table, assumptions_income_statement_1_teaching_factory_table.render),
     (assumptions_income_statement_2_teaching_factory_table, assumptions_income_statement_2_teaching_factory_table.render),
     (approach_unit_economics_teaching_factory_table, approach_unit_economics_teaching_factory_table.render),
@@ -108,6 +108,6 @@ SLIDE_RENDERS: list[tuple] = [
     (key_inputs_teaching_factory_table, key_inputs_teaching_factory_table.render),
     # ── Market Sizing: Golden Dome (20260116) ──
     (comparison_vs_ddgs_teaching_factory_chart, comparison_vs_ddgs_teaching_factory_chart.render),
-    (production_outlook_colocated, production_outlook_colocated.render),
+    (production_outlook_colocated_teaching_factory_chart, production_outlook_colocated_teaching_factory_chart.render),
     (production_outlook_separate_teaching_factory_chart, production_outlook_separate_teaching_factory_chart.render),
 ]

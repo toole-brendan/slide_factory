@@ -39,11 +39,11 @@ from . import (
     overview,                        # src 2:   Overview (2 summary tables + logo)
     key_terms_glossary_teaching_factory_table,  # src 5:   For Reference | Key Terms Glossary (native factory table)
     key_findings_demand_build_economics_teaching_factory_table,  # src 8:   Key Findings (1/3) - demand, build cost, vessel economics (native factory table)
-    key_findings_financial_outlook,  # src 9:   Key Findings (2/3) - ComboCo financial outlook (table)
-    key_findings_what_must_be_true,  # src 10:  Key Findings (3/3) - what must be true to succeed (table)
+    key_findings_financial_outlook_teaching_factory_table,  # src 9:   Key Findings (2/3) - ComboCo financial outlook (native factory table)
+    key_findings_what_must_be_true_teaching_factory_table,  # src 10:  Key Findings (3/3) - what must be true to succeed (native factory table)
     archetype_comps_newbuild_prices_teaching,  # src 32:  Archetype Comps (1/3) - improvement from rising new-build prices (chart)
     archetype_comps_vocc_performance_teaching,  # src 33:  Archetype Comps (2/3) - VOCC performance '21-'22 (chart + table)
-    archetype_comps_shipbuilder_margins,  # src 34:  Archetype Comps (3/3) - shipbuilder margin profile across geographies (5 charts, dense)
+    archetype_comps_shipbuilder_margins_teaching,  # src 34:  Archetype Comps (3/3) - shipbuilder margin profile across geographies (5 native factory charts, dense)
     # NOTE: fleet_overview (src 42) + status_quo_fleet_outlook (src 43) promoted to *_teaching in the render-first block
     status_quo_outlook_oceangoing,   # src 44:  Status Quo Outlook (Oceangoing Commercial) (chart + table)
     status_quo_outlook_offshore_1,   # src 45:  Status Quo Outlook (Addressable Offshore 1/2) (chart + table)
@@ -90,10 +90,10 @@ SLIDE_RENDERS: list[tuple] = [
     (overview, overview.render),
     (key_terms_glossary_teaching_factory_table, key_terms_glossary_teaching_factory_table.render),
     (key_findings_demand_build_economics_teaching_factory_table, key_findings_demand_build_economics_teaching_factory_table.render),
-    (key_findings_financial_outlook, key_findings_financial_outlook.render),
-    (key_findings_what_must_be_true, key_findings_what_must_be_true.render),
+    (key_findings_financial_outlook_teaching_factory_table, key_findings_financial_outlook_teaching_factory_table.render),
+    (key_findings_what_must_be_true_teaching_factory_table, key_findings_what_must_be_true_teaching_factory_table.render),
     # NOTE: archetype_comps_newbuild_prices_teaching + archetype_comps_vocc_performance_teaching promoted to the render-first block above
-    (archetype_comps_shipbuilder_margins, archetype_comps_shipbuilder_margins.render),
+    (archetype_comps_shipbuilder_margins_teaching, archetype_comps_shipbuilder_margins_teaching.render),
     (status_quo_outlook_oceangoing, status_quo_outlook_oceangoing.render),
     (status_quo_outlook_offshore_1, status_quo_outlook_offshore_1.render),
     # NOTE: status_quo_outlook_offshore_2_teaching promoted to the render-first block above

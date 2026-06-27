@@ -43,7 +43,7 @@ from deck_core.layout import (
 
 # ── charts ─────────────────────────────────────────────────────────────────
 from deck_core.charts import (
-    graphic_frame, column_chart, bar_chart, combo_chart, bubble_chart,
+    graphic_frame, column_chart, bar_chart, combo_chart, bubble_chart, area_chart,
 )
 
 # Deliberately NOT on this surface: a color palette, a type-size hierarchy, and

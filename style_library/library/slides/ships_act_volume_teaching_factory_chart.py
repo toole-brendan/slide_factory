@@ -10,8 +10,7 @@ USE WHEN
 
 TEACHES
   - source chart XML inspection before choosing chart machinery
-  - local stacked-area chart shim when the central factory has no public
-    area_chart() yet
+  - native area_chart(mode="stacked") factory for a stacked-area exhibit
   - explicit chart categories, series names, values, colors, pattern fill, and
     axis settings instead of opaque chart cache data
   - manual category ticks and external axis titles over a native chart frame
@@ -43,10 +42,10 @@ TEXT-FIT PRECEDENT
 SOURCE NOTE
   Teaching rewrite of the source-faithful `ships_act_volume.py` module.
   The attached `slide51_chart30.xml` shows that the source chart is a stacked
-  area chart, not a simple column chart. Because the current central chart
-  factory exposes column/bar/line/waterfall/marimekko but no public area_chart(),
-  this module includes a small local stacked-area chart shim whose data and style
-  were transcribed from the attached chart XML/XLSB. The slide body keeps the
+  area chart, not a simple column chart. The chart is built with the native
+  `area_chart(mode="stacked")` factory in deck_core.charts (promoted from this
+  module's former local stacked-area shim); its data and style were transcribed
+  from the attached chart XML/XLSB. The slide body keeps the
   source paint order, coordinates, manual labels, legend, phase rules, summary
   badges, Preliminary chip, and callouts.
 
@@ -61,15 +60,10 @@ FIDELITY NOTE
 from __future__ import annotations
 
 from dataclasses import dataclass
-from xml.sax.saxutils import escape as _xml_escape
 
 from deck_core.authoring import (
-    Chrome, IN, PT, body_slide, connector, graphic_frame, paragraph, run, text_box,
+    Chrome, IN, PT, area_chart, body_slide, connector, graphic_frame, paragraph, run, text_box,
 )
-
-from deck_core.charts import _build_embed_xlsx
-
-from deck_core.ooxml import NS_CHART, XML_DECL
 
 
 # House colors (hex lives in the module; no shared palette).
@@ -79,234 +73,6 @@ DK = "162029"
 FONT = "Arial"
 
 LAYOUT = "slideLayout4"
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# Chart factory shim: stacked area chart, localized until deck_core exposes one.
-# ════════════════════════════════════════════════════════════════════════════
-_AREA_CHART_RELS_TEMPLATE = (
-    f'{XML_DECL}\n'
-    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-    '<Relationship Id="rId1" '
-    'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/package" '
-    'Target="../embeddings/Microsoft_Excel_Worksheet{chart_num}.xlsx"/>'
-    '</Relationships>'
-)
-
-
-def _esc(s: object) -> str:
-    return _xml_escape(str(s))
-
-
-def _esc_attr(s: object) -> str:
-    return _xml_escape(str(s), {'"': '&quot;'})
-
-
-def _col_letter(idx: int) -> str:
-    """Map a zero-based worksheet column index to Excel letters."""
-
-    if idx < 0:
-        raise ValueError(f"negative column index: {idx}")
-    n = idx + 1
-    out: list[str] = []
-    while n:
-        n, rem = divmod(n - 1, 26)
-        out.append(chr(ord("A") + rem))
-    return "".join(reversed(out))
-
-
-def _is_blank(value) -> bool:
-    return value is None or value == ""
-
-
-def _area_series_xml(
-    *,
-    s_idx: int,
-    categories: list[str],
-    series: dict,
-    sheet_name: str,
-    value_format: str,
-) -> str:
-    """One CT_AreaSer block.
-
-    This mirrors the central chart factories' readable data-cache style but emits
-    the area-series child order: idx/order/tx/spPr/cat/val. Blanks are omitted
-    from the cache and rendered as zero by the chart-level dispBlanksAs setting.
-    """
-
-    name = series.get("name", f"Series {s_idx + 1}")
-    values = series["values"]
-    n_cats = len(categories)
-    val_col = _col_letter(s_idx + 1)  # B for series 0, C for series 1, ...
-    last_row = n_cats + 1
-
-    tx_xml = (
-        "<c:tx><c:strRef>"
-        f"<c:f>{sheet_name}!${val_col}$1</c:f>"
-        '<c:strCache><c:ptCount val="1"/>'
-        f'<c:pt idx="0"><c:v>{_esc(name)}</c:v></c:pt>'
-        "</c:strCache>"
-        "</c:strRef></c:tx>"
-    )
-
-    if series.get("pattern"):
-        pattern = series["pattern"]
-        fill_xml = (
-            f'<a:pattFill prst="{_esc_attr(pattern.get("prst", "ltUpDiag"))}">'
-            f'<a:fgClr><a:srgbClr val="{_esc_attr(pattern.get("fg", BLACK))}"/></a:fgClr>'
-            f'<a:bgClr><a:srgbClr val="{_esc_attr(pattern.get("bg", WHITE))}"/></a:bgClr>'
-            "</a:pattFill>"
-        )
-    elif series.get("color"):
-        fill_xml = f'<a:solidFill><a:srgbClr val="{_esc_attr(series["color"])}"/></a:solidFill>'
-    else:
-        fill_xml = "<a:noFill/>"
-
-    sppr_xml = "<c:spPr>" + fill_xml + "<a:ln><a:noFill/></a:ln></c:spPr>"
-
-    cat_pts = "".join(
-        f'<c:pt idx="{i}"><c:v>{_esc(cat)}</c:v></c:pt>'
-        for i, cat in enumerate(categories)
-    )
-    cat_xml = (
-        "<c:cat><c:strRef>"
-        f"<c:f>{sheet_name}!$A$2:$A${last_row}</c:f>"
-        "<c:strCache>"
-        f'<c:ptCount val="{n_cats}"/>'
-        + cat_pts +
-        "</c:strCache>"
-        "</c:strRef></c:cat>"
-    )
-
-    val_pts = "".join(
-        f'<c:pt idx="{i}"><c:v>{v}</c:v></c:pt>'
-        for i, v in enumerate(values)
-        if not _is_blank(v)
-    )
-    val_xml = (
-        "<c:val><c:numRef>"
-        f"<c:f>{sheet_name}!${val_col}$2:${val_col}${last_row}</c:f>"
-        "<c:numCache>"
-        f'<c:formatCode>{_esc(value_format)}</c:formatCode>'
-        f'<c:ptCount val="{n_cats}"/>'
-        + val_pts +
-        "</c:numCache>"
-        "</c:numRef></c:val>"
-    )
-
-    return (
-        "<c:ser>"
-        f'<c:idx val="{s_idx}"/>'
-        f'<c:order val="{s_idx}"/>'
-        + tx_xml
-        + sppr_xml
-        + cat_xml
-        + val_xml
-        + "</c:ser>"
-    )
-
-
-def stacked_area_chart(
-    *,
-    categories: list[str],
-    series: list[dict],
-    value_axis_min: float = 0,
-    value_axis_max: float = 220,
-    value_axis_major_unit: float = 20,
-    value_axis_format: str = '#,##0;"-"#,##0',
-    show_cat_labels: bool = False,
-    show_value_axis_labels: bool = True,
-    show_gridlines: bool = False,
-    axis_line_color: str = BLACK,
-    axis_line_width: int = 9_525,
-    plot_layout: dict | None = None,
-    cat_header: str = "Year",
-    sheet_name: str = "Sheet1",
-) -> dict:
-    """Native editable stacked area chart.
-
-    The central factory can absorb this helper later; the return contract matches
-    deck_core.charts.column_chart()/line_chart(): chart_xml + embedded xlsx + rels.
-    """
-
-    plot_layout = plot_layout or {"x": 0.042625, "y": 0.043556, "w": 0.949402, "h": 0.912889}
-    series_xml = "".join(
-        _area_series_xml(
-            s_idx=i,
-            categories=categories,
-            series=one_series,
-            sheet_name=sheet_name,
-            value_format="General",
-        )
-        for i, one_series in enumerate(series)
-    )
-
-    gridline_xml = (
-        '<c:majorGridlines><c:spPr><a:ln><a:noFill/></a:ln></c:spPr></c:majorGridlines>'
-        if not show_gridlines
-        else '<c:majorGridlines/>'
-    )
-    cat_tick_pos = "nextTo" if show_cat_labels else "none"
-    val_tick_pos = "nextTo" if show_value_axis_labels else "none"
-    val_fmt = _esc_attr(value_axis_format)
-
-    chart_xml = (
-        f'{XML_DECL}\n'
-        f'<c:chartSpace {NS_CHART}>'
-        '<c:date1904 val="0"/><c:lang val="en-US"/><c:roundedCorners val="0"/>'
-        '<c:chart><c:autoTitleDeleted val="0"/><c:plotArea>'
-        '<c:layout><c:manualLayout><c:layoutTarget val="inner"/>'
-        '<c:xMode val="edge"/><c:yMode val="edge"/>'
-        f'<c:x val="{plot_layout["x"]}"/><c:y val="{plot_layout["y"]}"/>'
-        f'<c:w val="{plot_layout["w"]}"/><c:h val="{plot_layout["h"]}"/>'
-        '</c:manualLayout></c:layout>'
-        '<c:areaChart><c:grouping val="stacked"/><c:varyColors val="0"/>'
-        + series_xml +
-        '<c:axId val="1371894367"/><c:axId val="1"/></c:areaChart>'
-        '<c:catAx><c:axId val="1371894367"/>'
-        '<c:scaling><c:orientation val="minMax"/></c:scaling>'
-        '<c:delete val="0"/><c:axPos val="b"/>'
-        + gridline_xml +
-        '<c:majorTickMark val="none"/><c:minorTickMark val="none"/>'
-        f'<c:tickLblPos val="{cat_tick_pos}"/>'
-        f'<c:spPr><a:ln w="{axis_line_width}" cmpd="sng" algn="ctr">'
-        f'<a:solidFill><a:srgbClr val="{axis_line_color}"/></a:solidFill>'
-        '<a:prstDash val="solid"/></a:ln></c:spPr>'
-        '<c:crossAx val="1"/><c:crosses val="min"/><c:auto val="0"/>'
-        '<c:lblAlgn val="ctr"/><c:lblOffset val="100"/><c:noMultiLvlLbl val="0"/>'
-        '</c:catAx>'
-        '<c:valAx><c:axId val="1"/>'
-        '<c:scaling><c:orientation val="minMax"/>'
-        f'<c:max val="{value_axis_max}"/><c:min val="{value_axis_min}"/>'
-        '</c:scaling>'
-        '<c:delete val="0"/><c:axPos val="l"/>'
-        + gridline_xml +
-        f'<c:numFmt formatCode="{val_fmt}" sourceLinked="0"/>'
-        '<c:majorTickMark val="out"/><c:minorTickMark val="none"/>'
-        f'<c:tickLblPos val="{val_tick_pos}"/>'
-        f'<c:spPr><a:ln w="{axis_line_width}" cmpd="sng" algn="ctr">'
-        f'<a:solidFill><a:srgbClr val="{axis_line_color}"/></a:solidFill>'
-        '<a:prstDash val="solid"/></a:ln></c:spPr>'
-        '<c:txPr><a:bodyPr wrap="none"/><a:lstStyle/><a:p><a:pPr>'
-        '<a:defRPr sz="1000" kern="1200">'
-        f'<a:solidFill><a:srgbClr val="{axis_line_color}"/></a:solidFill>'
-        '<a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/>'
-        '</a:defRPr></a:pPr><a:endParaRPr lang="en-US"/></a:p></c:txPr>'
-        '<c:crossAx val="1371894367"/><c:crosses val="min"/>'
-        '<c:crossBetween val="midCat"/>'
-        f'<c:majorUnit val="{value_axis_major_unit}"/></c:valAx>'
-        '</c:plotArea><c:plotVisOnly val="0"/><c:dispBlanksAs val="zero"/>'
-        '<c:showDLblsOverMax val="1"/></c:chart>'
-        '<c:externalData r:id="rId1"><c:autoUpdate val="0"/></c:externalData>'
-        '</c:chartSpace>'
-    )
-
-    return {
-        "chart_xml": chart_xml,
-        "embed_xlsx": _build_embed_xlsx(categories=categories, series=series, cat_header=cat_header),
-        "chart_rels": _AREA_CHART_RELS_TEMPLATE,
-    }
-
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -349,7 +115,7 @@ DEMAND_BAND_SERIES: tuple[dict, ...] = (
 )
 
 # Kept as a readable data mirror for agents/tools that expect the converted-slide
-# data-dict shape. CHARTS consumes the same values through stacked_area_chart().
+# data-dict shape. CHARTS consumes the same values through area_chart(mode="stacked").
 _CHART0_DATA = {
     "categories": CHART_CATEGORIES,
     "series": DEMAND_BAND_SERIES,
@@ -376,7 +142,7 @@ CHART_STYLE = {
     "cat_header": "Year",
 }
 
-CHARTS = [stacked_area_chart(**CHART_STYLE)]
+CHARTS = [area_chart(mode="stacked", **CHART_STYLE)]
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -390,7 +156,7 @@ TEACHING_METADATA = {
         "bottom milestone badges, and scenario caveats."
     ),
     "teaches": [
-        "local native stacked-area chart shim",
+        "native area_chart(mode=\"stacked\") factory",
         "explicit series values/colors/pattern fill",
         "manual year ticks",
         "manual demand-band legend",

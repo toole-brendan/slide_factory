@@ -96,7 +96,6 @@ SLIDE_RENDERS: list[tuple] = [
     # NOTE: archetype_comps_newbuild_prices_teaching + archetype_comps_vocc_performance_teaching promoted to the render-first block above
     (archetype_comps_shipbuilder_margins_teaching, archetype_comps_shipbuilder_margins_teaching.render),
     (status_quo_outlook_oceangoing_teaching, status_quo_outlook_oceangoing_teaching.render),
-    # NOTE: status_quo_outlook_offshore_1_teaching + status_quo_outlook_offshore_2_teaching promoted to the render-first block above
     (ships_act_volume_teaching_factory_chart, ships_act_volume_teaching_factory_chart.render),
     (ships_act_plus_volume_teaching_factory_chart, ships_act_plus_volume_teaching_factory_chart.render),
     (ships_act_captive_demand_teaching_factory_chart, ships_act_captive_demand_teaching_factory_chart.render),

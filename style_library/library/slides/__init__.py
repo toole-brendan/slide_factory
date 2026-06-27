@@ -37,8 +37,8 @@ from . import (
     value_chain_participation_teaching,       # value-chain participation - grouped icons (picture-dense)
     # ── Commercial Strategy Market Analysis (20260325) ──
     overview,                        # src 2:   Overview (2 summary tables + logo)
-    key_terms_glossary,              # src 5:   For Reference | Key Terms Glossary (3 tables)
-    key_findings_demand_build_economics,  # src 8:   Key Findings (1/3) - demand, build cost, vessel economics (table)
+    key_terms_glossary_teaching_factory_table,  # src 5:   For Reference | Key Terms Glossary (native factory table)
+    key_findings_demand_build_economics_teaching_factory_table,  # src 8:   Key Findings (1/3) - demand, build cost, vessel economics (native factory table)
     key_findings_financial_outlook,  # src 9:   Key Findings (2/3) - ComboCo financial outlook (table)
     key_findings_what_must_be_true,  # src 10:  Key Findings (3/3) - what must be true to succeed (table)
     archetype_comps_newbuild_prices_teaching,  # src 32:  Archetype Comps (1/3) - improvement from rising new-build prices (chart)
@@ -88,8 +88,8 @@ SLIDE_RENDERS: list[tuple] = [
     (value_chain_participation_teaching, value_chain_participation_teaching.render),
     # ── Commercial Strategy Market Analysis (20260325) ──
     (overview, overview.render),
-    (key_terms_glossary, key_terms_glossary.render),
-    (key_findings_demand_build_economics, key_findings_demand_build_economics.render),
+    (key_terms_glossary_teaching_factory_table, key_terms_glossary_teaching_factory_table.render),
+    (key_findings_demand_build_economics_teaching_factory_table, key_findings_demand_build_economics_teaching_factory_table.render),
     (key_findings_financial_outlook, key_findings_financial_outlook.render),
     (key_findings_what_must_be_true, key_findings_what_must_be_true.render),
     # NOTE: archetype_comps_newbuild_prices_teaching + archetype_comps_vocc_performance_teaching promoted to the render-first block above

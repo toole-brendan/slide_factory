@@ -1,0 +1,237 @@
+schema_version: 1
+
+# Inert human/agent navigation file — a faceted visual-grammar index.
+# The build pipeline does NOT parse this file; deck_core._build reads each slide
+# module's render(), LAYOUT, CHARTS, IMAGES, HYPERLINKS directly. This index
+# exists only so a future agent can find the right exemplar to study by the
+# copyable slide mechanics it demonstrates.
+#
+# Navigate by tags, not categories: the tags are namespaced facets
+# (chart: / layout: / table: / flow: / annotation:), not mutually exclusive
+# categories. Within each slide, tags are ordered most-useful-first
+# (dominant layout/exhibit, then chart/table/flow mechanics, then overlays).
+#
+# Slide ids are the cleaned module stems (file stem == id).
+
+visual_grammar_allowed:
+  # chart primitives and chart encodings
+  - "chart:native_area"
+  - "chart:native_bar"
+  - "chart:native_bubble"
+  - "chart:native_column"
+  - "chart:native_combo"
+  - "chart:stacked_column"
+  - "chart:clustered_bar"
+  - "chart:negative_values"
+  - "chart:single_category_stack"
+  - "chart:percentage_normalized_stack"
+  - "chart:dual_axis"
+  - "chart:line_overlay"
+  - "chart:waterfall_like"
+  - "chart:hidden_offset_series"
+  - "chart:bubble_size_encoding"
+  - "chart:point_level_colors"
+  - "chart:pattern_fill_series"
+  - "chart:small_multiples"
+  - "chart:manual_plot_border_patch"
+
+  # macro slide layouts
+  - "layout:dominant_chart"
+  - "layout:chart_only"
+  - "layout:chart_plus_table"
+  - "layout:chart_plus_right_rail"
+  - "layout:chart_plus_assumptions"
+  - "layout:chart_plus_kpi_cards"
+  - "layout:diagram_plus_table"
+  - "layout:full_slide_table"
+  - "layout:full_slide_matrix"
+  - "layout:full_slide_flow"
+  - "layout:two_column_opener"
+  - "layout:left_criteria_right_rationale"
+  - "layout:left_rail_flow"
+  - "layout:right_output_stack"
+  - "layout:formula_band"
+  - "layout:bottom_summary_strip"
+  - "layout:logo_heavy"
+
+  # native table patterns
+  - "table:native_table"
+  - "table:reference_table"
+  - "table:methodology_table"
+  - "table:glossary_tables"
+  - "table:two_column_terms"
+  - "table:one_cell_narrative"
+  - "table:matrix"
+  - "table:source_map"
+  - "table:row_spans"
+  - "table:grid_spans"
+  - "table:merged_commentary_cell"
+  - "table:rich_cell_bullets"
+  - "table:local_helpers"
+  - "table:rotated_spines"
+  - "table:section_rules"
+  - "table:full_width"
+
+  # diagram and flow grammars
+  - "flow:scope_filter"
+  - "flow:nested_funnel"
+  - "flow:approach_rail"
+  - "flow:calculation_nodes"
+  - "flow:operator_glyphs"
+  - "flow:parallel_tracks"
+  - "flow:repeat_frames"
+  - "flow:connectors"
+  - "flow:mission_grid"
+  - "flow:allocation_filters"
+  - "flow:braces_grouping"
+  - "flow:swimlanes"
+  - "flow:money_flow"
+  - "flow:value_chain_map"
+  - "flow:logo_matrix"
+
+  # manual overlays, legends, and annotations
+  - "annotation:manual_axis_labels"
+  - "annotation:manual_data_labels"
+  - "annotation:external_legend"
+  - "annotation:color_keys"
+  - "annotation:pattern_keys"
+  - "annotation:line_rule_keys"
+  - "annotation:bubble_size_key"
+  - "annotation:callouts"
+  - "annotation:wedge_callouts"
+  - "annotation:dashed_callouts"
+  - "annotation:ring_callouts"
+  - "annotation:shaded_band"
+  - "annotation:phase_rules"
+  - "annotation:summary_badges"
+  - "annotation:scenario_chip"
+  - "annotation:source_hotspots"
+  - "annotation:off_house_source_note"
+  - "annotation:hyperlinked_source_note"
+  - "annotation:status_icons"
+  - "annotation:kpi_cards"
+  - "annotation:metric_badges"
+  - "annotation:threshold_marker"
+  - "annotation:takeaway_banner"
+  - "annotation:logo_slots"
+
+slides:
+  - id: addressable_demand
+    visual_grammar: ["layout:left_criteria_right_rationale", "flow:scope_filter", "table:native_table", "annotation:color_keys", "table:section_rules"]
+
+  - id: approach_unit_economics
+    visual_grammar: ["layout:full_slide_table", "table:native_table", "table:matrix", "table:row_spans", "table:grid_spans", "table:local_helpers", "table:section_rules", "annotation:dashed_callouts", "annotation:color_keys"]
+
+  - id: approach_volume_and_price
+    visual_grammar: ["flow:parallel_tracks", "flow:calculation_nodes", "flow:operator_glyphs", "flow:repeat_frames", "flow:connectors", "annotation:dashed_callouts", "annotation:color_keys"]
+
+  - id: archetype_comps_newbuild_prices
+    visual_grammar: ["layout:chart_only", "chart:native_bubble", "chart:bubble_size_encoding", "chart:point_level_colors", "chart:pattern_fill_series", "chart:manual_plot_border_patch", "annotation:manual_axis_labels", "annotation:external_legend", "annotation:bubble_size_key", "annotation:off_house_source_note"]
+
+  - id: archetype_comps_shipbuilder_margins
+    visual_grammar: ["chart:small_multiples", "chart:native_column", "chart:line_overlay", "chart:dual_axis", "chart:point_level_colors", "annotation:manual_axis_labels", "annotation:manual_data_labels", "annotation:external_legend"]
+
+  - id: archetype_comps_vocc_performance
+    visual_grammar: ["layout:chart_plus_right_rail", "chart:native_bubble", "chart:bubble_size_encoding", "chart:point_level_colors", "chart:pattern_fill_series", "annotation:manual_axis_labels", "annotation:external_legend", "annotation:bubble_size_key", "table:rich_cell_bullets"]
+
+  - id: assumptions_income_statement_1
+    visual_grammar: ["layout:full_slide_table", "table:native_table", "table:methodology_table", "table:local_helpers", "table:section_rules", "table:rich_cell_bullets", "annotation:takeaway_banner"]
+
+  - id: assumptions_income_statement_2
+    visual_grammar: ["layout:full_slide_table", "table:native_table", "table:methodology_table", "table:local_helpers", "table:section_rules", "table:rich_cell_bullets", "annotation:off_house_source_note"]
+
+  - id: comparison_vs_ddgs
+    visual_grammar: ["layout:chart_plus_table", "chart:native_column", "chart:stacked_column", "chart:point_level_colors", "annotation:manual_data_labels", "table:native_table", "table:row_spans", "table:grid_spans", "annotation:logo_slots", "annotation:hyperlinked_source_note"]
+
+  - id: coordination_archetypes
+    visual_grammar: ["layout:full_slide_table", "table:native_table", "table:reference_table", "table:row_spans", "table:local_helpers", "table:section_rules"]
+
+  - id: definitions_market_levels
+    visual_grammar: ["layout:diagram_plus_table", "flow:nested_funnel", "table:native_table", "table:reference_table", "annotation:logo_slots"]
+
+  - id: fleet_overview
+    visual_grammar: ["layout:chart_plus_kpi_cards", "chart:native_bar", "chart:clustered_bar", "chart:point_level_colors", "annotation:manual_axis_labels", "annotation:manual_data_labels", "annotation:external_legend", "annotation:kpi_cards", "annotation:scenario_chip"]
+
+  - id: freight_charges
+    visual_grammar: ["layout:chart_plus_table", "chart:native_column", "chart:stacked_column", "chart:single_category_stack", "chart:percentage_normalized_stack", "annotation:manual_data_labels", "annotation:external_legend", "annotation:status_icons", "annotation:hyperlinked_source_note", "table:native_table"]
+
+  - id: funding_components
+    visual_grammar: ["layout:full_slide_matrix", "flow:mission_grid", "flow:scope_filter", "table:rotated_spines", "annotation:color_keys", "annotation:dashed_callouts", "annotation:logo_slots", "annotation:off_house_source_note"]
+
+  - id: key_findings_demand_build_economics
+    visual_grammar: ["layout:full_slide_table", "table:native_table", "table:one_cell_narrative", "table:rich_cell_bullets", "annotation:off_house_source_note"]
+
+  - id: key_findings_financial_outlook
+    visual_grammar: ["layout:full_slide_table", "table:native_table", "table:one_cell_narrative", "table:rich_cell_bullets", "annotation:dashed_callouts"]
+
+  - id: key_findings_what_must_be_true
+    visual_grammar: ["layout:full_slide_table", "table:native_table", "table:matrix", "table:row_spans", "table:grid_spans", "table:rich_cell_bullets", "annotation:dashed_callouts"]
+
+  - id: key_inputs
+    visual_grammar: ["layout:full_slide_table", "table:native_table", "table:reference_table", "table:source_map", "table:row_spans", "table:grid_spans", "table:rich_cell_bullets", "table:local_helpers"]
+
+  - id: key_terms_glossary
+    visual_grammar: ["layout:full_slide_table", "table:native_table", "table:glossary_tables", "table:two_column_terms", "table:local_helpers", "table:section_rules"]
+
+  - id: overview
+    visual_grammar: ["layout:two_column_opener", "table:native_table", "table:rich_cell_bullets", "annotation:takeaway_banner"]
+
+  - id: production_outlook_colocated
+    visual_grammar: ["layout:chart_plus_assumptions", "chart:native_combo", "chart:stacked_column", "chart:line_overlay", "chart:point_level_colors", "annotation:manual_axis_labels", "annotation:manual_data_labels", "annotation:ring_callouts", "annotation:phase_rules", "annotation:logo_slots", "annotation:off_house_source_note"]
+
+  - id: production_outlook_separate
+    visual_grammar: ["layout:chart_plus_assumptions", "chart:native_combo", "chart:stacked_column", "chart:line_overlay", "chart:point_level_colors", "annotation:manual_axis_labels", "annotation:manual_data_labels", "annotation:ring_callouts", "annotation:phase_rules", "annotation:logo_slots", "annotation:off_house_source_note"]
+
+  - id: ships_act_captive_demand
+    visual_grammar: ["layout:chart_plus_table", "chart:native_column", "chart:stacked_column", "chart:point_level_colors", "chart:pattern_fill_series", "annotation:manual_data_labels", "annotation:external_legend", "annotation:callouts", "table:native_table", "table:row_spans", "table:rich_cell_bullets"]
+
+  - id: ships_act_overview
+    visual_grammar: ["layout:full_slide_flow", "flow:money_flow", "flow:swimlanes", "flow:connectors", "annotation:callouts", "annotation:hyperlinked_source_note", "annotation:logo_slots"]
+
+  - id: ships_act_plus_volume
+    visual_grammar: ["layout:dominant_chart", "chart:native_area", "annotation:manual_axis_labels", "annotation:external_legend", "annotation:pattern_keys", "annotation:phase_rules", "annotation:summary_badges", "annotation:callouts", "annotation:source_hotspots", "annotation:scenario_chip"]
+
+  - id: ships_act_volume
+    visual_grammar: ["layout:dominant_chart", "chart:native_area", "annotation:manual_axis_labels", "annotation:external_legend", "annotation:pattern_keys", "annotation:phase_rules", "annotation:summary_badges", "annotation:callouts", "annotation:source_hotspots", "annotation:scenario_chip"]
+
+  - id: status_quo_fleet_outlook
+    visual_grammar: ["layout:dominant_chart", "chart:native_column", "chart:stacked_column", "chart:negative_values", "chart:point_level_colors", "annotation:manual_axis_labels", "annotation:manual_data_labels", "annotation:external_legend", "annotation:shaded_band", "annotation:wedge_callouts", "annotation:scenario_chip", "annotation:off_house_source_note"]
+
+  - id: status_quo_outlook_oceangoing
+    visual_grammar: ["layout:chart_plus_table", "chart:native_column", "chart:stacked_column", "chart:negative_values", "chart:point_level_colors", "annotation:manual_axis_labels", "annotation:manual_data_labels", "annotation:external_legend", "table:native_table", "table:merged_commentary_cell", "annotation:scenario_chip"]
+
+  - id: status_quo_outlook_offshore_1
+    visual_grammar: ["layout:chart_plus_table", "chart:native_column", "chart:stacked_column", "chart:negative_values", "chart:point_level_colors", "annotation:manual_axis_labels", "annotation:manual_data_labels", "annotation:external_legend", "annotation:shaded_band", "annotation:threshold_marker", "annotation:takeaway_banner", "annotation:scenario_chip"]
+
+  - id: status_quo_outlook_offshore_2
+    visual_grammar: ["layout:dominant_chart", "chart:native_combo", "chart:dual_axis", "chart:line_overlay", "annotation:manual_axis_labels", "annotation:manual_data_labels", "annotation:external_legend", "annotation:shaded_band", "annotation:callouts", "annotation:hyperlinked_source_note", "annotation:scenario_chip"]
+
+  - id: tcv_approach_iamd
+    visual_grammar: ["layout:left_rail_flow", "layout:right_output_stack", "flow:approach_rail", "flow:calculation_nodes", "flow:allocation_filters", "flow:operator_glyphs", "flow:connectors", "annotation:dashed_callouts", "annotation:color_keys", "annotation:logo_slots"]
+
+  - id: tcv_approach_manned
+    visual_grammar: ["layout:left_rail_flow", "layout:right_output_stack", "flow:approach_rail", "flow:mission_grid", "flow:calculation_nodes", "flow:connectors", "annotation:color_keys", "annotation:logo_slots"]
+
+  - id: tcv_approach_manned_undersea
+    visual_grammar: ["layout:left_rail_flow", "layout:right_output_stack", "flow:approach_rail", "flow:mission_grid", "flow:calculation_nodes", "flow:connectors", "annotation:color_keys", "annotation:logo_slots"]
+
+  - id: tcv_approach_unmanned_undersea
+    visual_grammar: ["layout:left_rail_flow", "layout:right_output_stack", "flow:approach_rail", "flow:calculation_nodes", "flow:operator_glyphs", "flow:braces_grouping", "flow:connectors", "annotation:color_keys", "annotation:logo_slots"]
+
+  - id: tcv_approach_usv
+    visual_grammar: ["layout:left_rail_flow", "layout:right_output_stack", "flow:approach_rail", "flow:calculation_nodes", "flow:operator_glyphs", "flow:connectors", "annotation:color_keys", "annotation:logo_slots"]
+
+  - id: tcv_to_acv_company_acv
+    visual_grammar: ["layout:formula_band", "chart:native_column", "chart:waterfall_like", "chart:hidden_offset_series", "chart:point_level_colors", "annotation:manual_axis_labels", "annotation:manual_data_labels", "annotation:kpi_cards", "table:native_table", "table:rich_cell_bullets"]
+
+  - id: tcv_to_acv_company_acv_undersea
+    visual_grammar: ["layout:formula_band", "chart:native_column", "chart:waterfall_like", "chart:hidden_offset_series", "chart:point_level_colors", "annotation:manual_axis_labels", "annotation:manual_data_labels", "annotation:kpi_cards", "table:native_table", "table:rich_cell_bullets"]
+
+  - id: us_delivery_capacity
+    visual_grammar: ["layout:chart_plus_right_rail", "chart:native_column", "chart:stacked_column", "chart:point_level_colors", "annotation:manual_axis_labels", "annotation:manual_data_labels", "annotation:external_legend", "annotation:summary_badges", "annotation:callouts"]
+
+  - id: value_chain_maritime_transport
+    visual_grammar: ["layout:full_slide_flow", "flow:value_chain_map", "flow:connectors", "annotation:metric_badges", "annotation:external_legend", "annotation:color_keys", "table:native_table"]
+
+  - id: value_chain_participation
+    visual_grammar: ["layout:logo_heavy", "flow:logo_matrix", "flow:value_chain_map", "annotation:logo_slots", "annotation:dashed_callouts", "annotation:callouts", "table:native_table", "annotation:external_legend"]

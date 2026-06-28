@@ -372,8 +372,8 @@ ADDRESSABILITY_LEGEND: tuple[LegendEntry, ...] = (
 )
 
 ALLOCATION_NOTES: tuple[TextSpec, ...] = (
-    TextSpec("domain_allocation", "DomainAllocation", Box(6.010, 2.526, 4.741, 0.664), (RunSpec("Domain allocations (%)", PT(10), italic=True),), None, DK, 3175, None, "ctr", dashed_line=True),
-    TextSpec("kill_chain_allocation", "KillChainAllocation", Box(5.751, 3.290, 5.001, 0.616), (RunSpec("Kill chain role allocations (%)", PT(10), italic=True),), None, DK, 3175, None, "ctr", dashed_line=True),
+    TextSpec("domain_allocation", "DomainAllocation", Box(6.010, 2.526, 4.741, 0.664), (RunSpec("Domain allocations (%)", PT(10), italic=True),), None, DK, 3175, None, "t", dashed_line=True),
+    TextSpec("kill_chain_allocation", "KillChainAllocation", Box(5.751, 3.290, 5.001, 0.616), (RunSpec("Kill chain role allocations (%)", PT(10), italic=True),), None, DK, 3175, None, "t", dashed_line=True),
 )
 
 APPROACH_HEADER = TextSpec("approach_header", "ApproachStepsHeader", Box(0.522, 1.507, 2.291, 0.359), (RunSpec("Approach steps", PT(10), italic=True),), align=None)

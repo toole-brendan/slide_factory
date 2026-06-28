@@ -415,37 +415,46 @@ _STATUS_GEOMS = {"check": ("Haken, check", _GEOM_CHECK), "cross": ("Cross, kreuz
 # paragraph margins or hanging indents. Omitted values intentionally retain the
 # primitive defaults, so layout behavior stays visible at each call site.
 
-def _body() -> str:
+# ════════════════════════════════════════════════════════════════════════════
+# Paint layer. Helpers are ordered slices of the source paint order (z-order is
+# load-bearing here — see paint_shoreside_caption). Each appends to the shared
+# sequential id counter `n`, so ids stay identical to the pre-split module.
+# ════════════════════════════════════════════════════════════════════════════
+def paint_chart_labels(n) -> list[str]:
+    """Native chart frame, title, on-bar/thin-segment $K labels, the total and
+    route labels, and the vessel-operations grouping frame around the bar."""
     out: list[str] = []
-    _ids = iter(range(100, 2000))
-    n = lambda: next(_ids)   # noqa: E731 - sequential shape ids
-    # DROPPED graphicFrame ('think-cell data - do not delete') - think-cell OLE
-    # ── native factory chart (stacked column) → CHARTS[0] ──
     out.append(graphic_frame(sp_id=n(), name="Chart", x=IN(0.439), y=IN(2.062), cx=IN(5.568), cy=IN(4.109), rId="rId2"))
-    out.append(text_box(n(), "Text Placeholder 25", IN(0.53), IN(1.87), IN(4.431), _TXT_H, [paragraph([run("Weighted avg. freight charges, normalized on TEU basis ($K, CY25)", size=PT(10), bold=True, color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
+    out.append(text_box(n(), "ChartTitle", IN(0.53), IN(1.87), IN(4.431), _TXT_H, [paragraph([run("Weighted avg. freight charges, normalized on TEU basis ($K, CY25)", size=PT(10), bold=True, color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
     for _y, _t in _DATA_LABELS["bar_values"]:
-        out.append(text_box(n(), "Label", _BARVAL_X, IN(_y), _BARVAL_W, _BARVAL_H, [paragraph([run(_t, size=PT(10), color=WHITE, font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # FFFFFF white
+        out.append(text_box(n(), "BarValueLabel", _BARVAL_X, IN(_y), _BARVAL_W, _BARVAL_H, [paragraph([run(_t, size=PT(10), color=WHITE, font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # FFFFFF white
     for _x, _y, _cx, _fill, _t in _DATA_LABELS["segment_values"]:
-        out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), _SEG_H, [paragraph([run(_t, size=PT(10), font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=_fill, line_color="none", anchor="ctr", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))
-    out.append(text_box(n(), "Text Placeholder 25", IN(3.108), IN(2.26), IN(0.229), _TXT_H, [paragraph([run("4.9", size=PT(10), color=BLACK, font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # 000000 black
-    out.append(text_box(n(), "Text Placeholder 25", IN(2.481), IN(6.128), IN(1.484), _TXT_H, [paragraph([run("Long Beach to Honolulu", size=PT(10), color=BLACK, font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
-    out.append(text_box(n(), "Rectangle 304", IN(0.439), IN(5.297), IN(1.965), IN(0.608), [paragraph([], align="ctr", line_spacing=100000)], fill=WHITE, line_color="364D6E", anchor="ctr"))   # FFFFFF white
-    # ── legend keys and labels ──
+        out.append(text_box(n(), "BarValueLabel", IN(_x), IN(_y), IN(_cx), _SEG_H, [paragraph([run(_t, size=PT(10), font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=_fill, line_color="none", anchor="ctr", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))
+    out.append(text_box(n(), "TotalFreightChargeLabel", IN(3.108), IN(2.26), IN(0.229), _TXT_H, [paragraph([run("4.9", size=PT(10), color=BLACK, font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # 000000 black
+    out.append(text_box(n(), "RouteLabel", IN(2.481), IN(6.128), IN(1.484), _TXT_H, [paragraph([run("Long Beach to Honolulu", size=PT(10), color=BLACK, font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
+    out.append(text_box(n(), "VesselOperationsBracket", IN(0.439), IN(5.297), IN(1.965), IN(0.608), [paragraph([], align="ctr", line_spacing=100000)], fill=WHITE, line_color="364D6E", anchor="ctr"))   # FFFFFF white
+    return out
+
+
+def paint_legend(n) -> list[str]:
+    """Charge-component colour chips, their captions, and the Fuel Surcharge
+    caption that carries the footnote superscript."""
+    out: list[str] = []
     for _y, _cx, _fill in _LEGEND_KEYS:
         out.append(text_box(n(), "LegendSwatch", _SWATCH_X, IN(_y), IN(_cx), _SWATCH_H, [paragraph([], align="ctr", line_spacing=100000)], fill=_fill, line_color=DK, line_width=3175, anchor="ctr"))
     for _y, _cx, _t in _LEGEND_LABELS:
-        out.append(text_box(n(), "Label", _CAT_X, IN(_y), IN(_cx), _CAT_H, [paragraph([run(_t, size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
-    out.append(text_box(n(), "Text Placeholder 25", IN(0.837), IN(5.307), IN(0.997), _TXT_H, [paragraph([run("Fuel Surcharge", size=PT(10), color=BLACK, font=FONT), run("1", size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
-    # ── chrome ──
-    out.append("")
-    out.append("")
-    # Native comparison table: col_widths defines the four columns and each
-    # trow(h=...) is a minimum. Repeated cell insets/anchor can encode row/
-    # column padding and vertical alignment; align/mar_l/indent place text.
-    # palette - text: 000000 black (labels/descriptions) · FFFFFF white (Terminal/Fuel/Ocean labels) · 162029 dark navy (Wharfage desc);
-    #   fills: C0C0C0 silver (Wharfage) · 808080 gray (Terminal) · 4C6C9C blue (Fuel Surcharge) · 364D6E dark blue (Basic Ocean Rate);
-    #   rules: 162029 dark navy (header) · 808080 gray (inner).
-    out.append(table(n(), "Table 238", IN(6.162), IN(1.755), IN(6.634), IN(4.25), col_widths=[IN(1.667), IN(1.219), IN(2.88), IN(0.868)], rows=[
+        out.append(text_box(n(), "LegendLabel", _CAT_X, IN(_y), IN(_cx), _CAT_H, [paragraph([run(_t, size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
+    out.append(text_box(n(), "LegendLabel", IN(0.837), IN(5.307), IN(0.997), _TXT_H, [paragraph([run("Fuel Surcharge", size=PT(10), color=BLACK, font=FONT), run("1", size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
+    return out
+
+
+def paint_charge_component_table(n) -> list[str]:
+    """Native addressability table: header + six component rows + italic method row.
+    palette - text: 000000 black (labels/descriptions) · FFFFFF white (Terminal/
+    Fuel/Ocean labels) · 162029 dark navy (Wharfage desc); fills: C0C0C0 silver
+    (Wharfage) · 808080 gray (Terminal) · 4C6C9C blue (Fuel Surcharge) · 364D6E
+    dark blue (Basic Ocean Rate); rules: 162029 dark navy (header) · 808080 gray."""
+    return [table(n(), "ChargeComponentTable", IN(6.162), IN(1.755), IN(6.634), IN(4.25), col_widths=[IN(1.667), IN(1.219), IN(2.88), IN(0.868)], rows=[
         trow([
             cell("Freight Charges", bold=True, align="ctr", B=edge(DK)),
             cell("ASV Addressability", bold=True, align="ctr", B=edge(DK)),
@@ -485,33 +494,75 @@ def _body() -> str:
         trow([
             cell("Pasha’s rates calculator breaks out each charge, allowing for isolation of Basic Ocean Rate and Fuel Adjustment Factor", bold=True, italic=True, align="ctr", span=4),
         ], h=IN(0.636)),
-    ]))
-    # status icons: a colored disc with the check/cross knocked out (verbatim source path)
+    ])]
+
+
+def paint_status_icons(n) -> list[str]:
+    """Colored discs with a check/cross knocked out (verbatim source freeform path).
+    Source think-cell glyph names ('Haken, check' / 'Cross, kreuz') are retained."""
+    out: list[str] = []
     for _kind, _y, _fill in _STATUS_ICONS:
         _name, _geom = _STATUS_GEOMS[_kind]
         out.append(custom_geometry(n(), _name, _GLYPH_X, IN(_y), _GLYPH_SZ, _GLYPH_SZ, _geom, fill=_fill))
+    return out
 
-    # Source paint order matters here. The lower vessel-operations caption does
-    # not overlap the gray bracket, but "Shoreside charges" must be drawn after
-    # the bracket and leaders so the white label sits in front of the exterior
-    # border line.
+
+def paint_addressability_brackets(n) -> list[str]:
+    """Vessel-operations group caption, the shoreside grouping bracket, and the
+    dated analysis-status annotation."""
+    out: list[str] = []
     _x, _y, _cx, _cy, _fill, _lc, _t = _GROUP_CAPTIONS[0]
-    out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr"))
-    out.append(text_box(n(), "Rectangle 326", IN(0.439), IN(4.009), IN(1.965), IN(1.264), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color="969696", anchor="ctr"))   # 969696 gray outline
+    out.append(text_box(n(), "VesselOperationsGroupCaption", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr"))
+    out.append(text_box(n(), "ShoresideChargesBracket", IN(0.439), IN(4.009), IN(1.965), IN(1.264), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color="969696", anchor="ctr"))   # 969696 gray outline
     for _x, _y, _cx, _cy, _fill, _lc, _t in _ANNOTATION_BOXES:
-        out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr"))
-    out.append("")
-    out.append(text_box(n(), "Rectangle 407", IN(0.495), IN(6.681), IN(12.367), IN(0.317), [paragraph([run("Note: (1) Matson and Pasha charge a Fuel Surcharge of 16.5% as of September 2025; Basic Ocean Rates largely derived from Pasha Hawaii, whereas Terminal Charges are specific to Matson", size=PT(8), color=BLACK, font=FONT), line_break(), run("Source: ", size=PT(8), color=BLACK, font=FONT), run("Pasha Hawaii", size=PT(8), color=BLACK, hyperlink_rid="rId3", font=FONT), run("; ", size=PT(8), color=BLACK, font=FONT), run("Aloha Freight", size=PT(8), color=BLACK, hyperlink_rid="rId4", font=FONT), run("; ", size=PT(8), color=BLACK, font=FONT), run("Hawaii Department of Transportation", size=PT(8), color=BLACK, hyperlink_rid="rId5", font=FONT)], line_spacing=100000)], fill=None, line_color="none"))   # 000000 black
-    out.append(text_box(n(), "Rectangle 453", IN(6.153), IN(4.094), IN(6.643), IN(1.959), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color="FB6B3C", line_width=19050, anchor="ctr"))   # FB6B3C orange outline
-    out.append(text_box(n(), "Rectangle 465", IN(7.548), IN(5.909), IN(5.054), IN(0.293), [paragraph([run("Directly related to vessel operations; percentage varies based on basic ocean rate, fuel surcharge, discounts, and other factors ", size=PT(10), bold=True, color="FB6B3C", font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white
-    out.append(connector(n(), "Straight Arrow Connector 597", _LEADER_X, IN(4.052), IN(2.162), IN(0.696), color="808080", width=12700, dash="dash"))   # 808080 gray
-    out.append(connector(n(), "Straight Arrow Connector 637", _LEADER_X, IN(3.691), IN(2.171), IN(0.426), color="808080", width=12700, dash="dash"))   # 808080 gray
-    out.append(connector(n(), "Straight Arrow Connector 640", _LEADER_X, IN(2.729), IN(2.162), IN(0.704), color="808080", width=12700, dash="dash"))   # 808080 gray
-    out.append(connector(n(), "Straight Arrow Connector 646", _LEADER_X, IN(2.528), IN(2.171), IN(0.308), color="808080", width=12700, dash="dash"))   # 808080 gray
-    out.append(connector(n(), "Straight Arrow Connector 471", _LEADER_X, IN(2.2), IN(2.135), IN(0.3), color="808080", width=12700, dash="dash", flip_v=True))   # 808080 gray
+        out.append(text_box(n(), "AnalysisStatusNote", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr"))
+    return out
+
+
+def paint_source_note(n) -> list[str]:
+    return [text_box(n(), "SourceNote", IN(0.495), IN(6.681), IN(12.367), IN(0.317), [paragraph([run("Note: (1) Matson and Pasha charge a Fuel Surcharge of 16.5% as of September 2025; Basic Ocean Rates largely derived from Pasha Hawaii, whereas Terminal Charges are specific to Matson", size=PT(8), color=BLACK, font=FONT), line_break(), run("Source: ", size=PT(8), color=BLACK, font=FONT), run("Pasha Hawaii", size=PT(8), color=BLACK, hyperlink_rid="rId3", font=FONT), run("; ", size=PT(8), color=BLACK, font=FONT), run("Aloha Freight", size=PT(8), color=BLACK, hyperlink_rid="rId4", font=FONT), run("; ", size=PT(8), color=BLACK, font=FONT), run("Hawaii Department of Transportation", size=PT(8), color=BLACK, hyperlink_rid="rId5", font=FONT)], line_spacing=100000)], fill=None, line_color="none")]   # 000000 black
+
+
+def paint_vessel_operations_callout(n) -> list[str]:
+    """Orange highlight around the addressable charges, the vessel-operations
+    explanatory callout, and the dashed leaders from the chart to the table rows."""
+    out: list[str] = []
+    out.append(text_box(n(), "ChargeComponentHighlight", IN(6.153), IN(4.094), IN(6.643), IN(1.959), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color="FB6B3C", line_width=19050, anchor="ctr"))   # FB6B3C orange outline
+    out.append(text_box(n(), "VesselOperationsCallout", IN(7.548), IN(5.909), IN(5.054), IN(0.293), [paragraph([run("Directly related to vessel operations; percentage varies based on basic ocean rate, fuel surcharge, discounts, and other factors ", size=PT(10), bold=True, color="FB6B3C", font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white
+    out.append(connector(n(), "ChargeLeader_TerminalCharges", _LEADER_X, IN(4.052), IN(2.162), IN(0.696), color="808080", width=12700, dash="dash"))   # 808080 gray
+    out.append(connector(n(), "ChargeLeader_WharfageHNL", _LEADER_X, IN(3.691), IN(2.171), IN(0.426), color="808080", width=12700, dash="dash"))   # 808080 gray
+    out.append(connector(n(), "ChargeLeader_WharfageLB", _LEADER_X, IN(2.729), IN(2.162), IN(0.704), color="808080", width=12700, dash="dash"))   # 808080 gray
+    out.append(connector(n(), "ChargeLeader_TerminalHNL", _LEADER_X, IN(2.528), IN(2.171), IN(0.308), color="808080", width=12700, dash="dash"))   # 808080 gray
+    out.append(connector(n(), "ChargeLeader_OtherFees", _LEADER_X, IN(2.2), IN(2.135), IN(0.3), color="808080", width=12700, dash="dash", flip_v=True))   # 808080 gray
+    return out
+
+
+def paint_shoreside_caption(n) -> list[str]:
+    """'Shoreside charges' caption. Source paint order matters: it is drawn after
+    the bracket and leaders so the white label sits in front of the border line."""
     _x, _y, _cx, _cy, _fill, _lc, _t = _GROUP_CAPTIONS[1]
-    out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr"))
-    out.append(text_box(n(), "Rectangle 36", IN(0.53), IN(1.447), IN(3.2), IN(0.244), [paragraph([run("Spot Rate from CONUS", size=PT(11), bold=True, italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill="CEDDEC", line_color="none", anchor="ctr"))   # CEDDEC pale blue
+    return [text_box(n(), "ShoresideChargesGroupCaption", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr")]
+
+
+def paint_spot_rate_callout(n) -> list[str]:
+    return [text_box(n(), "SpotRateCallout", IN(0.53), IN(1.447), IN(3.2), IN(0.244), [paragraph([run("Spot Rate from CONUS", size=PT(11), bold=True, italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill="CEDDEC", line_color="none", anchor="ctr")]   # CEDDEC pale blue
+
+
+def _body() -> str:
+    _ids = iter(range(100, 2000))
+    n = lambda: next(_ids)   # noqa: E731 - sequential shape ids
+    # DROPPED graphicFrame ('think-cell data - do not delete') - think-cell OLE.
+    # Paint order is the source z-order; ids stay sequential via the shared `n`.
+    out: list[str] = []
+    out += paint_chart_labels(n)
+    out += paint_legend(n)
+    out += paint_charge_component_table(n)
+    out += paint_status_icons(n)
+    out += paint_addressability_brackets(n)
+    out += paint_source_note(n)
+    out += paint_vessel_operations_callout(n)
+    out += paint_shoreside_caption(n)
+    out += paint_spot_rate_callout(n)
     return "".join(out)
 
 

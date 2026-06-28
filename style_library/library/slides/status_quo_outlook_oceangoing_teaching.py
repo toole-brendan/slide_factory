@@ -538,64 +538,127 @@ _LEGEND_LABELS = [    # (x, y, cx, label) x8 — archetype captions: Retirements
 # primitive defaults intentionally.
 
 
-def _body() -> str:
+# ════════════════════════════════════════════════════════════════════════════
+# Serial-production threshold key — one glyph + caption per support state.
+# ════════════════════════════════════════════════════════════════════════════
+@dataclass(frozen=True)
+class SerialKeyEntry:
+    glyph_color: str
+    glyph_x: float
+    glyph_y: float
+    label_x: float
+    label_y: float
+    label: str
+
+
+SERIAL_PRODUCTION_KEY: tuple[SerialKeyEntry, ...] = (
+    SerialKeyEntry(TABLE_VALUE_RED, 10.438, 1.429, 10.694, 1.442, "Does not support serial production"),
+    SerialKeyEntry("007770", 10.438, 1.187, 10.694, 1.2, "Supports serial production"),
+)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Paint layer. Each helper appends shapes to the shared sequential id counter `n`
+# in the source paint order; emitted names are the slide's teaching surface.
+# ════════════════════════════════════════════════════════════════════════════
+def paint_orderbook_band(n) -> list[str]:
+    """Left-side grey rail flagging the years that carry orderbook data."""
+    return [text_box(n(), "OrderbookDataBand", IN(0.783), IN(2.104), IN(1.354), IN(4.276), [paragraph([run("Years with ", size=PT(10), italic=True, color=BLACK, font=FONT), line_break(), run("orderbook ", size=PT(10), italic=True, color=BLACK, font=FONT), line_break(), run("data", size=PT(10), italic=True, color=BLACK, font=FONT), line_break(), line_break(), line_break()], align="r", line_spacing=100000)], fill=GRAY_1, line_color="none", anchor="b")]   # F2F2F2 off-white
+
+
+def paint_native_chart(n) -> list[str]:
+    """Native editable stacked-column chart frame; labels are slide-level objects."""
+    # Chart XML/XLSB values are embedded above and generated through CHART_STYLE.
+    return [graphic_frame(sp_id=n(), name="Chart", x=IN(0.325), y=IN(1.866), cx=IN(7.359), cy=IN(4.165), rId="rId2")]
+
+
+def paint_year_ticks(n) -> list[str]:
+    """Manual 2026-2050 category ticks: right-aligned, no-wrap, zero-inset so the
+    boxes register precisely to the plotted categories."""
+    return [text_box(n(), "YearTickLabel", IN(_x), _AXIS_Y, _AXIS_W, _AXIS_H, [paragraph([run(_t, size=PT(8), color=BLACK, font=FONT)], align="r", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", vert="vert270", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0) for _x, _t in _CATEGORY_TICK_LABELS]   # 000000 black; vert270 = rotated 270° (reads bottom-to-top), per source
+
+
+def paint_chart_title(n) -> list[str]:
+    return [text_box(n(), "ChartTitle", IN(0.484), IN(1.752), IN(6.707), IN(0.167), [paragraph([run("Implied Retirements vs. Orderbook of US-Built, US-Flagged Oceangoing Commercial Vessels (# Hulls)", size=PT(10), bold=True, color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0)]   # 000000 black
+
+
+def paint_bar_total_labels(n) -> list[str]:
+    """Net-hull bar totals, the manualized chart-XML labels, and the two standalone
+    orderbook (+4) value labels — centered with tight side insets in source-fit boxes."""
     out: list[str] = []
-    _ids = iter(range(100, 2000))
-    n = lambda: next(_ids)   # noqa: E731 - sequential shape ids
-    # DROPPED graphicFrame ('think-cell data - do not delete') - think-cell OLE
-    # ── orderbook-window rail (grey band behind the chart's left years) ──
-    out.append(text_box(n(), "Rectangle 30", IN(0.783), IN(2.104), IN(1.354), IN(4.276), [paragraph([run("Years with ", size=PT(10), italic=True, color=BLACK, font=FONT), line_break(), run("orderbook ", size=PT(10), italic=True, color=BLACK, font=FONT), line_break(), run("data", size=PT(10), italic=True, color=BLACK, font=FONT), line_break(), line_break(), line_break()], align="r", line_spacing=100000)], fill=GRAY_1, line_color="none", anchor="b"))   # F2F2F2 off-white
-    # ── native editable chart + category axis ──
-    # Chart XML/XLSB values are now embedded above and generated through CHART_STYLE.
-    out.append(graphic_frame(sp_id=n(), name="Chart", x=IN(0.325), y=IN(1.866), cx=IN(7.359), cy=IN(4.165), rId="rId2"))
-    # Tick labels are right-aligned, no-wrap, and zero-inset so their boxes
-    # register precisely to the plotted categories.
-    for _x, _t in _CATEGORY_TICK_LABELS:
-        out.append(text_box(n(), "YearLabel", IN(_x), _AXIS_Y, _AXIS_W, _AXIS_H, [paragraph([run(_t, size=PT(8), color=BLACK, font=FONT)], align="r", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", vert="vert270", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black; vert270 = rotated 270° (reads bottom-to-top), per source
-    # ── chart title ──
-    out.append(text_box(n(), "Text Placeholder 25", IN(0.484), IN(1.752), IN(6.707), IN(0.167), [paragraph([run("Implied Retirements vs. Orderbook of US-Built, US-Flagged Oceangoing Commercial Vessels (# Hulls)", size=PT(10), bold=True, color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
-    # ── data labels: bar totals (net hulls added/removed) ──
-    # Centered paragraphs use tight side insets in narrow source-fit boxes.
     for _x, _y, _t in _DATA_LABELS:
-        out.append(text_box(n(), "Label", IN(_x), IN(_y), _BARVAL_W, _BARVAL_H, [paragraph([run(_t, size=PT(10), font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # 000000 black
-    # Manualized labels whose values came from the original chart XML dLbls.
+        out.append(text_box(n(), "BarTotalLabel", IN(_x), IN(_y), _BARVAL_W, _BARVAL_H, [paragraph([run(_t, size=PT(10), font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # 000000 black
     for _x, _y, _w, _t in _XML_DATA_LABELS:
         out.append(text_box(n(), "ManualizedChartXmlLabel", IN(_x), IN(_y), IN(_w), _BARVAL_H, [paragraph([run(_t, size=PT(10), font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))
     # two standalone "4" data labels (2029/2030 orderbook), interleaved in paint order
-    out.append(text_box(n(), "Text Placeholder 25", IN(1.674), IN(2.837), IN(0.115), IN(0.167), [paragraph([run("4", size=PT(10), font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # 000000 black
-    out.append(text_box(n(), "Text Placeholder 25", IN(1.946), IN(2.837), IN(0.115), IN(0.167), [paragraph([run("4", size=PT(10), font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # 000000 black
-    # ── chrome ──
-    out.append("")
-    out.append("")
-    # ── table — avg retirement replacements required per year ’26-’50 ──
-    out.append(_replacement_table(n()))
-    # ── legend — Retirements frame + Orderbook frame, archetype keys +
-    #    captions, and the bar-total wedge callout (all interleaved in paint order) ──
-    out.append(text_box(n(), "Rectangle 840", IN(5.283), IN(2.488), IN(0.932), IN(0.98), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color=OUTLINE_NEAR_BLACK, anchor="ctr"))   # 121415 near-black outline
+    out.append(text_box(n(), "OrderbookValueLabel", IN(1.674), IN(2.837), IN(0.115), IN(0.167), [paragraph([run("4", size=PT(10), font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # 000000 black
+    out.append(text_box(n(), "OrderbookValueLabel", IN(1.946), IN(2.837), IN(0.115), IN(0.167), [paragraph([run("4", size=PT(10), font=FONT)], align="ctr", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=17463, t_ins=0, r_ins=17463, b_ins=0))   # 000000 black
+    return out
+
+
+def paint_legend(n) -> list[str]:
+    """Paired legend: Retirements frame + Orderbook frame, archetype keys + captions,
+    and the bar-total wedge callout (all interleaved in source paint order)."""
+    out: list[str] = []
+    out.append(text_box(n(), "RetirementsLegendFrame", IN(5.283), IN(2.488), IN(0.932), IN(0.98), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color=OUTLINE_NEAR_BLACK, anchor="ctr"))   # 121415 near-black outline
     # Keys have empty centered text bodies; caption boxes below are centered,
     # no-wrap, zero-inset, and use zero paragraph margins.
     for _x, _y, _fill in _LEGEND_KEYS:
         out.append(text_box(n(), "LegendSwatch", IN(_x), IN(_y), _SWATCH_W, _SWATCH_H, [paragraph([], align="ctr", line_spacing=100000)], fill=_fill, line_color="none", anchor="ctr"))
     for _x, _y, _cx, _t in _LEGEND_LABELS:
-        out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), _LEGEND_LBL_H, [paragraph([run(_t, size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
-    out.append(text_box(n(), "Speech Bubble: Rectangle 645", IN(5.193), IN(1.965), IN(2.382), IN(0.425), [paragraph([run("Bar total values indicate net hulls added (removed) each year", size=PT(10), italic=True, color=BLACK, font=FONT)], line_spacing=100000)], fill=WHITE, line_color="none", prst="wedgeRectCallout", geom_adj={"adj1": "val -19106", "adj2": "val -3267"}, anchor="ctr"))   # FFFFFF white
-    out.append(text_box(n(), "Rectangle 839", IN(5.325), IN(2.412), IN(0.849), IN(0.159), [paragraph([run("Retirements", size=PT(8), italic=True, color=BLACK, font=FONT), run("1", size=PT(8), italic=True, baseline=30000, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white; "1" = superscript footnote marker
-    out.append(text_box(n(), "Rectangle 688", IN(6.247), IN(2.488), IN(0.932), IN(0.98), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color=OUTLINE_NEAR_BLACK, anchor="ctr"))   # 121415 near-black outline
-    out.append(text_box(n(), "Rectangle 689", IN(6.288), IN(2.412), IN(0.849), IN(0.159), [paragraph([run("Orderbook", size=PT(8), italic=True, color=BLACK, font=FONT), run("2", size=PT(8), italic=True, baseline=30000, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white; "2" = superscript footnote marker
-    # ── takeaway banner ──
-    out.append(text_box(n(), "Rectangle 690", IN(7.79), IN(5.652), IN(5.094), IN(0.68), [paragraph([run("~0.2-1.2 vessels per year is insufficient for serial production ", size=PT(12), bold=True, color=BLACK, font=FONT), run("(5+ hulls/yr. to achieve max labor efficiencies by end of year 2)", size=PT(12), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=SCENARIO_BLUE, line_color="none", anchor="ctr", effects=CALLOUT_SHADOW))   # CEDDEC pale blue
-    # ── footnote — kept verbatim (sits off the house Source position) ──
-    out.append(text_box(n(), "Rectangle 694", IN(0.495), IN(6.68), IN(12.367), IN(0.317), [paragraph([run("Note: (1) Service life assumptions – 40 years for Bulk, Container, General Cargo, and RORO, 35 years for Tankers, 30 years for PSVs, and 25 years for Crew/FSVs; (2) All Oceangoing Commercial vessels in orderbook are built at Hanwha Philly, including containerships purchased by Matson and 12x tankers (10x Chemical & Oil and 2x LNG) purchased by Hanwha Shipping | Source: Clarksons (US fleet size and GT data)", size=PT(8), color=BLACK, font=FONT)], line_spacing=100000)], fill=None, line_color="none"))   # 000000 black
-    # ── serial-production key — red "#" (does not support) / green "#" (supports) ──
-    out.append(text_box(n(), "Rectangle 715", IN(10.438), IN(1.429), IN(0.301), IN(0.26), [paragraph([run("#", size=PT(16), bold=True, color=TABLE_VALUE_RED, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color="none", anchor="ctr"))   # C30C3E crimson
-    out.append(text_box(n(), "TextBox 716", IN(10.694), IN(1.442), IN(2.101), IN(0.234), [paragraph([run("Does not support serial production", size=PT(10), font=FONT)], line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none"))   # 000000 black
-    out.append(text_box(n(), "Rectangle 717", IN(10.438), IN(1.187), IN(0.301), IN(0.26), [paragraph([run("#", size=PT(16), bold=True, color="007770", font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color="none", anchor="ctr"))   # 007770 teal
-    out.append(text_box(n(), "TextBox 718", IN(10.694), IN(1.2), IN(2.101), IN(0.234), [paragraph([run("Supports serial production", size=PT(10), font=FONT)], line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none"))   # 000000 black
-    out.append("")
-    # ── Hanwha callout (wedge over the chart) ──
-    out.append(text_box(n(), "Speech Bubble: Rectangle 2", IN(2.239), IN(3.166), IN(1.501), IN(0.416), [paragraph([run("12x purchased by Hanwha Shipping", size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color=BLACK, prst="wedgeRectCallout", geom_adj={"adj1": "val -59329", "adj2": "val -21373"}, anchor="ctr"))   # 000000 black outline
-    # ── scenario chip (top-right) ──
-    out.append(text_box(n(), "Rectangle 4", IN(8.069), IN(0.174), IN(2.977), IN(0.217), [paragraph([run("(1) Status Quo Scenario", size=PT(12), bold=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=SCENARIO_BLUE, line_color=BLACK, line_width=19050, anchor="ctr"))   # CEDDEC pale blue; 1.5pt border (source lnRef idx 2)
+        out.append(text_box(n(), "LegendLabel", IN(_x), IN(_y), IN(_cx), _LEGEND_LBL_H, [paragraph([run(_t, size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
+    out.append(text_box(n(), "BarTotalCallout", IN(5.193), IN(1.965), IN(2.382), IN(0.425), [paragraph([run("Bar total values indicate net hulls added (removed) each year", size=PT(10), italic=True, color=BLACK, font=FONT)], line_spacing=100000)], fill=WHITE, line_color="none", prst="wedgeRectCallout", geom_adj={"adj1": "val -19106", "adj2": "val -3267"}, anchor="ctr"))   # FFFFFF white
+    out.append(text_box(n(), "RetirementsLegendCaption", IN(5.325), IN(2.412), IN(0.849), IN(0.159), [paragraph([run("Retirements", size=PT(8), italic=True, color=BLACK, font=FONT), run("1", size=PT(8), italic=True, baseline=30000, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white; "1" = superscript footnote marker
+    out.append(text_box(n(), "OrderbookLegendFrame", IN(6.247), IN(2.488), IN(0.932), IN(0.98), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color=OUTLINE_NEAR_BLACK, anchor="ctr"))   # 121415 near-black outline
+    out.append(text_box(n(), "OrderbookLegendCaption", IN(6.288), IN(2.412), IN(0.849), IN(0.159), [paragraph([run("Orderbook", size=PT(8), italic=True, color=BLACK, font=FONT), run("2", size=PT(8), italic=True, baseline=30000, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white; "2" = superscript footnote marker
+    return out
+
+
+def paint_takeaway_banner(n) -> list[str]:
+    return [text_box(n(), "TakeawayBanner", IN(7.79), IN(5.652), IN(5.094), IN(0.68), [paragraph([run("~0.2-1.2 vessels per year is insufficient for serial production ", size=PT(12), bold=True, color=BLACK, font=FONT), run("(5+ hulls/yr. to achieve max labor efficiencies by end of year 2)", size=PT(12), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=SCENARIO_BLUE, line_color="none", anchor="ctr", effects=CALLOUT_SHADOW)]   # CEDDEC pale blue
+
+
+def paint_source_note(n) -> list[str]:
+    """Footnote kept verbatim (sits off the house Source position)."""
+    return [text_box(n(), "SourceNote", IN(0.495), IN(6.68), IN(12.367), IN(0.317), [paragraph([run("Note: (1) Service life assumptions – 40 years for Bulk, Container, General Cargo, and RORO, 35 years for Tankers, 30 years for PSVs, and 25 years for Crew/FSVs; (2) All Oceangoing Commercial vessels in orderbook are built at Hanwha Philly, including containerships purchased by Matson and 12x tankers (10x Chemical & Oil and 2x LNG) purchased by Hanwha Shipping | Source: Clarksons (US fleet size and GT data)", size=PT(8), color=BLACK, font=FONT)], line_spacing=100000)], fill=None, line_color="none")]   # 000000 black
+
+
+def paint_serial_production_key(n) -> list[str]:
+    """Red "#" (does not support) / teal "#" (supports) glyph + caption per state."""
+    out: list[str] = []
+    for entry in SERIAL_PRODUCTION_KEY:
+        out.append(text_box(n(), "SerialProductionGlyph", IN(entry.glyph_x), IN(entry.glyph_y), IN(0.301), IN(0.26), [paragraph([run("#", size=PT(16), bold=True, color=entry.glyph_color, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color="none", anchor="ctr"))   # C30C3E crimson / 007770 teal
+        out.append(text_box(n(), "SerialProductionLabel", IN(entry.label_x), IN(entry.label_y), IN(2.101), IN(0.234), [paragraph([run(entry.label, size=PT(10), font=FONT)], line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none"))   # 000000 black
+    return out
+
+
+def paint_hanwha_callout(n) -> list[str]:
+    """Wedge callout over the chart noting the Hanwha Shipping tanker purchase."""
+    return [text_box(n(), "HanwhaPurchaseCallout", IN(2.239), IN(3.166), IN(1.501), IN(0.416), [paragraph([run("12x purchased by Hanwha Shipping", size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color=BLACK, prst="wedgeRectCallout", geom_adj={"adj1": "val -59329", "adj2": "val -21373"}, anchor="ctr")]   # 000000 black outline
+
+
+def paint_scenario_chip(n) -> list[str]:
+    return [text_box(n(), "ScenarioChip", IN(8.069), IN(0.174), IN(2.977), IN(0.217), [paragraph([run("(1) Status Quo Scenario", size=PT(12), bold=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=SCENARIO_BLUE, line_color=BLACK, line_width=19050, anchor="ctr")]   # CEDDEC pale blue; 1.5pt border (source lnRef idx 2)
+
+
+def _body() -> str:
+    _ids = iter(range(100, 2000))
+    n = lambda: next(_ids)   # noqa: E731 - sequential shape ids
+    # DROPPED graphicFrame ('think-cell data - do not delete') - think-cell OLE.
+    # Paint order is the source z-order; ids stay sequential via the shared `n`.
+    out: list[str] = []
+    out += paint_orderbook_band(n)
+    out += paint_native_chart(n)
+    out += paint_year_ticks(n)
+    out += paint_chart_title(n)
+    out += paint_bar_total_labels(n)
+    out.append(_replacement_table(n()))   # avg retirement replacements per year ’26-’50
+    out += paint_legend(n)
+    out += paint_takeaway_banner(n)
+    out += paint_source_note(n)
+    out += paint_serial_production_key(n)
+    out += paint_hanwha_callout(n)
+    out += paint_scenario_chip(n)
     return "".join(out)
 
 

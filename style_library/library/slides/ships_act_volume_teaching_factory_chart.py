@@ -358,7 +358,7 @@ AXIS_RIGHT_CAP = LabelBox(
     align=None,
 )
 AXIS_TITLE = LabelBox(
-    "Text Placeholder 25",
+    "ChartAxisTitle",
     Box(0.542, 1.505, 4.347, 0.167),
     "Additions to US-Built, Oceangoing Commercial Fleet (# deliveries)",
     font_pt=10,
@@ -482,24 +482,24 @@ REFERENCE_MARKERS: tuple[ReferenceMarker, ...] = (
 # visible `dash` rules below. Drawing them black would double every dashed rule
 # and muddy the dash pattern, so keep them color="none".
 INITIAL_PHASE_RULES: tuple[Rule, ...] = (
-    Rule("Straight Connector 734", 0.911, 3.066, 10.750, 0.000, dash="lgDash", color="none"),
-    Rule("Straight Connector 735", 0.911, 2.191, 10.750, 0.000, dash="lgDash", color="none"),
-    Rule("Straight Connector 737", 0.911, 2.741, 10.750, 0.000, dash="lgDash", color="none"),
-    Rule("Straight Connector 740", 0.911, 3.714, 10.750, 0.000, dash="lgDash", color="none"),
-    Rule("Straight Connector 741", 0.911, 4.363, 10.750, 0.000, dash="lgDash", color="none"),
-    Rule("Straight Connector 743", 0.911, 4.670, 10.750, 0.000, dash="lgDash", color="none"),
+    Rule("PhaseCapacityRuleAnchor", 0.911, 3.066, 10.750, 0.000, dash="lgDash", color="none"),
+    Rule("PhaseCapacityRuleAnchor", 0.911, 2.191, 10.750, 0.000, dash="lgDash", color="none"),
+    Rule("PhaseCapacityRuleAnchor", 0.911, 2.741, 10.750, 0.000, dash="lgDash", color="none"),
+    Rule("PhaseCapacityRuleAnchor", 0.911, 3.714, 10.750, 0.000, dash="lgDash", color="none"),
+    Rule("PhaseCapacityRuleAnchor", 0.911, 4.363, 10.750, 0.000, dash="lgDash", color="none"),
+    Rule("PhaseCapacityRuleAnchor", 0.911, 4.670, 10.750, 0.000, dash="lgDash", color="none"),
 )
 
 MID_LEGEND_RULES: tuple[Rule, ...] = (
-    Rule("Straight Arrow Connector 777", 0.913, 2.729, 10.900, 0.008),
-    Rule("Straight Arrow Connector 778", 0.913, 2.183, 10.900, 0.008),
+    Rule("PhaseCapacityRule", 0.913, 2.729, 10.900, 0.008),
+    Rule("PhaseCapacityRule", 0.913, 2.183, 10.900, 0.008),
 )
 
 LATE_PHASE_RULES: tuple[Rule, ...] = (
-    Rule("Straight Arrow Connector 796", 0.913, 3.052, 10.900, 0.008),
-    Rule("Straight Arrow Connector 797", 0.913, 3.712, 10.900, 0.008),
-    Rule("Straight Arrow Connector 798", 0.913, 4.349, 10.900, 0.008),
-    Rule("Straight Arrow Connector 803", 0.911, 4.656, 10.900, 0.008),
+    Rule("PhaseCapacityRule", 0.913, 3.052, 10.900, 0.008),
+    Rule("PhaseCapacityRule", 0.913, 3.712, 10.900, 0.008),
+    Rule("PhaseCapacityRule", 0.913, 4.349, 10.900, 0.008),
+    Rule("PhaseCapacityRule", 0.911, 4.656, 10.900, 0.008),
 )
 
 YEAR_TICKS: tuple[YearTick, ...] = (
@@ -531,19 +531,19 @@ YEAR_TICKS: tuple[YearTick, ...] = (
 )
 
 REFERENCE_LABELS: tuple[LabelBox, ...] = (
-    LabelBox("Label", Box(11.913, 2.658, 1.281, ANNOTATION_LABEL_H), "PA Phase 5 (125/yr.)"),
-    LabelBox("Label", Box(11.913, 2.983, 1.281, ANNOTATION_LABEL_H), "PA Phase 4 (105/yr.)"),
-    LabelBox("Label", Box(11.913, 3.630, 1.205, ANNOTATION_LABEL_H), "PA Phase 3 (65/yr.)"),
-    LabelBox("Label", Box(11.913, 4.280, 1.205, ANNOTATION_LABEL_H), "PA Phase 2 (25/yr.)"),
-    LabelBox("Label", Box(11.913, 4.587, 1.128, ANNOTATION_LABEL_H), "PA Phase 1 (6/yr.)"),
+    LabelBox("ReferenceLabel", Box(11.913, 2.658, 1.281, ANNOTATION_LABEL_H), "PA Phase 5 (125/yr.)"),
+    LabelBox("ReferenceLabel", Box(11.913, 2.983, 1.281, ANNOTATION_LABEL_H), "PA Phase 4 (105/yr.)"),
+    LabelBox("ReferenceLabel", Box(11.913, 3.630, 1.205, ANNOTATION_LABEL_H), "PA Phase 3 (65/yr.)"),
+    LabelBox("ReferenceLabel", Box(11.913, 4.280, 1.205, ANNOTATION_LABEL_H), "PA Phase 2 (25/yr.)"),
+    LabelBox("ReferenceLabel", Box(11.913, 4.587, 1.128, ANNOTATION_LABEL_H), "PA Phase 1 (6/yr.)"),
 )
 
 LEGEND_LABELS: tuple[LabelBox, ...] = (
-    LabelBox("Label", Box(1.342, 1.922, 1.222, ANNOTATION_LABEL_H), "Excess US capacity"),
-    LabelBox("Label", Box(1.342, 2.144, 2.488, ANNOTATION_LABEL_H), "Heritage Foundation target (incremental)"),
-    LabelBox("Label", Box(1.342, 2.366, 1.236, ANNOTATION_LABEL_H), "SHIPS Act Scenario"),
-    LabelBox("Label", Box(1.342, 2.589, 1.545, ANNOTATION_LABEL_H), "Retirement replacements"),
-    LabelBox("Label", Box(1.342, 2.811, 0.653, ANNOTATION_LABEL_H), "Orderbook"),
+    LabelBox("LegendLabel", Box(1.342, 1.922, 1.222, ANNOTATION_LABEL_H), "Excess US capacity"),
+    LabelBox("LegendLabel", Box(1.342, 2.144, 2.488, ANNOTATION_LABEL_H), "Heritage Foundation target (incremental)"),
+    LabelBox("LegendLabel", Box(1.342, 2.366, 1.236, ANNOTATION_LABEL_H), "SHIPS Act Scenario"),
+    LabelBox("LegendLabel", Box(1.342, 2.589, 1.545, ANNOTATION_LABEL_H), "Retirement replacements"),
+    LabelBox("LegendLabel", Box(1.342, 2.811, 0.653, ANNOTATION_LABEL_H), "Orderbook"),
 )
 
 SOLID_LEGEND_SWATCHES: tuple[LegendSwatch, ...] = (
@@ -576,12 +576,12 @@ SCALE_LABELS: tuple[LabelBox, ...] = (
 # Red->green vertical gradient, double-headed (source confidence scale: C30C3E "Lower"
 # top -> 008600 "Higher" bottom). grad overrides color; arrow="both" = head + tail.
 CONFIDENCE_SCALE_ARROW = Rule(
-    "Straight Arrow Connector 800", 4.391, 2.171, 0.000, 0.741, width=28_575,
+    "ConfidenceScaleArrow", 4.391, 2.171, 0.000, 0.741, width=28_575,
     dashed=False, arrow="both", grad=((0, "C30C3E"), (100_000, "008600")), grad_angle=5_400_000,
 )
 
 CAPACITY_CAPTION = Callout(
-    name="Rectangle 804",
+    name="DemandCapacityCaption",
     box=Box(5.133, 1.499, 5.268, 0.437),
     text="Demand modeled with Port Alpha Phase 5 capacity; demand would spread over more years if capacity held at earlier phases ",
     font_pt=12,
@@ -592,7 +592,7 @@ CAPACITY_CAPTION = Callout(
 
 CALLOUTS: tuple[Callout, ...] = (
     Callout(
-        name="Speech Bubble: Rectangle 9",
+        name="ContingencyCallout",
         box=Box(2.999, 4.934, 1.201, 0.278),
         text="Contingent upon SHIPS Act passing",
         font_pt=8,
@@ -603,7 +603,7 @@ CALLOUTS: tuple[Callout, ...] = (
         italic=True,
     ),
     Callout(
-        name="Rectangle 709",
+        name="TotalCapacityCallout",
         box=Box(10.500, 1.499, 2.694, 0.506),
         text="Total US delivery capacity by 2050 w/ PA phases and competitor expansion; PA deliveries in parenthetical",
         font_pt=10,
@@ -612,7 +612,7 @@ CALLOUTS: tuple[Callout, ...] = (
         italic=True,
     ),
     Callout(
-        name="Speech Bubble: Rectangle 851",
+        name="FundingCallout",
         box=Box(5.269, 4.934, 2.340, 0.278),
         text="Requires increased universal cargo fees and MSTF balance cap increase",
         font_pt=8,
@@ -733,7 +733,7 @@ def paint_chrome_and_scenario(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "Rectangle 724",
+            "ScenarioChip",
             *SCENARIO_CHIP.box.emu(),
             [paragraph([run(SCENARIO_CHIP.text, size=PT(12), bold=True, color=WHITE, font=FONT)], align="ctr", line_spacing=100_000)],
             fill=SCENARIO_CHIP.fill,    # 447BB2 = theme bg2 @ 50% lum (reference chip fill)
@@ -802,7 +802,7 @@ def paint_axis_titles(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "Text Placeholder 25",
+            "RightAxisCapLabel",
             *AXIS_RIGHT_CAP.box.emu(),
             [
                 paragraph(
@@ -862,7 +862,7 @@ def paint_legend_panel_and_keys(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "Rectangle 787",
+            "HeritageTargetPatternSwatch",
             *HERITAGE_LEGEND_SWATCH.box.emu(),
             [_empty_centered_para()],
             fill=None,
@@ -891,7 +891,7 @@ def paint_late_rules_and_scale(out: list[str], ids: ShapeIds) -> None:
         out.append(
             text_box(
                 ids.next(),
-                "Label",
+                "ConfidenceScaleLabel",
                 *label.box.emu(),
                 [paragraph([_r(label.text, size_pt=8, italic=True)], align="ctr", line_spacing=100_000)],
                 fill=label.fill,
@@ -935,7 +935,7 @@ def paint_capacity_and_summary(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "Rectangle 6",
+            "SummaryCaption",
             *SUMMARY_CAPTION.box.emu(),
             [paragraph([_r(SUMMARY_CAPTION.text, bold=True, italic=True)], line_spacing=100_000)],
             fill=None,

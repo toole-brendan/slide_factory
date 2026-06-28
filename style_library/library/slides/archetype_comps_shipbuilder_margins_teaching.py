@@ -633,7 +633,7 @@ def paint_chrome(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "Rectangle 1964",
+            "SourceNote",
             IN(0.495),
             IN(7.006),
             IN(5.102),
@@ -654,49 +654,49 @@ def paint_chart_frames(out: list[str], ids: ShapeIds) -> None:
 def paint_panel_baselines(out: list[str], ids: ShapeIds) -> None:
     # Dashed baselines/rules copied from the source slide. The segmented 2021 and
     # 2022 baselines preserve gaps around labels and dividers.
-    out.append(connector(ids.next(), "Straight Connector 2230", _GRID_X, IN(2.021), IN(11.832), IN(0), color=DK, width=9525, dash="lgDash"))
-    out.append(connector(ids.next(), "Straight Connector 2205", _GRID_X, IN(3.052), IN(11.832), IN(0), color=DK, width=9525, dash="lgDash"))
-    out.append(connector(ids.next(), "Straight Connector 2180", _GRID_X, IN(4.083), IN(1.024), IN(0), color=DK, width=9525, dash="lgDash"))
-    out.append(connector(ids.next(), "Straight Connector 2484", IN(2.280), IN(4.083), IN(5.273), IN(0), color=DK, width=9525, dash="lgDash"))
-    out.append(connector(ids.next(), "Straight Connector 2485", IN(7.733), IN(4.083), IN(5.038), IN(0), color=DK, width=9525, dash="lgDash"))
-    out.append(connector(ids.next(), "Straight Connector 384", _GRID_X, IN(5.115), IN(1.024), IN(0), color=DK, width=9525, dash="lgDash"))
-    out.append(connector(ids.next(), "Straight Connector 2529", IN(2.280), IN(5.115), IN(5.273), IN(0), color=DK, width=9525, dash="lgDash"))
-    out.append(connector(ids.next(), "Straight Connector 2530", IN(7.733), IN(5.115), IN(5.038), IN(0), color=DK, width=9525, dash="lgDash"))
-    out.append(connector(ids.next(), "Straight Connector 2528", IN(2.122), IN(5.205), IN(0), IN(0.003), color=BREADCRUMB, width=6350))
-    out.append(connector(ids.next(), "Straight Connector 2020", _GRID_X, IN(6.146), IN(11.832), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "PanelBaseline_2024", _GRID_X, IN(2.021), IN(11.832), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "PanelBaseline_2023", _GRID_X, IN(3.052), IN(11.832), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "PanelBaseline_2022_Left", _GRID_X, IN(4.083), IN(1.024), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "PanelBaseline_2022_Mid", IN(2.280), IN(4.083), IN(5.273), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "PanelBaseline_2022_Right", IN(7.733), IN(4.083), IN(5.038), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "PanelBaseline_2021_Left", _GRID_X, IN(5.115), IN(1.024), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "PanelBaseline_2021_Mid", IN(2.280), IN(5.115), IN(5.273), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "PanelBaseline_2021_Right", IN(7.733), IN(5.115), IN(5.038), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "PanelDivider_2021", IN(2.122), IN(5.205), IN(0), IN(0.003), color=BREADCRUMB, width=6350))
+    out.append(connector(ids.next(), "PanelBaseline_2020", _GRID_X, IN(6.146), IN(11.832), IN(0), color=DK, width=9525, dash="lgDash"))
 
 
 def paint_manual_axis_and_data_labels(out: list[str], ids: ShapeIds) -> None:
     # Shared revenue-axis ticks: 0/20/40/60/80 ($B) per panel.
     for _x, _y, _cx, _t in _VALUE_TICK_LABELS:
-        out.append(text_box(ids.next(), "ValueLabel", IN(_x), IN(_y), IN(_cx), _AXIS_TICK_H, [_p(_t, size_pt=8, align="r")], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))
+        out.append(text_box(ids.next(), "RevenueAxisTick", IN(_x), IN(_y), IN(_cx), _AXIS_TICK_H, [_p(_t, size_pt=8, align="r")], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))
 
     # Shared company/category labels across the bottom.
     for _x, _cx, _t in _CATEGORY_TICK_LABELS["single_line"]:
-        out.append(text_box(ids.next(), "Label", IN(_x), _COMPANY_LBL_Y, IN(_cx), _COMPANY_LBL_H, [_p(_t, size_pt=8)], fill=None, line_color="none", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))
+        out.append(text_box(ids.next(), "CompanyTickLabel", IN(_x), _COMPANY_LBL_Y, IN(_cx), _COMPANY_LBL_H, [_p(_t, size_pt=8)], fill=None, line_color="none", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))
 
     for _x, _cx, _t in _CATEGORY_TICK_LABELS["wrapped"]:
-        out.append(text_box(ids.next(), "Label", IN(_x), _COMPANY_WRAP_Y, IN(_cx), _COMPANY_WRAP_H, [_p(_t, size_pt=8)], fill=None, line_color="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))
+        out.append(text_box(ids.next(), "CompanyTickLabel", IN(_x), _COMPANY_WRAP_Y, IN(_cx), _COMPANY_WRAP_H, [_p(_t, size_pt=8)], fill=None, line_color="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))
 
     # EBIT-margin point labels.
     for _x, _y, _cx, _t in _DATA_LABELS["margin_points"]:
-        out.append(text_box(ids.next(), "Label", IN(_x), IN(_y), IN(_cx), _MARGIN_LBL_H, [_p(_t, size_pt=8)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=14288, t_ins=0, r_ins=14288, b_ins=0))
+        out.append(text_box(ids.next(), "MarginPointLabel", IN(_x), IN(_y), IN(_cx), _MARGIN_LBL_H, [_p(_t, size_pt=8)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=14288, t_ins=0, r_ins=14288, b_ins=0))
 
     # Revenue chips, shown in $B and filled by archetype color.
     for _x, _y, _cx, _fill, _t in _DATA_LABELS["revenue_chips"]:
-        out.append(text_box(ids.next(), "ValueLabel", IN(_x), IN(_y), IN(_cx), _BAR_CHIP_H, [_p(_t, size_pt=8, color=WHITE)], fill=_fill, line_color="none", anchor="ctr", wrap="none", l_ins=14288, t_ins=0, r_ins=14288, b_ins=0))
+        out.append(text_box(ids.next(), "RevenueChip", IN(_x), IN(_y), IN(_cx), _BAR_CHIP_H, [_p(_t, size_pt=8, color=WHITE)], fill=_fill, line_color="none", anchor="ctr", wrap="none", l_ins=14288, t_ins=0, r_ins=14288, b_ins=0))
 
 
 def paint_group_headers_and_panel_labels(out: list[str], ids: ShapeIds) -> None:
     for _x, _y, _cx, _cy, _fill, _t in _GROUP_HEADERS:
-        out.append(text_box(ids.next(), "Label", IN(_x), IN(_y), IN(_cx), IN(_cy), [_p(_t, size_pt=10, bold=True, color=WHITE)], fill=_fill, line_color="none", anchor="ctr"))
+        out.append(text_box(ids.next(), "SegmentHeader", IN(_x), IN(_y), IN(_cx), IN(_cy), [_p(_t, size_pt=10, bold=True, color=WHITE)], fill=_fill, line_color="none", anchor="ctr"))
 
     # The carrier segment header is split from the green charter-company tag in
     # the source, so it remains a standalone run with italic parenthetical text.
     out.append(
         text_box(
             ids.next(),
-            "Rectangle 2147",
+            "CarrierSegmentHeader",
             IN(5.068),
             IN(6.822),
             IN(2.833),
@@ -709,18 +709,18 @@ def paint_group_headers_and_panel_labels(out: list[str], ids: ShapeIds) -> None:
     )
 
     for _x, _y, _cx, _cy, _fill, _t in _PANEL_LABELS["upper_panels"]:
-        out.append(text_box(ids.next(), "Label", IN(_x), IN(_y), IN(_cx), IN(_cy), [_p(_t, size_pt=10, bold=True, color=WHITE)], fill=_fill, line_color="none", anchor="ctr"))
+        out.append(text_box(ids.next(), "YearLabel", IN(_x), IN(_y), IN(_cx), IN(_cy), [_p(_t, size_pt=10, bold=True, color=WHITE)], fill=_fill, line_color="none", anchor="ctr"))
     for _y, _fill, _t in _PANEL_LABELS["lower_panels"]:
         out.append(text_box(ids.next(), "YearLabel", _YEAR_X, IN(_y), _YEAR_W, _YEAR_H, [_p(_t, size_pt=10, bold=True, color=BLACK)], fill=_fill, line_color="none", anchor="ctr"))
 
 
 def paint_axis_legends_and_dividers(out: list[str], ids: ShapeIds) -> None:
-    out.append(text_box(ids.next(), "Text Placeholder 25", IN(11.898), IN(1.135), IN(1.170), IN(0.134), [_p("EBIT Margin (%, lines)", size_pt=8, bold=True, align="r")], fill=None, line_color="none", anchor="b", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))
-    out.append(text_box(ids.next(), "Text Placeholder 25", IN(0.741), IN(1.135), IN(1.010), IN(0.134), [_p("Revenue ($B, bars)", size_pt=8, bold=True, align=None)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))
+    out.append(text_box(ids.next(), "EbitMarginAxisTitle", IN(11.898), IN(1.135), IN(1.170), IN(0.134), [_p("EBIT Margin (%, lines)", size_pt=8, bold=True, align="r")], fill=None, line_color="none", anchor="b", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))
+    out.append(text_box(ids.next(), "RevenueAxisTitle", IN(0.741), IN(1.135), IN(1.010), IN(0.134), [_p("Revenue ($B, bars)", size_pt=8, bold=True, align=None)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))
 
-    out.append(connector(ids.next(), "Straight Arrow Connector 2596", IN(4.939), IN(1.377), IN(0), IN(5.600), color="808080", width=12700))
-    out.append(connector(ids.next(), "Straight Arrow Connector 2598", IN(8.056), IN(1.377), IN(0), IN(5.600), color="808080", width=12700))
-    out.append(connector(ids.next(), "Straight Arrow Connector 2602", IN(10.465), IN(1.377), IN(0), IN(5.600), color="808080", width=12700))
+    out.append(connector(ids.next(), "SegmentDivider_Shipbuilders", IN(4.939), IN(1.377), IN(0), IN(5.600), color="808080", width=12700))
+    out.append(connector(ids.next(), "SegmentDivider_OwnerOperator", IN(8.056), IN(1.377), IN(0), IN(5.600), color="808080", width=12700))
+    out.append(connector(ids.next(), "SegmentDivider_CharterCompanies", IN(10.465), IN(1.377), IN(0), IN(5.600), color="808080", width=12700))
 
 
 # ════════════════════════════════════════════════════════════════════════════

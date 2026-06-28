@@ -29,7 +29,7 @@ Pipeline: parse every shape into a record -> detect roles/structure -> emit.
     the source sits within tolerance of the house position; otherwise it's kept as a
     verbatim shape so nothing moves.
   - STRUCTURE: shapes that share a style (>=3 of them) are collapsed into a module-level
-    data table + a loop (the year axis, on-bar values, legend swatches/labels, callouts),
+    data table + a loop (the year axis, on-bar values, legend keys/labels, callouts),
     instead of N near-identical calls.
   - anything exotic (custGeom, gradient/pattern/picture fill, a placeholder with no
     geometry) -> emitted as a RAW verbatim OOXML string (cruft stripped, id renumbered).
@@ -266,7 +266,7 @@ def _lnref_color(el, theme):
 
 def _parse_pattfill(pat, theme):
     """<a:pattFill> -> {"prst", "fg", "bg"} for text_box(pattern_fill=...). fg/bg
-    come back as a "scheme:NAME" ref (kept symbolic, e.g. tx1/bg1, so the swatch
+    come back as a "scheme:NAME" ref (kept symbolic, e.g. tx1/bg1, so the key
     tracks the theme like the source) or a baked hex; an absent colour is omitted
     so text_box falls back to its tx1/bg1 default."""
     def _clr(tagname):
@@ -393,7 +393,7 @@ def parse_sp(el, theme):
     rec["prst"] = pg.get("prst") if pg is not None else "rect"
     rec["geom_adj"] = ({gd.get("name"): gd.get("fmla") for gd in pg.findall(q(A, "avLst") + "/" + q(A, "gd"))}
                        if pg is not None else {})
-    # pattern fill (think-cell hatch swatch) -> a pattern_fill= param on text_box
+    # pattern fill (think-cell hatch pattern) -> a pattern_fill= param on text_box
     pat = spPr.find(q(A, "pattFill"))
     rec["pattern_fill"] = _parse_pattfill(pat, theme) if pat is not None else None
     rec["fill"] = "None" if spPr.find(q(A, "noFill")) is not None \
@@ -1119,7 +1119,7 @@ def affordance_name(lead, texts):
     filled = lead.get("fill", "None") != "None"
     ne = [(t or "").strip() for t in texts if (t or "").strip()]
     empty = not ne
-    if _MATH_PRST.match(prst):                       # = + x / glyphs (the old "LegendSwatch" mislabel)
+    if _MATH_PRST.match(prst):                       # = + x / glyphs (operator glyphs, not legend keys)
         return "_OPERATOR_GLYPHS", "OP"
     if "Callout" in prst:                            # wedgeRectCallout, borderCallout, cloudCallout
         return "_CALLOUTS", "CALLOUT"
@@ -1129,7 +1129,7 @@ def affordance_name(lead, texts):
         return "_HIGHLIGHT_RINGS", "RING"
     if ne and not filled and all(_YEAR_TICK.match(t) for t in ne):
         return "_CATEGORY_TICK_LABELS", "TICK"       # year / FY ticks under a chart axis
-    if empty and filled:                             # filled, textless swatches/chips
+    if empty and filled:                             # filled, textless color chips/keys
         return "_LEGEND_KEYS", "KEY"
     if ne and all(_NUMERIC_LBL.match(t) for t in ne):
         return "_DATA_LABELS", "DLBL"                # numeric values riding marks (filled chips ok)
@@ -1153,7 +1153,7 @@ def cluster_identity(items, cl, used):
     elif all(re.fullmatch(r"(19|20)\d\d", (t or "").strip()) for t in texts):
         sn = "YearLabel"
     elif all((t or "").strip() == "" for t in texts) and lead["fill"] != "None":
-        sn = "LegendSwatch"
+        sn = "LegendColorKey"
     elif all(re.fullmatch(r"~?\d{1,3}%?", (t or "").strip()) for t in texts if t):
         sn = "ValueLabel"
     elif all((t or "").strip() for t in texts):
@@ -1887,7 +1887,7 @@ Auto-converted from the source .pptx by _tools/convert_slide.py.
 Shapes are deck_core primitives at the source EMU coordinates; standard chrome
 uses the house builders; repeated shape clusters are data tables + loops;
 think-cell <a:fld> labels are frozen; <p:pic> images are copied into slides/images/
-and wired via IMAGES + picture(); pattern-fill swatches become
+and wired via IMAGES + picture(); pattern-fill keys become
 text_box(pattern_fill=…) and freeform <a:custGeom> icons become custom_geometry()
 over a deduped path constant; think-cell OLE frames (and the EMF chart previews
 that sit over bundled charts) are dropped.

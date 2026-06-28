@@ -128,7 +128,7 @@ class LegendEntry:
     """A color-key chip in the top legend row. Its visible caption is the
     adjacent TrackLabel (Price ($) / Volume (#) / Proportions (%)); in the
     source the chip itself carries no text."""
-    swatch: Box
+    key_box: Box
     fill: str | None
     line_color: str | None
 
@@ -345,7 +345,7 @@ def paint_track_labels_and_legend(out: list[str], n) -> None:
     for label in TRACK_LABELS:
         out.append(text_box(n(), "TrackLabel", *label.box.emu(), [paragraph([run(label.label, size=PT(8), color=DK, font=FONT)], line_spacing=100000)], fill=None, line_color=NO_BORDER, wrap="none"))
     for entry in LEGEND_ENTRIES:
-        out.append(text_box(n(), "LegendSwatch", *entry.swatch.emu(), [paragraph([], align="ctr", line_spacing=100000)], fill=entry.fill, line_color=entry.line_color, line_width=3175, anchor="ctr"))
+        out.append(text_box(n(), "LegendColorKey", *entry.key_box.emu(), [paragraph([], align="ctr", line_spacing=100000)], fill=entry.fill, line_color=entry.line_color, line_width=3175, anchor="ctr"))
 
 
 def _body() -> str:

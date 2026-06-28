@@ -306,7 +306,7 @@ class AnnualStartLabel:
 class LegendEntry:
     label: str
     fill: str | None
-    swatch: Box | None
+    key_box: Box | None
     caption: Box
 
 
@@ -380,8 +380,8 @@ ANNUAL_START_LABEL_ZONE = TextZone(
     fit_note="Short in-year starts label over FY32/FY33 bars.",
 )
 
-LEGEND_SWATCH_W = 0.196
-LEGEND_SWATCH_H = 0.146
+LEGEND_KEY_W = 0.196
+LEGEND_KEY_H = 0.146
 LEGEND_LABEL_H = 0.167
 
 LEFT_FORECAST_BLOCK = TextZone(
@@ -470,9 +470,9 @@ if tuple(label.label for label in SOURCE_CHART_VALUE_LABELS) != ("5", "18", "25"
     raise ValueError("Manualized source chart data labels no longer match slide12_chart3.xml")
 
 LEGEND: tuple[LegendEntry, ...] = (
-    LegendEntry("Phase 1", PHASE_1, Box(7.984, 1.811, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(8.236, 1.806, 0.505, LEGEND_LABEL_H)),
-    LegendEntry("Phase 2", PHASE_2, Box(8.852, 1.811, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(9.104, 1.806, 0.505, LEGEND_LABEL_H)),
-    LegendEntry("Phase 3", PHASE_3, Box(9.720, 1.811, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(9.972, 1.806, 0.505, LEGEND_LABEL_H)),
+    LegendEntry("Phase 1", PHASE_1, Box(7.984, 1.811, LEGEND_KEY_W, LEGEND_KEY_H), Box(8.236, 1.806, 0.505, LEGEND_LABEL_H)),
+    LegendEntry("Phase 2", PHASE_2, Box(8.852, 1.811, LEGEND_KEY_W, LEGEND_KEY_H), Box(9.104, 1.806, 0.505, LEGEND_LABEL_H)),
+    LegendEntry("Phase 3", PHASE_3, Box(9.720, 1.811, LEGEND_KEY_W, LEGEND_KEY_H), Box(9.972, 1.806, 0.505, LEGEND_LABEL_H)),
     LegendEntry("Franklin capacity (vessel starts)", None, None, Box(10.840, 1.806, 1.939, LEGEND_LABEL_H)),
 )
 
@@ -705,15 +705,15 @@ def paint_chrome_and_logos(out: list[str], ids: ShapeIds) -> None:
 
 
 def paint_legend(out: list[str], ids: ShapeIds) -> None:
-    # Swatches first, then the capacity line key, then captions — source paint order.
+    # Keys first, then the capacity line key, then captions — source paint order.
     for entry in LEGEND:
-        if entry.swatch is None:
+        if entry.key_box is None:
             continue
         out.append(
             text_box(
                 ids.next(),
-                "PhaseLegendSwatch",
-                *entry.swatch.emu(),
+                "PhaseLegendColorKey",
+                *entry.key_box.emu(),
                 [paragraph([], align="ctr", line_spacing=100_000)],
                 fill=entry.fill,
                 line_color="none",

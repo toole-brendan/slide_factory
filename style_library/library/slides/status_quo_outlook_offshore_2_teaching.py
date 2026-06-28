@@ -15,7 +15,7 @@ TEACHES
     source XML/XLSB reads at build time
   - manual year ticks over a dense 40-year axis
   - manual peak column labels for only analytically important years
-  - left-side custom legend for mixed series types: filled bar swatch + line rules
+  - left-side custom legend for mixed series types: filled bar key + line rules
   - off-house source note, scenario chip, and correlation callout placement
   - preserving source chart scale/layout settings as named Python constants
 
@@ -108,7 +108,7 @@ TEACHING_METADATA = {
         "manual axis titles outside chart frame",
         "manual periodic year ticks across 40 annual categories",
         "manual peak value labels rather than full data labels",
-        "mixed-series legend: filled bar swatch plus line-rule keys",
+        "mixed-series legend: filled bar key plus line-rule keys",
         "shaded no-activity panel behind the native chart",
         "statistical callout with emphasized coefficients",
     ],
@@ -503,7 +503,7 @@ PEAK_ADD_LABELS: tuple[PeakAddLabel, ...] = (
 LEGEND_ENTRIES: tuple[LegendEntry, ...] = (
     LegendEntry(
         "FSV/PSV Adds",
-        "bar_swatch",
+        "bar_key",
         FLEET_ADDS_BLUE,
         Box(1.078, 2.174, 0.196, 0.146),
         Box(LEGEND_LABEL_X, 2.168, 0.936, LEGEND_LABEL_H),
@@ -678,14 +678,14 @@ def paint_peak_add_labels(next_id) -> list[str]:
 
 
 def paint_mixed_series_legend(next_id) -> list[str]:
-    """Left legend with one filled swatch and two short line-rule keys."""
+    """Left legend with one filled key and two short line-rule keys."""
 
     shapes: list[str] = []
-    bar_entry = next(entry for entry in LEGEND_ENTRIES if entry.key_kind == "bar_swatch")
+    bar_entry = next(entry for entry in LEGEND_ENTRIES if entry.key_kind == "bar_key")
     shapes.append(
         _textbox(
             next_id(),
-            "LegendBarSwatch",
+            "LegendColorKey",
             bar_entry.key_box,
             [_empty_centered_paragraph()],
             fill=bar_entry.color,

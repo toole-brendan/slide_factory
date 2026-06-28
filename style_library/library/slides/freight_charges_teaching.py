@@ -268,7 +268,7 @@ def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
 # ── layout anchors (shared coordinates; value unchanged from the raw port) ──
 _BARVAL_X, _BARVAL_W, _BARVAL_H = IN(3.108), IN(0.229), IN(0.167)   # on-bar $-value-label geometry
 _SEG_H = IN(0.167)        # thin-segment value-label height
-_SWATCH_X, _SWATCH_H = IN(0.585), IN(0.146)    # legend colour-chip x / height
+_KEY_X, _KEY_H = IN(0.585), IN(0.146)    # legend colour-chip x / height
 _CAT_X, _CAT_H = IN(0.837), IN(0.167)          # charge-category label x / height
 _TXT_H = IN(0.167)        # chart-title / axis-label height        [shared x4]
 _LEADER_X = IN(3.99)      # dashed leader-line x                   [shared x5]
@@ -441,7 +441,7 @@ def paint_legend(n) -> list[str]:
     caption that carries the footnote superscript."""
     out: list[str] = []
     for _y, _cx, _fill in _LEGEND_KEYS:
-        out.append(text_box(n(), "LegendSwatch", _SWATCH_X, IN(_y), IN(_cx), _SWATCH_H, [paragraph([], align="ctr", line_spacing=100000)], fill=_fill, line_color=DK, line_width=3175, anchor="ctr"))
+        out.append(text_box(n(), "LegendColorKey", _KEY_X, IN(_y), IN(_cx), _KEY_H, [paragraph([], align="ctr", line_spacing=100000)], fill=_fill, line_color=DK, line_width=3175, anchor="ctr"))
     for _y, _cx, _t in _LEGEND_LABELS:
         out.append(text_box(n(), "LegendLabel", _CAT_X, IN(_y), IN(_cx), _CAT_H, [paragraph([run(_t, size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
     out.append(text_box(n(), "LegendLabel", IN(0.837), IN(5.307), IN(0.997), _TXT_H, [paragraph([run("Fuel Surcharge", size=PT(10), color=BLACK, font=FONT), run("1", size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black

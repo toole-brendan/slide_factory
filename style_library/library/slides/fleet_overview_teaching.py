@@ -190,7 +190,7 @@ class LegendEntry:
 
     label: str
     fill: str
-    swatch_box: Box
+    key_box: Box
     label_box: Box
 
 
@@ -279,31 +279,31 @@ ADDRESSABILITY_LEGEND: tuple[LegendEntry, ...] = (
     LegendEntry(
         label="Addressable Commercial",
         fill=TEAL_ADDRESSABLE_COMMERCIAL,
-        swatch_box=Box(5.632, 4.905, 0.196, 0.146),
+        key_box=Box(5.632, 4.905, 0.196, 0.146),
         label_box=Box(5.884, 4.899, 1.547, 0.167),
     ),
     LegendEntry(
         label="Addressable Offshore",
         fill=AMBER_ADDRESSABLE_OFFSHORE,
-        swatch_box=Box(5.632, 5.127, 0.196, 0.146),
+        key_box=Box(5.632, 5.127, 0.196, 0.146),
         label_box=Box(5.884, 5.122, 1.335, 0.167),
     ),
     LegendEntry(
         label="Great Lakes Commercial",
         fill=GRAY_NON_ADDRESSABLE,
-        swatch_box=Box(5.632, 5.349, 0.196, 0.146),
+        key_box=Box(5.632, 5.349, 0.196, 0.146),
         label_box=Box(5.884, 5.344, 1.531, 0.167),
     ),
     LegendEntry(
         label="Non-Addressable Offshore",
         fill=GRAY_NON_ADDRESSABLE,
-        swatch_box=Box(5.632, 5.571, 0.196, 0.146),
+        key_box=Box(5.632, 5.571, 0.196, 0.146),
         label_box=Box(5.884, 5.566, 1.635, 0.167),
     ),
     LegendEntry(
         label="Other Segments",
         fill=GRAY_NON_ADDRESSABLE,
-        swatch_box=Box(5.632, 5.793, 0.196, 0.146),
+        key_box=Box(5.632, 5.793, 0.196, 0.146),
         label_box=Box(5.884, 5.788, 1.005, 0.167),
     ),
 )
@@ -606,8 +606,8 @@ def paint_addressability_legend(next_id) -> list[str]:
     for entry in ADDRESSABILITY_LEGEND:
         shapes.append(_textbox(
             next_id(),
-            "LegendSwatch",
-            entry.swatch_box,
+            "LegendColorKey",
+            entry.key_box,
             [_empty_centered_paragraph()],
             fill=entry.fill,
             line_color="none",

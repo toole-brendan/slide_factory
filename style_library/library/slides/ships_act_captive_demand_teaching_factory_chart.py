@@ -390,7 +390,7 @@ class ValueChip:
 
 
 @dataclass(frozen=True)
-class LegendSwatch:
+class LegendKey:
     box: Box
     fill: str
 
@@ -468,7 +468,7 @@ PORT_ALPHA_LABEL = TextZone(
 )
 
 MARKER_SIZE = Box(0, 0, 0.115, 0.167)
-SWATCH_SIZE = Box(0, 0, 0.196, 0.146)
+KEY_SIZE = Box(0, 0, 0.196, 0.146)
 VESSEL_LABEL_X = 4.139
 VESSEL_LABEL_H = 0.167
 TEXT_ROW_H = 0.167
@@ -479,13 +479,13 @@ VALUE_CHIPS: tuple[ValueChip, ...] = (
     ValueChip(Box(3.951, 4.016, MARKER_SIZE.w, MARKER_SIZE.h), VESSEL_TYPE_COLORS["product_tanker"]),
 )
 
-LEGEND_SWATCHES: tuple[LegendSwatch, ...] = (
-    LegendSwatch(Box(3.887, 2.149, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["ro_ro"]),
-    LegendSwatch(Box(3.887, 2.372, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["bulk"]),
-    LegendSwatch(Box(3.887, 2.594, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["product_tanker"]),
-    LegendSwatch(Box(3.887, 2.816, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["crude_tanker"]),
-    LegendSwatch(Box(3.887, 3.038, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["lng"]),
-    LegendSwatch(Box(3.887, 3.260, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["container"]),
+LEGEND_KEYS: tuple[LegendKey, ...] = (
+    LegendKey(Box(3.887, 2.149, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["ro_ro"]),
+    LegendKey(Box(3.887, 2.372, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["bulk"]),
+    LegendKey(Box(3.887, 2.594, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["product_tanker"]),
+    LegendKey(Box(3.887, 2.816, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["crude_tanker"]),
+    LegendKey(Box(3.887, 3.038, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["lng"]),
+    LegendKey(Box(3.887, 3.260, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["container"]),
 )
 
 LEGEND_LABELS: tuple[LegendLabel, ...] = (
@@ -858,16 +858,16 @@ def paint_chart_labels_and_legend(out: list[str], ids: ShapeIds) -> None:
         )
     )
 
-    # Pattern-fill legend swatch — text_box(pattern_fill=) mirrors the native
+    # Pattern-fill legend key — text_box(pattern_fill=) mirrors the native
     # chart's hatched `Other` series without a per-module OOXML helper.
     out.append(
         text_box(
             ids.next(),
-            "OtherPatternSwatch",
+            "OtherPatternKey",
             IN(3.887),
             IN(1.927),
-            IN(SWATCH_SIZE.w),
-            IN(SWATCH_SIZE.h),
+            IN(KEY_SIZE.w),
+            IN(KEY_SIZE.h),
             [_empty_para()],
             fill=None,
             line_color="none",
@@ -876,14 +876,14 @@ def paint_chart_labels_and_legend(out: list[str], ids: ShapeIds) -> None:
         )
     )
 
-    for swatch in LEGEND_SWATCHES:
+    for key in LEGEND_KEYS:
         out.append(
             text_box(
                 ids.next(),
-                "LegendSwatch",
-                *swatch.box.emu(),
+                "LegendColorKey",
+                *key.box.emu(),
                 [_empty_para()],
-                fill=swatch.fill,
+                fill=key.fill,
                 line_color="none",
                 anchor="ctr",
             )

@@ -147,7 +147,7 @@ class MissionCell:
 @dataclass(frozen=True)
 class LegendEntry:
     label: str
-    swatch: Box
+    key_box: Box
     label_box: Box
     fill: str | None
     line_color: str | None
@@ -300,8 +300,8 @@ def _draw_legend(out: list[str], n) -> None:
     for entry in ADDRESSABILITY_LEGEND:
         out.append(text_box(
             n(),
-            "LegendSwatch",
-            *entry.swatch.emu(),
+            "LegendColorKey",
+            *entry.key_box.emu(),
             [paragraph([], align="ctr", line_spacing=100000)],
             fill=entry.fill,
             line_color=entry.line_color,

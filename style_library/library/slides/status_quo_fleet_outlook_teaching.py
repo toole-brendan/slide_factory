@@ -246,7 +246,7 @@ class LegendEntry:
 
     label: str
     fill: str
-    swatch_box: Box
+    key_box: Box
     label_box: Box
 
 
@@ -265,9 +265,9 @@ YEAR_TICK_H = 0.167
 YEAR_TICK_Y = 6.134
 NET_LABEL_H = 0.167
 
-LEGEND_SWATCH_X = 10.156
-LEGEND_SWATCH_W = 0.196
-LEGEND_SWATCH_H = 0.146
+LEGEND_KEY_X = 10.156
+LEGEND_KEY_W = 0.196
+LEGEND_KEY_H = 0.146
 LEGEND_LABEL_X = 10.408
 LEGEND_LABEL_H = 0.167
 
@@ -417,25 +417,25 @@ LEGEND_ENTRIES: tuple[LegendEntry, ...] = (
     LegendEntry(
         "Addressable Commercial Retirements",
         COMMERCIAL_TEAL,
-        Box(LEGEND_SWATCH_X, 2.174, LEGEND_SWATCH_W, LEGEND_SWATCH_H),
+        Box(LEGEND_KEY_X, 2.174, LEGEND_KEY_W, LEGEND_KEY_H),
         Box(LEGEND_LABEL_X, 2.168, 2.332, LEGEND_LABEL_H),
     ),
     LegendEntry(
         "Addressable Commercial Orderbook",
         COMMERCIAL_TEAL,
-        Box(LEGEND_SWATCH_X, 2.396, LEGEND_SWATCH_W, LEGEND_SWATCH_H),
+        Box(LEGEND_KEY_X, 2.396, LEGEND_KEY_W, LEGEND_KEY_H),
         Box(LEGEND_LABEL_X, 2.391, 2.238, LEGEND_LABEL_H),
     ),
     LegendEntry(
         "Addressable Offshore Retirements",
         OFFSHORE_AMBER,
-        Box(LEGEND_SWATCH_X, 2.618, LEGEND_SWATCH_W, LEGEND_SWATCH_H),
+        Box(LEGEND_KEY_X, 2.618, LEGEND_KEY_W, LEGEND_KEY_H),
         Box(LEGEND_LABEL_X, 2.613, 2.120, LEGEND_LABEL_H),
     ),
     LegendEntry(
         "Addressable Offshore Orderbook",
         OFFSHORE_AMBER,
-        Box(LEGEND_SWATCH_X, 2.840, LEGEND_SWATCH_W, LEGEND_SWATCH_H),
+        Box(LEGEND_KEY_X, 2.840, LEGEND_KEY_W, LEGEND_KEY_H),
         Box(LEGEND_LABEL_X, 2.835, 2.026, LEGEND_LABEL_H),
     ),
 )
@@ -663,8 +663,8 @@ def paint_legend(next_id) -> list[str]:
         shapes.append(
             _textbox(
                 next_id(),
-                "LegendSwatch",
-                entry.swatch_box,
+                "LegendColorKey",
+                entry.key_box,
                 [_empty_centered_paragraph()],
                 fill=entry.fill,
                 line_color="none",

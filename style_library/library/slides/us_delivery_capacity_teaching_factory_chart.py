@@ -244,7 +244,7 @@ class DeliveryTotalLabel:
 class LegendEntry:
     label: str
     fill: str
-    swatch: Box
+    key_box: Box
     caption: Box
 
 
@@ -309,8 +309,8 @@ DELIVERY_TOTAL_ZONE = TextZone(
     fit_note="One short value riding each bar; width expands from 0.191in to 0.267in for 3 digits.",
 )
 
-LEGEND_SWATCH_W = 0.196
-LEGEND_SWATCH_H = 0.146
+LEGEND_KEY_W = 0.196
+LEGEND_KEY_H = 0.146
 SHIPYARD_LABEL_H = 0.167
 
 ASSUMPTIONS_HEADER = TextZone(
@@ -410,13 +410,13 @@ DELIVERY_TOTAL_LABELS: tuple[DeliveryTotalLabel, ...] = (
 )
 
 SHIPYARD_LEGEND: tuple[LegendEntry, ...] = (
-    LegendEntry("GD NASSCO (SHI)", "808080", Box(0.967, 1.927, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(1.219, 1.922, 1.194, SHIPYARD_LABEL_H)),
-    LegendEntry("Tampa Ship (HD HHI)", "C3CFE1", Box(0.967, 2.149, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(1.219, 2.144, 1.356, SHIPYARD_LABEL_H)),
-    LegendEntry("Bollinger", "9DB1CF", Box(0.967, 2.372, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(1.219, 2.366, 0.576, SHIPYARD_LABEL_H)),
-    LegendEntry("New Entrant (e.g., HD Hyundai)", "6F8DB9", Box(0.967, 2.594, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(1.219, 2.589, 1.944, SHIPYARD_LABEL_H)),
-    LegendEntry("Hanwha 2nd Yard", "4C6C9C", Box(0.967, 2.816, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(1.219, 2.811, 1.104, SHIPYARD_LABEL_H)),
-    LegendEntry("Hanwha Philly", "364D6E", Box(0.967, 3.038, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(1.219, 3.033, 0.877, SHIPYARD_LABEL_H)),
-    LegendEntry("Saronic", "007770", Box(0.967, 3.260, LEGEND_SWATCH_W, LEGEND_SWATCH_H), Box(1.219, 3.255, 0.469, SHIPYARD_LABEL_H)),
+    LegendEntry("GD NASSCO (SHI)", "808080", Box(0.967, 1.927, LEGEND_KEY_W, LEGEND_KEY_H), Box(1.219, 1.922, 1.194, SHIPYARD_LABEL_H)),
+    LegendEntry("Tampa Ship (HD HHI)", "C3CFE1", Box(0.967, 2.149, LEGEND_KEY_W, LEGEND_KEY_H), Box(1.219, 2.144, 1.356, SHIPYARD_LABEL_H)),
+    LegendEntry("Bollinger", "9DB1CF", Box(0.967, 2.372, LEGEND_KEY_W, LEGEND_KEY_H), Box(1.219, 2.366, 0.576, SHIPYARD_LABEL_H)),
+    LegendEntry("New Entrant (e.g., HD Hyundai)", "6F8DB9", Box(0.967, 2.594, LEGEND_KEY_W, LEGEND_KEY_H), Box(1.219, 2.589, 1.944, SHIPYARD_LABEL_H)),
+    LegendEntry("Hanwha 2nd Yard", "4C6C9C", Box(0.967, 2.816, LEGEND_KEY_W, LEGEND_KEY_H), Box(1.219, 2.811, 1.104, SHIPYARD_LABEL_H)),
+    LegendEntry("Hanwha Philly", "364D6E", Box(0.967, 3.038, LEGEND_KEY_W, LEGEND_KEY_H), Box(1.219, 3.033, 0.877, SHIPYARD_LABEL_H)),
+    LegendEntry("Saronic", "007770", Box(0.967, 3.260, LEGEND_KEY_W, LEGEND_KEY_H), Box(1.219, 3.255, 0.469, SHIPYARD_LABEL_H)),
 )
 
 
@@ -718,13 +718,13 @@ def paint_chart_manual_labels(out: list[str], ids: ShapeIds) -> None:
 
 
 def paint_shipyard_legend(out: list[str], ids: ShapeIds) -> None:
-    # A two-pass legend mirrors the original paint order: all swatches, then labels.
+    # A two-pass legend mirrors the original paint order: all keys, then labels.
     for entry in SHIPYARD_LEGEND:
         out.append(
             text_box(
                 ids.next(),
-                "ShipyardLegendSwatch",
-                *entry.swatch.emu(),
+                "ShipyardLegendColorKey",
+                *entry.key_box.emu(),
                 [paragraph([], align="ctr", line_spacing=100_000)],
                 fill=entry.fill,
                 line_color="none",

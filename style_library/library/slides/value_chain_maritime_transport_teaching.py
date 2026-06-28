@@ -168,7 +168,7 @@ class MetricLabel:
 @dataclass(frozen=True)
 class LegendEntry:
     label: tuple[str, ...]
-    swatch_x: float
+    key_x: float
     label_box: Box
     fill: str | None
 
@@ -341,7 +341,7 @@ def paint_metric_labels(out: list[str], n) -> None:
 
 def paint_legend(out: list[str], n) -> None:
     for entry in LEGEND:
-        out.append(text_box(n(), "LegendSwatch", IN(entry.swatch_x), IN(1.406), IN(0.200), IN(0.200), [paragraph([], align="ctr", line_spacing=100000)], fill=entry.fill, line_color=BLACK, line_width=3175, anchor="ctr"))
+        out.append(text_box(n(), "LegendColorKey", IN(entry.key_x), IN(1.406), IN(0.200), IN(0.200), [paragraph([], align="ctr", line_spacing=100000)], fill=entry.fill, line_color=BLACK, line_width=3175, anchor="ctr"))
         para_runs = []
         for idx, line in enumerate(entry.label):
             if idx:

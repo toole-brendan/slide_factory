@@ -426,7 +426,7 @@ def _replacement_table(sp_id: int) -> str:
 # ── layout anchors (shared coordinates; value unchanged from the raw port) ──
 _AXIS_Y, _AXIS_W, _AXIS_H = IN(6.026), IN(0.167), IN(0.306)   # x-axis year-label row [x25]
 _BARVAL_W, _BARVAL_H = IN(0.161), IN(0.167)                   # bar-total value-label box [x9]
-_SWATCH_W, _SWATCH_H = IN(0.196), IN(0.146)                   # legend colour-chip [x8]
+_KEY_W, _KEY_H = IN(0.196), IN(0.146)                   # legend colour-chip [x8]
 _LEGEND_LBL_H = IN(0.167)                                     # legend caption height [x8]
 
 # ── repeated-shape data tables (each drives a loop in _body) ──
@@ -604,7 +604,7 @@ def paint_legend(n) -> list[str]:
     # Keys have empty centered text bodies; caption boxes below are centered,
     # no-wrap, zero-inset, and use zero paragraph margins.
     for _x, _y, _fill in _LEGEND_KEYS:
-        out.append(text_box(n(), "LegendSwatch", IN(_x), IN(_y), _SWATCH_W, _SWATCH_H, [paragraph([], align="ctr", line_spacing=100000)], fill=_fill, line_color="none", anchor="ctr"))
+        out.append(text_box(n(), "LegendColorKey", IN(_x), IN(_y), _KEY_W, _KEY_H, [paragraph([], align="ctr", line_spacing=100000)], fill=_fill, line_color="none", anchor="ctr"))
     for _x, _y, _cx, _t in _LEGEND_LABELS:
         out.append(text_box(n(), "LegendLabel", IN(_x), IN(_y), IN(_cx), _LEGEND_LBL_H, [paragraph([run(_t, size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
     out.append(text_box(n(), "BarTotalCallout", IN(5.193), IN(1.965), IN(2.382), IN(0.425), [paragraph([run("Bar total values indicate net hulls added (removed) each year", size=PT(10), italic=True, color=BLACK, font=FONT)], line_spacing=100000)], fill=WHITE, line_color="none", prst="wedgeRectCallout", geom_adj={"adj1": "val -19106", "adj2": "val -3267"}, anchor="ctr"))   # FFFFFF white

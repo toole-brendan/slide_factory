@@ -18,7 +18,7 @@ TEACHES
     shoreside variable costs, navy vessel-related variable costs, gray Opex
   - source-calibrated empty table-cell paragraphs: 9pt blanks for row fit, 1pt blanks for true spacers
   - dashed normalization callouts layered beside and over the table
-  - compact legend swatches with two-line no-wrap captions
+  - compact legend keys with two-line no-wrap captions
 
 TEXT-FIT PRECEDENT
   cost_matrix:
@@ -35,7 +35,7 @@ TEXT-FIT PRECEDENT
     copy_when: a table needs procedural instructions that should read as overlay
                annotations rather than separate narrative rails
   legend:
-    geometry: 0.200in square swatches with 0.200in-high captions
+    geometry: 0.200in square keys with 0.200in-high captions
     type: Arial 8pt, no-wrap, often split over two lines with line_break()
 
 SOURCE NOTE
@@ -122,7 +122,7 @@ TEXT_FIT = {
         "note": "Centered 100% line spacing; zero left/right insets where text spans the full dashed region.",
     },
     "legend": {
-        "swatch_in": (0.200, 0.200),
+        "key_in": (0.200, 0.200),
         "font_pt": 8,
         "content": "four category keys; captions are no-wrap and often split with line_break()",
     },
@@ -161,7 +161,7 @@ class TableColumn:
 
 
 @dataclass(frozen=True)
-class LegendSwatch:
+class LegendKey:
     label: str
     box: Box
     fill: str
@@ -213,10 +213,10 @@ SECTION_RULE_W = 76_200       # 6pt section dividers, matching the source table
 HAIRLINE_W = 6_350            # 0.5pt white hairline in the source grid
 PAD = dict(l_ins=60_960, r_ins=60_960, t_ins=60_960, b_ins=60_960)
 
-_SWATCH_W, _SWATCH_H = IN(0.2), IN(0.2)
+_KEY_W, _KEY_H = IN(0.2), IN(0.2)
 _LEGEND_H = IN(0.2)
 
-# The four cost-category keys appear as swatches; captions paint around them in
+# The four cost-category keys appear as color keys; captions paint around them in
 # the original order, so the caption text boxes remain explicit below.
 _LEGEND_KEYS: tuple[tuple[float, float, str], ...] = (
     (9.919, 1.164, BLUE_5),    # Price components: navy in the source legend
@@ -482,13 +482,13 @@ def paint_normalization_callouts(out: list[str], ids: ShapeIds) -> None:
 
 
 def paint_cost_category_legend(out: list[str], ids: ShapeIds) -> None:
-    """Compact cost-category swatches and no-wrap captions."""
+    """Compact cost-category keys and no-wrap captions."""
     out.append(text_box(ids.next(), "PriceComponentsLegendLabel", IN(9.1), IN(1.164), IN(0.8), _LEGEND_H, [paragraph([run("Price", size=PT(8), color=BLACK, font=FONT), line_break(), run("Components", size=PT(8), color=BLACK, font=FONT)], line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none"))   # 000000 black
     # ── legend: cost-category visual keys + captions ──
     # Keys use empty centered bodies; caption boxes are centered vertically,
     # no-wrap, and retain default internal padding.
     for _x, _y, _fill in _LEGEND_KEYS:
-        out.append(text_box(ids.next(), "LegendSwatch", IN(_x), IN(_y), _SWATCH_W, _SWATCH_H, [paragraph([], align="ctr", line_spacing=100000)], fill=_fill, line_color=BLACK, anchor="ctr"))
+        out.append(text_box(ids.next(), "LegendColorKey", IN(_x), IN(_y), _KEY_W, _KEY_H, [paragraph([], align="ctr", line_spacing=100000)], fill=_fill, line_color=BLACK, anchor="ctr"))
     out.append(text_box(ids.next(), "ShoresideVariableCostLegendLabel", IN(10.139), IN(1.164), IN(0.9), _LEGEND_H, [paragraph([run("Shoreside ", size=PT(8), color=BLACK, font=FONT), line_break(), run("variable costs", size=PT(8), color=BLACK, font=FONT)], line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none"))   # 000000 black
     out.append(text_box(ids.next(), "VesselVariableCostLegendLabel", IN(11.278), IN(1.165), IN(0.9), _LEGEND_H, [paragraph([run("Vessel-related ", size=PT(8), color=BLACK, font=FONT), line_break(), run("variable costs", size=PT(8), color=BLACK, font=FONT)], line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none"))   # 000000 black
     out.append(text_box(ids.next(), "OpexLegendLabel", IN(12.417), IN(1.164), IN(0.4), _LEGEND_H, [paragraph([run("Opex", size=PT(8), color=BLACK, font=FONT)], line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none"))   # 000000 black

@@ -15,7 +15,7 @@ TEACHES
     axis settings instead of opaque chart cache data
   - manual category ticks and external axis titles over a native chart frame
   - capacity phase rules and right-arrow markers layered over the plot
-  - manual legend construction, including a pattern swatch
+  - manual legend construction, including a pattern key
   - bottom summary-badge row and caveat callouts layered after the chart
 
 TEXT-FIT PRECEDENT
@@ -264,7 +264,7 @@ class LabelBox:
 
 
 @dataclass(frozen=True)
-class LegendSwatch:
+class LegendKey:
     name: str
     box: Box
     fill: str | None = None
@@ -332,7 +332,7 @@ PCT_BADGE_ZONE = TextZone(
     fit_note="five ellipse percentage badges across bottom strip",
 )
 
-LEGEND_PANEL = LegendSwatch("DemandLegendPanel", Box(0.979, 1.850, 3.910, 1.191), WHITE)
+LEGEND_PANEL = LegendKey("DemandLegendPanel", Box(0.979, 1.850, 3.910, 1.191), WHITE)
 
 AXIS_RIGHT_CAP = LabelBox(
     "RightAxisCap",
@@ -492,15 +492,15 @@ LEGEND_LABELS: tuple[LabelBox, ...] = (
     LabelBox("LegendLabel", Box(1.342, 2.811, 0.653, ANNOTATION_LABEL_H), "Orderbook"),
 )
 
-SOLID_LEGEND_SWATCHES: tuple[LegendSwatch, ...] = (
-    LegendSwatch("DemandLegendSwatch", Box(1.090, 1.927, 0.196, 0.146), EXCESS_US_CAPACITY),
-    LegendSwatch("DemandLegendSwatch", Box(1.090, 2.372, 0.196, 0.146), SHIPS_ACT_PLUS),
-    LegendSwatch("DemandLegendSwatch", Box(1.090, 2.594, 0.196, 0.146), RETIREMENT_REPLACEMENTS),
-    LegendSwatch("DemandLegendSwatch", Box(1.090, 2.816, 0.196, 0.146), ORDERBOOK),
+SOLID_LEGEND_KEYS: tuple[LegendKey, ...] = (
+    LegendKey("DemandLegendColorKey", Box(1.090, 1.927, 0.196, 0.146), EXCESS_US_CAPACITY),
+    LegendKey("DemandLegendColorKey", Box(1.090, 2.372, 0.196, 0.146), SHIPS_ACT_PLUS),
+    LegendKey("DemandLegendColorKey", Box(1.090, 2.594, 0.196, 0.146), RETIREMENT_REPLACEMENTS),
+    LegendKey("DemandLegendColorKey", Box(1.090, 2.816, 0.196, 0.146), ORDERBOOK),
 )
 
-HERITAGE_LEGEND_SWATCH = LegendSwatch(
-    "HeritagePatternSwatch",
+HERITAGE_LEGEND_KEY = LegendKey(
+    "HeritagePatternKey",
     Box(1.090, 2.149, 0.196, 0.146),
     pattern={"prst": "ltUpDiag", "fg": "scheme:tx1", "bg": "scheme:bg1"},
 )
@@ -652,7 +652,7 @@ def paint_reference_markers(out: list[str], ids: ShapeIds) -> None:
         out.append(
             text_box(
                 ids.next(),
-                "LegendSwatch",
+                "LegendGlyphKey",
                 IN(RIGHT_ARROW_MARK.box.x),
                 IN(marker.y),
                 IN(RIGHT_ARROW_MARK.box.w),
@@ -727,7 +727,7 @@ def paint_reference_labels_and_mid_rules(out: list[str], ids: ShapeIds) -> None:
 
 
 def paint_legend_labels(out: list[str], ids: ShapeIds) -> None:
-    # These captions must be painted after the white legend panel/swatch stack;
+    # These captions must be painted after the white legend panel/key stack;
     # otherwise the panel hides the text and leaves only the chips visible.
     for label in LEGEND_LABELS:
         out.append(_label_box(ids, label))
@@ -737,7 +737,7 @@ def paint_legend_panel_and_keys(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "LegendSwatch",
+            LEGEND_PANEL.name,
             *LEGEND_PANEL.box.emu(),
             [_empty_centered_para()],
             fill=LEGEND_PANEL.fill,
@@ -745,14 +745,14 @@ def paint_legend_panel_and_keys(out: list[str], ids: ShapeIds) -> None:
             anchor="ctr",
         )
     )
-    for swatch in SOLID_LEGEND_SWATCHES:
+    for key in SOLID_LEGEND_KEYS:
         out.append(
             text_box(
                 ids.next(),
-                "LegendSwatch",
-                *swatch.box.emu(),
+                key.name,
+                *key.box.emu(),
                 [_empty_centered_para()],
-                fill=swatch.fill,
+                fill=key.fill,
                 line_color="none",
                 anchor="ctr",
             )
@@ -793,16 +793,16 @@ def paint_chrome_and_summary(out: list[str], ids: ShapeIds) -> None:
         )
 
 
-def paint_pattern_swatch(out: list[str], ids: ShapeIds) -> None:
+def paint_pattern_key(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "HeritageTargetPatternSwatch",
-            *HERITAGE_LEGEND_SWATCH.box.emu(),
+            "HeritageTargetPatternKey",
+            *HERITAGE_LEGEND_KEY.box.emu(),
             [_empty_centered_para()],
             fill=None,
             line_color="none",
-            pattern_fill=HERITAGE_LEGEND_SWATCH.pattern,
+            pattern_fill=HERITAGE_LEGEND_KEY.pattern,
             anchor="ctr",
         )
     )
@@ -979,7 +979,7 @@ def _body() -> str:
     paint_reference_labels_and_mid_rules(out, ids)
     paint_legend_panel_and_keys(out, ids)
     paint_chrome_and_summary(out, ids)
-    paint_pattern_swatch(out, ids)
+    paint_pattern_key(out, ids)
     paint_legend_labels(out, ids)
     paint_scenario_chip(out, ids)
     paint_late_rules_and_scale(out, ids)

@@ -110,7 +110,7 @@ class MatrixBox:
 @dataclass(frozen=True)
 class LegendEntry:
     label: str
-    swatch: Box
+    key_box: Box
     label_box: Box
     fill: str | None
     line: str | None
@@ -263,7 +263,7 @@ def paint_mission_grid(out: list[str], n) -> None:
 
 def paint_legend(out: list[str], n) -> None:
     for item in LEGEND:
-        out.append(text_box(n(), f"LegendSwatch:{item.label}", *_xywh(item.swatch), [paragraph([], align="ctr", line_spacing=100000)], fill=item.fill, line_color=item.line, line_width=3175, anchor="ctr"))
+        out.append(text_box(n(), f"LegendColorKey:{item.label}", *_xywh(item.key_box), [paragraph([], align="ctr", line_spacing=100000)], fill=item.fill, line_color=item.line, line_width=3175, anchor="ctr"))
         out.append(text_box(n(), f"LegendLabel:{item.label}", *_xywh(item.label_box), [paragraph([run(item.label, size=PT(8), color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none"))
 
 

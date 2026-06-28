@@ -249,7 +249,7 @@ class LegendEntry:
 
     label: str
     fill: str
-    swatch_box: Box
+    key_box: Box
     label_box: Box
 
 
@@ -747,8 +747,8 @@ def paint_chart_callout_and_legend(next_id) -> list[str]:
         shapes.append(
             _textbox(
                 next_id(),
-                "LegendSwatch",
-                entry.swatch_box,
+                "LegendColorKey",
+                entry.key_box,
                 [_empty_centered_paragraph()],
                 fill=entry.fill,
                 line_color="none",

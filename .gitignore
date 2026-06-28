@@ -10,3 +10,8 @@ venv/
 
 # MS Office lock/owner temp files
 ~$*
+
+# awards_methodology research data corpora (kept on disk, not tracked in git;
+# scripts/ and the methodology/ + wiki/ markdown stay tracked)
+projects/awards_methodology/research/datasets/*/raw/
+projects/awards_methodology/research/datasets/*/extracted/

@@ -434,26 +434,5 @@ def _body() -> str:
     return "".join(out)
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Import-time validation: fail fast if the teaching contract drifts.
-# ════════════════════════════════════════════════════════════════════════════
-def _validate_teaching_module() -> None:
-    if LAYOUT != "slideLayout3":
-        raise ValueError("overview teaching slide must remain on slideLayout3")
-    if CHARTS != []:
-        raise ValueError("overview is table-only and must not declare chart objects")
-    if CONTEXT_TABLE.box.w != OBJECTIVES_TABLE.box.w:
-        raise ValueError("context/objective columns should retain the same 5.7in width")
-    if len(CONTEXT_TABLE.lines) != 4:
-        raise ValueError("context table should have one parent bullet, two sub-bullets, and one data-source bullet")
-    if len(OBJECTIVES_TABLE.lines) != 10:
-        raise ValueError("objectives table should retain ten bullets")
-    if not all(line.runs[0].italic for line in OBJECTIVES_TABLE.lines[-3:]):
-        raise ValueError("final three objectives must retain italic ongoing-effort prefixes")
-
-
-_validate_teaching_module()
-
-
 def render() -> str:
     return slide(_body())

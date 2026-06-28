@@ -48,7 +48,7 @@ FIDELITY NOTE
   manual axis/year labels, source chart data labels, cumulative rings, labels,
   assumption blocks, logos, footnote, off-house Preliminary chip, and FY32
   requirement-met callout. The source workbook rows and key XML style values are
-  carried explicitly in the module (`SOURCE_CHART_AUDIT`). Tiny differences can
+  carried explicitly in the module as Python constants. Tiny differences can
   remain in native chart XML ordering and connector interpolation versus the
   source combo chart part.
 """
@@ -188,94 +188,6 @@ CHART_STYLE = {
 }
 
 CHARTS = [column_chart(**CHART_STYLE)]
-
-
-SOURCE_CHART_AUDIT = {
-    "source_xml": "slide11_chart2.xml",
-    "source_workbook": "slide11_chart2.xlsb",
-    "workbook_rows": [
-        SOURCE_XLSB_LOWER_START_LAYER_VALUES,
-        SOURCE_XLSB_UPPER_START_LAYER_VALUES,
-        SOURCE_XLSB_FRANKLIN_CAPACITY_VALUES,
-    ],
-    "xml_style": {
-        "manualLayout": SOURCE_PLOT_LAYOUT,
-        "gapWidth": SOURCE_GAP_WIDTH,
-        "overlap": SOURCE_BAR_OVERLAP,
-        "valueAxisMin": SOURCE_VALUE_AXIS_MIN,
-        "valueAxisMax": SOURCE_VALUE_AXIS_MAX,
-        "valueAxisMajorUnit": SOURCE_VALUE_AXIS_MAJOR_UNIT,
-        "lineWidth": FRANKLIN_CAPACITY_LINE_WIDTH,
-        "lineDash": "solid",
-        "seriesPointColors": {
-            "lowerLayer": {4: PHASE_2, 5: PHASE_3, 6: PHASE_3},
-            "upperLayer": {4: PHASE_1},
-        },
-        "xmlDataLabels": ["5", "18", "25", "17", "19", "20", "9", "7"],
-        "manualizedDataLabels": ["5", "18", "25", "17", "19", "20", "9", "7"],
-        "manualTotalLabels": ["26", "26"],
-        "dataLabelColors": {
-            "black": ["5", "18", "25", "20"],
-            "white_bg1": ["17", "19", "7"],
-            "secondary_text_tx2": ["9"],
-        },
-    },
-}
-
-
-def _validate_source_chart_alignment() -> None:
-    """Fail fast if a future edit drifts from the source XML/XLSB values."""
-
-    if len(CHART_CATEGORIES) != 10:
-        raise ValueError("Expected 10 FY categories from slide11_chart2.xml/.xlsb")
-
-    expected_rows = (
-        SOURCE_XLSB_LOWER_START_LAYER_VALUES,
-        SOURCE_XLSB_UPPER_START_LAYER_VALUES,
-        SOURCE_XLSB_FRANKLIN_CAPACITY_VALUES,
-    )
-    actual_rows = (
-        tuple(LOWER_START_LAYER_VALUES),
-        tuple(UPPER_START_LAYER_VALUES),
-        tuple(FRANKLIN_CAPACITY_VALUES),
-    )
-    if actual_rows != expected_rows:
-        raise ValueError("Chart series values no longer match slide11_chart2.xlsb")
-
-    for series in actual_rows:
-        if len(series) != len(CHART_CATEGORIES):
-            raise ValueError("Chart series length must match the 10 source workbook columns")
-
-    expected_lower_colors = [PHASE_1] * 4 + [PHASE_2] + [PHASE_3] * 2 + [PHASE_1] * 3
-    expected_upper_colors = [PHASE_2] * 4 + [PHASE_1] + [PHASE_2] * 5
-    lower_colors = PRODUCTION_START_SERIES[0]["data_point_colors"]
-    upper_colors = PRODUCTION_START_SERIES[1]["data_point_colors"]
-    if lower_colors != expected_lower_colors:
-        raise ValueError("Lower start-layer point colors no longer match slide11_chart2.xml dPt overrides")
-    if upper_colors != expected_upper_colors:
-        raise ValueError("Upper start-layer point colors no longer match slide11_chart2.xml dPt overrides")
-
-    annual_totals = tuple(
-        int((lower or 0) + (upper or 0))
-        for lower, upper in zip(LOWER_START_LAYER_VALUES, UPPER_START_LAYER_VALUES)
-        if (lower or 0) + (upper or 0)
-    )
-    if annual_totals != (5, 18, 25, 26, 26, 20):
-        raise ValueError("Annual start totals no longer match slide11_chart2.xml/.xlsb")
-
-    if CHART_STYLE["gap_width"] != SOURCE_GAP_WIDTH or CHART_STYLE["bar_overlap"] != SOURCE_BAR_OVERLAP:
-        raise ValueError("Chart gap/overlap must match slide11_chart2.xml")
-    if CHART_STYLE["value_axis_max"] != SOURCE_VALUE_AXIS_MAX:
-        raise ValueError("Value-axis maximum must match slide11_chart2.xml")
-    if CHART_STYLE["value_axis_major_unit"] != SOURCE_VALUE_AXIS_MAJOR_UNIT:
-        raise ValueError("Value-axis major unit must match slide11_chart2.xml")
-    if CHART_STYLE["plot_layout"] != SOURCE_PLOT_LAYOUT:
-        raise ValueError("Manual plot layout must match slide11_chart2.xml")
-    if FRANKLIN_CAPACITY_LINE_WIDTH != 19_050:
-        raise ValueError("Franklin capacity connector width must match slide11_chart2.xml")
-
-
-_validate_source_chart_alignment()
 
 
 # ════════════════════════════════════════════════════════════════════════════

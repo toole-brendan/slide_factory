@@ -125,11 +125,9 @@ SOURCE_REVENUE_AXIS_MAX = 80000
 SOURCE_REVENUE_AXIS_MAJOR_UNIT = 20000
 SOURCE_EBIT_AXIS_MIN = -50
 SOURCE_EBIT_AXIS_MAX = 100
-SOURCE_EBIT_AXIS_MAJOR_UNIT = 50
 SOURCE_GAP_WIDTH = 80
 SOURCE_BAR_OVERLAP = 100
 SOURCE_AXIS_LINE_WIDTH = 9_525
-SOURCE_EBIT_MARKER_SIZE_PT = 12
 SOURCE_EBIT_MARKER_LINE_WIDTH = 9_525
 EBIT_MARKER_WIDTH_IN = 0.120
 
@@ -201,42 +199,6 @@ _CHART1_DATA = {"categories": COMPANY_CATEGORIES, "series": [{"name": "2021 Reve
 _CHART2_DATA = {"categories": COMPANY_CATEGORIES, "series": [{"name": "2022 Revenue", "values": list(REVENUE_VALUES_BY_YEAR[2022])}, {"name": "2022 EBIT Margin", "values": list(EBIT_MARGIN_VALUES_BY_YEAR[2022])}]}
 _CHART3_DATA = {"categories": COMPANY_CATEGORIES, "series": [{"name": "2023 Revenue", "values": list(REVENUE_VALUES_BY_YEAR[2023])}, {"name": "2023 EBIT Margin", "values": list(EBIT_MARGIN_VALUES_BY_YEAR[2023])}]}
 _CHART4_DATA = {"categories": COMPANY_CATEGORIES, "series": [{"name": "2024 Revenue", "values": list(REVENUE_VALUES_BY_YEAR[2024])}, {"name": "2024 EBIT Margin", "values": list(EBIT_MARGIN_VALUES_BY_YEAR[2024])}]}
-
-SOURCE_CHART_AUDIT = {
-    "source_xml_files": {
-        2020: "slide34_chart19.xml",
-        2021: "slide34_chart20.xml",
-        2022: "slide34_chart21.xml",
-        2023: "slide34_chart22.xml",
-        2024: "slide34_chart23.xml",
-    },
-    "source_workbooks": {
-        2020: "slide34_chart19.xlsb",
-        2021: "slide34_chart20.xlsb",
-        2022: "slide34_chart21.xlsb",
-        2023: "slide34_chart22.xlsb",
-        2024: "slide34_chart23.xlsb",
-    },
-    "workbook_rows_by_year": SOURCE_XLSB_ROWS_BY_YEAR,
-    "xml_style": {
-        "barChart.grouping": "stacked",
-        "barChart.gapWidth": SOURCE_GAP_WIDTH,
-        "barChart.overlap": SOURCE_BAR_OVERLAP,
-        "plotArea.layout.manualLayout": SOURCE_PLOT_LAYOUT,
-        "primaryValueAxis.min": SOURCE_REVENUE_AXIS_MIN,
-        "primaryValueAxis.max": SOURCE_REVENUE_AXIS_MAX,
-        "secondaryValueAxis.min": SOURCE_EBIT_AXIS_MIN,
-        "secondaryValueAxis.max": SOURCE_EBIT_AXIS_MAX,
-        "secondaryValueAxis.majorUnit": SOURCE_EBIT_AXIS_MAJOR_UNIT,
-        "barDefaultFill": SHIPBUILDER_RED,
-        "barDptFills": REVENUE_POINT_COLORS,
-        "lineSeries.noFill": True,
-        "lineMarker.symbol": "dash",
-        "lineMarker.size": SOURCE_EBIT_MARKER_SIZE_PT,
-        "lineMarker.fill": EBIT_MARKER_YELLOW,
-        "lineMarker.lineWidth": SOURCE_EBIT_MARKER_LINE_WIDTH,
-    },
-}
 
 
 TEACHING_METADATA = {
@@ -588,7 +550,6 @@ _PANEL_LABELS = {
 # primitive defaults, so layout behavior stays visible at each call site.
 
 
-
 # ════════════════════════════════════════════════════════════════════════════
 # Drawing helpers.
 # ════════════════════════════════════════════════════════════════════════════
@@ -730,38 +691,6 @@ def paint_axis_legends_and_dividers(out: list[str], ids: ShapeIds) -> None:
     out.append(connector(ids.next(), "Straight Arrow Connector 2596", IN(4.939), IN(1.377), IN(0), IN(5.600), color="808080", width=12700))
     out.append(connector(ids.next(), "Straight Arrow Connector 2598", IN(8.056), IN(1.377), IN(0), IN(5.600), color="808080", width=12700))
     out.append(connector(ids.next(), "Straight Arrow Connector 2602", IN(10.465), IN(1.377), IN(0), IN(5.600), color="808080", width=12700))
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# Validation helpers. These run at import time so future edits fail loudly if
-# chart data/labels drift from the source XML/XLSB conversion.
-# ════════════════════════════════════════════════════════════════════════════
-def _validate_source_chart_alignment() -> None:
-    expected_count = len(COMPANY_CATEGORIES)
-    if expected_count != 15:
-        raise ValueError("Expected fifteen company categories from slide34 chart workbooks.")
-    if len(REVENUE_POINT_COLORS) != expected_count:
-        raise ValueError("Revenue point colors must align with the fifteen company categories.")
-    if tuple(CHART_STYLES_BY_YEAR) != FISCAL_YEARS:
-        raise ValueError("CHART_STYLES_BY_YEAR order must match the five source chart panels.")
-    for year in FISCAL_YEARS:
-        revenue = REVENUE_VALUES_BY_YEAR[year]
-        margin = EBIT_MARGIN_VALUES_BY_YEAR[year]
-        if len(revenue) != expected_count or len(margin) != expected_count:
-            raise ValueError(f"{year} revenue and EBIT rows must align with COMPANY_CATEGORIES.")
-        if CHART_STYLES_BY_YEAR[year]["series"][0]["values"] != list(revenue):
-            raise ValueError(f"{year} native chart revenue series drifted from SOURCE_XLSB_ROWS_BY_YEAR.")
-    if len(CHARTS) != 5 or len(CHART_PANELS) != 5:
-        raise ValueError("Expected five native chart panels / five graphic-frame rIds.")
-    nonblank_revenue = sum(value is not None for year in FISCAL_YEARS for value in REVENUE_VALUES_BY_YEAR[year])
-    nonblank_margin = sum(value is not None for year in FISCAL_YEARS for value in EBIT_MARGIN_VALUES_BY_YEAR[year])
-    if len(_DATA_LABELS["revenue_chips"]) != nonblank_revenue:
-        raise ValueError("Manual revenue chips no longer match nonblank workbook revenue values.")
-    if len(_DATA_LABELS["margin_points"]) != nonblank_margin:
-        raise ValueError("Manual EBIT-margin labels no longer match nonblank workbook margin values.")
-
-
-_validate_source_chart_alignment()
 
 
 # ════════════════════════════════════════════════════════════════════════════

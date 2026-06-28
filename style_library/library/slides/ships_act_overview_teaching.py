@@ -34,7 +34,6 @@ FIDELITY NOTE
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from deck_core.authoring import (
     Chrome, IN, PT, body_slide, connector, line_break, paragraph, picture, run, text_box,
@@ -57,7 +56,6 @@ FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
-_SRC = Path(__file__).parent / "_src"
 CHARTS: list = []
 
 NO_BORDER = "none"

@@ -32,7 +32,6 @@ FIDELITY NOTE
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from deck_core.authoring import (
     Chrome, IN, PT, body_slide, connector, line_break, paragraph, picture, run, text_box,
@@ -53,7 +52,6 @@ FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
-_SRC = Path(__file__).parent / "_src"
 CHARTS: list = []
 
 SIZED_IN_ANOTHER_CAMPAIGN = "A6A6A6"
@@ -451,11 +449,6 @@ MISSION_TO_EFFECTOR_EXTRA = ConnectorSpec("mission_to_effectors", "Connector: El
 SCOPE_CHIP = TextSpec("scope_chip", "ScopeChip", Box(9.121, 0.074, 2.663, 0.500), (RunSpec("Currently manned capabilities", PT(12), WHITE, bold=True),), SURFACE_BLUE, DK)
 
 
-def paint_chrome(out: list[str], n) -> None:
-    out.append("")
-    out.append("")
-
-
 def paint_approach_rail(out: list[str], n) -> None:
     for step in APPROACH_STEPS:
         _draw_step(out, n, step)
@@ -512,7 +505,6 @@ def _body() -> str:
     out: list[str] = []
     ids = _shape_ids()
     n = lambda: next(ids)  # noqa: E731
-    paint_chrome(out, n)
     paint_approach_rail(out, n)
     paint_calculation_nodes(out, n)
     paint_platforms_and_connectors(out, n)

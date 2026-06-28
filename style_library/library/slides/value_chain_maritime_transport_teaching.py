@@ -43,7 +43,6 @@ FIDELITY NOTE
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from deck_core.authoring import (
     Chrome, IN, PT, body_slide, connector, line_break, paragraph, run, table, tbreak,
@@ -77,7 +76,6 @@ def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
 
 LAYOUT = "slideLayout4"
 
-_SRC = Path(__file__).parent / "_src"
 CHARTS: list = []
 
 DARK_STEP = "0E1924"
@@ -304,12 +302,6 @@ def paint_stage_headers(out: list[str], n) -> None:
         out.append(text_box(n(), f"StageHeader:{header.label}", *_xywh(header.box), [_p(header.label, bold=True, color=header.text_color)], fill=header.fill, line_color="none", prst=header.prst, geom_adj={"adj": "val 24929"}, anchor="ctr", l_ins=144000, t_ins=108000, r_ins=144000, b_ins=108000))
 
 
-def paint_chrome(out: list[str]) -> None:
-    out.append("")
-    out.append("")
-    out.append("")
-
-
 def paint_archetype_nodes(out: list[str], n) -> None:
     for node in ARCHETYPE_NODES:
         out.append(text_box(n(), f"ArchetypeNode:{node.name}", *_xywh(node.box), [_p(node.name, bold=True, color=node.text_color)], fill=node.fill, line_color="none", anchor="ctr", l_ins=91440, r_ins=91440))
@@ -363,7 +355,6 @@ def _body() -> str:
     n = lambda: next(ids)  # noqa: E731 - sequential shape ids
     paint_value_flow_panels(out, n)
     paint_stage_headers(out, n)
-    paint_chrome(out)
     paint_archetype_nodes(out, n)
     paint_row_labels_and_metric_header(out, n)
     paint_descriptions(out, n)

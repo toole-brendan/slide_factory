@@ -1,11 +1,11 @@
 """Minimal OOXML primitives — self-contained string builders, shared by all decks.
 
-Body builders and the content-slide chrome live here as importable functions:
-run / paragraph / text_box / custom_geometry / table / connector / picture, plus
-the breadcrumb / title_placeholder / prelim_chip / sources_line chrome pieces.
-Mechanical geometry/units come from deck_core.layout; the locked-chrome colors,
-sizes, and geometry are private constants below. They are conveniences, not a
-cage: a slide may still compose raw OOXML directly, or mix raw strings with these
+Body / shape / table builders live here as importable functions:
+run / paragraph / text_box / custom_geometry / table / connector / picture (plus
+the table-cell emitters). The house chrome (breadcrumb / slide_title /
+preliminary_chip / source_note) lives in deck_core.chrome, not here. Mechanical
+geometry/units come from deck_core.layout. They are conveniences, not a cage: a
+slide may still compose raw OOXML directly, or mix raw strings with these
 builders, whenever that reads better.
 """
 from __future__ import annotations
@@ -84,8 +84,8 @@ def esc(s: str) -> str:
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Body builders — text runs / paragraphs / shapes / tables. Slides import these
-# from deck_core.authoring rather than inlining raw OOXML. Blue/gray FILLS must use
-# a BLUE_*/GRAY_* token from deck_core.style; line colors are unconstrained.
+# from deck_core.authoring rather than inlining raw OOXML. Colors are passed in as
+# hex literals by the slide module (no central palette).
 # ─────────────────────────────────────────────────────────────────────────────
 
 

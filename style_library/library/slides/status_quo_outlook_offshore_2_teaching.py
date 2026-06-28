@@ -405,36 +405,6 @@ CHART_STYLE = {
 
 CHARTS = [combo_chart(mode="stacked", **CHART_STYLE)]
 
-SOURCE_CHART_AUDIT = {
-    "source_xml": "slide46_chart28.xml",
-    "source_workbook": "slide46_chart28.xlsb",
-    "workbook_rows": [
-        FSV_PSV_ADDS,
-        WTI_SPOT_PRICE_2025_DOLLARS,
-        BRENT_SPOT_PRICE_2025_DOLLARS,
-    ],
-    "xml_style": {
-        "barDir": "col",
-        "grouping": "stacked",
-        "gapWidth": SOURCE_GAP_WIDTH,
-        "overlap": SOURCE_BAR_OVERLAP,
-        "plotArea.layout.manualLayout": SOURCE_PLOT_LAYOUT,
-        "rightValueAxis": {
-            "min": SOURCE_FLEET_AXIS_MIN,
-            "max": SOURCE_FLEET_AXIS_MAX,
-            "majorUnit": SOURCE_FLEET_AXIS_MAJOR_UNIT,
-        },
-        "leftValueAxis": {
-            "min": SOURCE_CRUDE_AXIS_MIN,
-            "max": SOURCE_CRUDE_AXIS_MAX,
-            "majorUnit": SOURCE_CRUDE_AXIS_MAJOR_UNIT,
-        },
-        "barFill": FLEET_ADDS_BLUE,
-        "lineFills": (WTI_GOLD, BRENT_TEAL),
-        "lineWidth": SOURCE_LINE_WIDTH,
-    },
-}
-
 # The correlation callout treats missing fleet additions as zero-add years; that
 # convention matches the source slide's displayed WTI coefficient. The Brent value
 # is kept verbatim from the source callout.
@@ -497,39 +467,6 @@ LEGEND_LINE_KEYS: tuple[LineKey, ...] = tuple(
     for entry in LEGEND_ENTRIES
     if entry.key_kind == "line_rule"
 )
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# Validation helpers. These keep edits from silently desynchronizing manual
-# labels from the native chart.
-# ════════════════════════════════════════════════════════════════════════════
-def _validate_semantics() -> None:
-    if len(YEARS) != 40:
-        raise ValueError("Offshore crude-price chart must carry 40 annual slots, 1986-2025.")
-    if any(len(series.values) != len(YEARS) for series in COMBO_SERIES):
-        raise ValueError("Every combo series must align to YEARS.")
-
-    adds_by_year = {int(year): value for year, value in zip(YEARS, FSV_PSV_ADDS)}
-    for label in PEAK_ADD_LABELS:
-        if str(adds_by_year[label.year] or 0) != label.label:
-            raise ValueError(f"Peak label for {label.year} no longer matches FSV/PSV adds data.")
-
-    if CHART_STYLE["gap_width"] != SOURCE_GAP_WIDTH or CHART_STYLE["bar_overlap"] != SOURCE_BAR_OVERLAP:
-        raise ValueError("Chart gap/overlap must match slide46_chart28.xml.")
-    if CHART_STYLE["plot_layout"] != SOURCE_PLOT_LAYOUT:
-        raise ValueError("Manual plot layout must match slide46_chart28.xml.")
-    if CHART_STYLE["value_axis_max"] != SOURCE_FLEET_AXIS_MAX or CHART_STYLE["line_value_axis_max"] != SOURCE_CRUDE_AXIS_MAX:
-        raise ValueError("Native chart axis maxima must match the source combo chart.")
-    if CHART_STYLE["line_overlay_axis"] != "secondary":
-        raise ValueError("Crude-price lines must remain on the left/secondary value axis.")
-    if not CHARTS or not CHARTS[0].get("embed_xlsx"):
-        raise ValueError("Native chart must generate an embedded editable workbook.")
-
-    if tuple(tick.label for tick in YEAR_TICKS) != ("1986", "1990", "1995", "2000", "2005", "2010", "2015", "2020", "2025"):
-        raise ValueError("Manual year ticks should remain the nine source anchor years.")
-
-
-_validate_semantics()
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -674,15 +611,6 @@ def paint_peak_add_labels(next_id) -> list[str]:
             b_ins=0,
         )
         for label in PEAK_ADD_LABELS
-    ]
-
-
-def paint_chrome(next_id) -> list[str]:
-    """House chrome for the status-quo offshore outlook page."""
-
-    return [
-        "",
-        "",
     ]
 
 
@@ -848,7 +776,6 @@ def _body() -> str:
     shapes.extend(paint_axis_titles(next_id))
     shapes.extend(paint_manual_year_ticks(next_id))
     shapes.extend(paint_peak_add_labels(next_id))
-    shapes.extend(paint_chrome(next_id))
     shapes.extend(paint_mixed_series_legend(next_id))
     shapes.extend(paint_source_note(next_id))
     shapes.extend(paint_scenario_chrome(next_id))

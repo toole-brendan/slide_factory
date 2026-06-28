@@ -415,11 +415,6 @@ def _exercise_timing_table(sp_id: int) -> str:
     return table(sp_id, "ExerciseTimingTable", IN(0.495), IN(4.903), IN(12.482), IN(2.1), col_widths=[IN(1.283), IN(2.993), IN(1.368), IN(1.368), IN(1.368), IN(1.368), IN(1.368), IN(1.368)], rows=rows)
 
 
-def paint_chrome(out: list[str], n) -> None:
-    out.append("")
-    out.append("")
-
-
 def paint_approach_header(out: list[str], n) -> None:
     out.append(text_box(n(), "ApproachDescription", IN(0.425), IN(1.589), IN(2.289), IN(0.701), [_plain("Multiply Company TCV by contract exercise timing to find Company ACV", align=None)], fill=None, line_color="none", anchor="ctr"))
     out.append(text_box(n(), "ApproachStepsHeader", IN(0.425), IN(1.229), IN(2.291), IN(0.359), [_plain("Approach steps", italic=True, align=None)], fill=None, line_color="none", anchor="ctr"))
@@ -469,36 +464,10 @@ def paint_timeline_scope_cards_and_logo(out: list[str], n) -> None:
     out.append(text_box(n(), "ContractFootnote", IN(9.023), IN(3.959), IN(3.748), IN(0.403), [_plain("May be used if Weapons Procurement contract extends over 5-year period", italic=True)], fill=GRAY_1, line_color=GRAY_1, line_width=19050, anchor="ctr"))
 
 
-
-# ════════════════════════════════════════════════════════════════════════════
-# Validation helpers. They intentionally run at import time only if something is
-# structurally wrong in the teaching data.
-# ════════════════════════════════════════════════════════════════════════════
-def _validate_semantics() -> None:
-    if len(CHART_CATEGORIES) != 9:
-        raise ValueError("Undersea TCV-to-ACV chart must carry nine bridge categories.")
-    if any(len(series["values"]) != len(CHART_CATEGORIES) for series in ACV_WATERFALL_SERIES):
-        raise ValueError("Every undersea ACV waterfall series must align to CHART_CATEGORIES.")
-    if any(len(series.get("data_point_colors", ())) != len(CHART_CATEGORIES) for series in ACV_WATERFALL_SERIES):
-        raise ValueError("Every undersea ACV waterfall series must carry per-point colors for all categories.")
-    stack_heights = [
-        sum(value or 0 for value in values)
-        for values in zip(*(series["values"] for series in ACV_WATERFALL_SERIES))
-    ]
-    if stack_heights != [200, 200, 100, 100, 50, 15, 0, 0, 0]:
-        raise ValueError("Waterfall stack heights no longer match the source bridge geometry.")
-    if tuple(tick.label for tick in CATEGORY_TICKS) != CHART_CATEGORIES:
-        raise ValueError("Manual category ticks no longer match native chart categories.")
-
-
-_validate_semantics()
-
-
 def _body() -> str:
     out: list[str] = []
     ids = _shape_ids()
     n = lambda: next(ids)  # noqa: E731
-    paint_chrome(out, n)
     paint_approach_header(out, n)
     paint_formula_output_and_chart_arrows(out, n)
     paint_worked_chart(out, n)

@@ -31,7 +31,7 @@ from deck_core.primitives import (
 from deck_core.chrome import (
     Chrome, Sources, body_slide,
     breadcrumb, slide_title, preliminary_chip, source_note,
-    layout_title, layout_placeholder,
+    layout_title, layout_placeholder, cover_layout, section_divider_layout,
 )
 
 # ── units + canvas / margins / BODY box (layout) ───────────────────────────

@@ -10,15 +10,15 @@ unzipped template dir, the Saronic assets, the docProps identity) are passed in.
 Each slide module returns a complete <p:sld> XML string via a no-arg
 `render() -> str` (the render_fn passed alongside the module), and may export
 `CHARTS: list[dict]` (chart dicts from deck_core.charts — column_chart /
-bar_chart / line_chart / waterfall_chart / marimekko_chart) which the loop wires
+bar_chart / combo_chart / bubble_chart / area_chart) which the loop wires
 as native chart parts + per-slide chart rels. A module may also export
 `IMAGES: list[dict]` — each `{"rId": "rIdN", "file": "<name in ppt/media>"}` — which
 the loop wires as per-slide image relationships so a `picture(..., r_embed="rIdN")`
 resolves (the bytes come from assets/media/ or the `images` dir).
 
-A slide module declares `LAYOUT = "slideLayoutN"` at module scope for non-default
-layouts (cover = slideLayout1, divider = slideLayout2); body slides omit it and
-default to slideLayout4 (which auto-numbers - no manual page number).
+Every slide module must declare `LAYOUT = "slideLayoutN"` explicitly at module
+scope (cover = slideLayout1, divider = slideLayout2, body = slideLayout4, which
+auto-numbers - no manual page number); build_pptx raises if it is missing.
 """
 from __future__ import annotations
 
@@ -31,7 +31,19 @@ from xml.sax.saxutils import escape as _escape
 from deck_core.ooxml import XML_DECL, NS
 from deck_core.layout import SLIDE_W, SLIDE_H
 
-DEFAULT_LAYOUT = "slideLayout4"   # body slides (auto-number; no manual page number)
+_LAYOUT_RE = re.compile(r"slideLayout[1-6]")
+
+
+def _required_layout(mod, slot: int) -> str:
+    """Every slide module must declare a valid LAYOUT; fail fast if it doesn't, so
+    a missing or typo'd layout can't silently fall back to a default."""
+    layout = getattr(mod, "LAYOUT", None)
+    if not isinstance(layout, str) or not _LAYOUT_RE.fullmatch(layout):
+        name = getattr(mod, "__name__", repr(mod))
+        raise ValueError(
+            f"slide {slot} ({name}) must declare LAYOUT = 'slideLayoutN' "
+            f"(N in 1..6); got {layout!r}")
+    return layout
 
 ROOT_RELS_XML = (
     f'{XML_DECL}\n'
@@ -161,8 +173,8 @@ def _presentation_rels_xml(n_slides: int) -> str:
             + "".join(rels) + '</Relationships>')
 
 
-def _slide_rels_xml(n: int, slide_rels: dict, default_layout: str) -> str:
-    rels = slide_rels.get(n, [("rId1", "slideLayout", f"../slideLayouts/{default_layout}.xml")])
+def _slide_rels_xml(n: int, slide_rels: dict) -> str:
+    rels = slide_rels[n]
     parts = []
     for rId, t, target in rels:
         parts.append(f'<Relationship Id="{rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/{t}" Target="{target}"/>')
@@ -172,8 +184,7 @@ def _slide_rels_xml(n: int, slide_rels: dict, default_layout: str) -> str:
 
 def build_pptx(slide_module_renders, *, out: Path, extracted: Path, assets: Path,
                title: str, creator: str, app: str = "deck_core",
-               images: Path | None = None, hidden: tuple[int, ...] = (),
-               default_layout: str = DEFAULT_LAYOUT) -> None:
+               images: Path | None = None, hidden: tuple[int, ...] = ()) -> None:
     """Render every slide and pack the .pptx.
 
     slide_module_renders: list of (module, render_fn) where render_fn() -> <p:sld>
@@ -193,10 +204,10 @@ def build_pptx(slide_module_renders, *, out: Path, extracted: Path, assets: Path
     def _ex(p: str) -> bytes:
         return (extracted / p).read_bytes()
 
-    # Seed per-slide rels from each module's LAYOUT (local -> idempotent).
+    # Seed per-slide rels from each module's LAYOUT (required; fail fast).
     slide_rels: dict[int, list] = {}
     for slot, (mod, _) in enumerate(slide_module_renders, start=1):
-        layout = getattr(mod, "LAYOUT", default_layout)
+        layout = _required_layout(mod, slot)
         slide_rels[slot] = [("rId1", "slideLayout", f"../slideLayouts/{layout}.xml")]
 
     # Render slides; collect native chart parts + wire per-slide chart rels.
@@ -281,7 +292,7 @@ def build_pptx(slide_module_renders, *, out: Path, extracted: Path, assets: Path
         parts[f"ppt/slideLayouts/_rels/slideLayout{i}.xml.rels"] = _ex(f"ppt/slideLayouts/_rels/slideLayout{i}.xml.rels")
     for i, body in enumerate(slides, 1):
         parts[f"ppt/slides/slide{i}.xml"] = body
-        parts[f"ppt/slides/_rels/slide{i}.xml.rels"] = _slide_rels_xml(i, slide_rels, default_layout)
+        parts[f"ppt/slides/_rels/slide{i}.xml.rels"] = _slide_rels_xml(i, slide_rels)
     parts.update(chart_parts)
 
     # Media (Saronic chrome) + optional photos/embeddings + thumbnail.

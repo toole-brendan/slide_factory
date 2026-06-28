@@ -508,15 +508,6 @@ def _body_run(text: str, *, size_pt: float, color: str = BLACK) -> str:
     return run(text, size=PT(size_pt), color=color, font=FONT)
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Paint sections. Document order is PowerPoint paint order.
-# ════════════════════════════════════════════════════════════════════════════
-def paint_chrome(out: list[str]) -> None:
-    out.append("")
-    out.append("")
-    out.append("")
-
-
 def paint_findings_table(out: list[str], ids: ShapeIds) -> None:
     # One-cell native table used as a stable rich-text frame. col_widths is the
     # table geometry; findings_cell() owns the text insets and explicit no-rules.
@@ -568,7 +559,6 @@ def _body() -> str:
 
     # Paint order matters in PowerPoint OOXML: later elements sit on top.
     # DROPPED graphicFrame ('think-cell data - do not delete') - think-cell OLE.
-    paint_chrome(out)
     paint_findings_table(out, ids)
     paint_footnote(out, ids)
 

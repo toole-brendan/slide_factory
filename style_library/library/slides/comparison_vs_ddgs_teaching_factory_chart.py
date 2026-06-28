@@ -520,16 +520,6 @@ def _manual_label(out: list[str], ids: ShapeIds, label: ManualLabel) -> None:
     )
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Paint sections. Document order is PowerPoint paint order.
-# ════════════════════════════════════════════════════════════════════════════
-def paint_chrome(out: list[str], ids: ShapeIds) -> None:
-    out.append("")
-    out.append(
-        ""
-    )
-
-
 def paint_logos(out: list[str], ids: ShapeIds) -> None:
     for slot in LOGO_SLOTS:
         out.append(picture(ids.next(), slot.name, slot.r_id, *slot.box.emu()))
@@ -773,7 +763,6 @@ def _body() -> str:
     ids = ShapeIds(start=100)
 
     # Paint order matters in PowerPoint OOXML: later elements sit on top.
-    paint_chrome(out, ids)
     paint_logos(out, ids)
     paint_chart(out, ids)
     paint_chart_manual_labels(out, ids)

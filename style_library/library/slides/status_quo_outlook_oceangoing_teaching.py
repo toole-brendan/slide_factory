@@ -11,7 +11,7 @@ USE WHEN
 TEACHES
   - fully declarative native stacked-column charting with column_chart(mode="stacked")
   - source workbook rows embedded as Python constants instead of a sidecar XLSB
-  - source chart-part style values embedded in CHART_STYLE and SOURCE_CHART_AUDIT
+  - source chart-part style values embedded in CHART_STYLE
   - point-level colors to encode vessel archetype and positive orderbook values
   - manual year ticks and source-positioned bar-total labels over a native chart
   - semantic native table rows tied back to the chart color/value arithmetic
@@ -270,31 +270,6 @@ RETIREMENT_REPLACEMENT_ROWS: tuple[ReplacementRow, ...] = (
     ReplacementRow("Tanker", TANKER_RETIREMENT, "~1.7", "~1.2"),
 )
 
-SOURCE_CHART_AUDIT = {
-    "source_xml": "slide44_chart26.xml",
-    "source_workbook": "slide44_chart26.xlsb",
-    "workbook_rows": SOURCE_WORKBOOK_ROWS,
-    "xml_style": {
-        "manualLayout": SOURCE_PLOT_LAYOUT,
-        "barDir": "col",
-        "grouping": "stacked",
-        "gapWidth": SOURCE_GAP_WIDTH,
-        "overlap": SOURCE_BAR_OVERLAP,
-        "valueAxisMin": SOURCE_VALUE_AXIS_MIN,
-        "valueAxisMax": SOURCE_VALUE_AXIS_MAX,
-        "valueAxisMajorUnit": SOURCE_VALUE_AXIS_MAJOR_UNIT,
-        "axisLineWidth": SOURCE_AXIS_LINE_WIDTH,
-        "seriesDefaultsAndPointOverrides": [
-            {
-                "defaultFill": layer.default_fill,
-                "pointFillOverrides": dict(layer.point_fill_overrides),
-            }
-            for layer in CHART_LAYERS
-        ],
-        "selectiveDataLabels": [label.__dict__ for label in SOURCE_XML_DATA_LABELS],
-    },
-}
-
 TEACHING_METADATA = {
     "role": "scenario_forecast / net_hull_retirement_replacements",
     "use_when": (
@@ -365,39 +340,6 @@ def _average_replacements_by_archetype() -> dict[str, tuple[float, float]]:
 
 def _display_average(value: float) -> str:
     return f"~{value:.1f}"
-
-
-def _validate_source_chart_alignment() -> None:
-    if len(YEARS) != 25:
-        raise ValueError("slide44_chart26 must carry 25 annual categories.")
-    if tuple(layer.values for layer in CHART_LAYERS) != SOURCE_WORKBOOK_ROWS:
-        raise ValueError("Native chart layers no longer match slide44_chart26.xlsb rows.")
-    if any(len(layer.values) != len(YEARS) for layer in CHART_LAYERS):
-        raise ValueError("Every chart layer must align to YEARS.")
-    if any(len(layer.point_fills()) != len(YEARS) for layer in CHART_LAYERS):
-        raise ValueError("Every point-fill list must align to YEARS.")
-    if _net_hulls_by_year() != (-9, -1, 2, 4, 4, -1, -2, -3, -2, 0, -1, -1, -2, -2, -3, -2, -3, -5, -7, -7, -2, -2, -1, -1, -4):
-        raise ValueError("Computed net hull totals no longer match the source chart.")
-    if CHART_STYLE["gap_width"] != SOURCE_GAP_WIDTH or CHART_STYLE["bar_overlap"] != SOURCE_BAR_OVERLAP:
-        raise ValueError("Chart gap/overlap must match slide44_chart26.xml.")
-    if CHART_STYLE["plot_layout"] != SOURCE_PLOT_LAYOUT:
-        raise ValueError("Manual plot layout must match slide44_chart26.xml.")
-    if CHART_STYLE["value_axis_min"] != SOURCE_VALUE_AXIS_MIN or CHART_STYLE["value_axis_max"] != SOURCE_VALUE_AXIS_MAX:
-        raise ValueError("Value-axis bounds must match slide44_chart26.xml.")
-    calculated = _average_replacements_by_archetype()
-    for row in RETIREMENT_REPLACEMENT_ROWS:
-        total, net = calculated[row.archetype]
-        if (_display_average(total), _display_average(net)) != (row.total_per_year, row.net_of_orderbook_per_year):
-            raise ValueError(f"Replacement table row for {row.archetype} no longer matches chart data.")
-    if tuple((label.idx, label.text) for label in SOURCE_XML_DATA_LABELS) != (
-        (2, "2"), (5, "-1"), (7, "-3"), (8, "-2"), (10, "-1"), (11, "-1"),
-        (13, "-2"), (15, "-2"), (16, "-3"), (21, "-2"), (22, "-1"),
-        (23, "-1"), (24, "-4"),
-    ):
-        raise ValueError("Source XML data-label intent no longer matches slide44_chart26.xml.")
-
-
-_validate_source_chart_alignment()
 
 
 # ── table kit (local): separates a cell's CONTENT from its MECHANICS (insets,

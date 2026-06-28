@@ -1,12 +1,12 @@
 """deck_core.ooxml - shared OOXML package plumbing (XML decl + namespaces).
 
 Single source of truth for the XML declaration and the OpenXML namespace URIs
-used across the build pipeline (primitives, lib, charts) and the probe parser,
+used across the build pipeline (primitives, _build, charts) and the probe parser,
 so the same strings aren't redeclared (and silently drifting) per file.
 
-Raw geometry / palette / type tokens live in deck_core.style; this module is
-only the package-level XML plumbing. Pure data with no dependency on the rest
-of deck_core, so importing it is cheap and cycle-free.
+Mechanical geometry / units live in deck_core.layout; this module is only the
+package-level XML plumbing. Pure data with no dependency on the rest of
+deck_core, so importing it is cheap and cycle-free.
 """
 from __future__ import annotations
 

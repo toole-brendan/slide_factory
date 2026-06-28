@@ -579,15 +579,6 @@ def _matrix_rows():
     ]
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Paint sections. Document order is PowerPoint paint order.
-# ════════════════════════════════════════════════════════════════════════════
-def paint_chrome(out: list[str]) -> None:
-    out.append("")
-    out.append("")
-    out.append("")
-
-
 def paint_matrix(out: list[str], ids: ShapeIds) -> None:
     # col_widths are column tracks; row builders carry spans, anchors, insets,
     # and rules. Every border side not listed renders as explicit no-fill.
@@ -650,7 +641,6 @@ def _body() -> str:
 
     # Paint order matters in PowerPoint OOXML: later elements sit on top.
     # DROPPED graphicFrame ('think-cell data - do not delete') - think-cell OLE.
-    paint_chrome(out)
     paint_matrix(out, ids)
     paint_callouts(out, ids)
 

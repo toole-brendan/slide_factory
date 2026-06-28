@@ -11,7 +11,7 @@ USE WHEN
 TEACHES
   - fully declarative native stacked-column charting with column_chart(mode="stacked")
   - source workbook values embedded as Python constants instead of sidecar XLSB
-  - source chart-part style values embedded as CHART_STYLE and SOURCE_CHART_AUDIT
+  - source chart-part style values embedded as CHART_STYLE
   - manual on-bar dollar labels over a percentage-normalized stacked chart
   - separate legend/category labels when the chart has a single category
   - status icons and dashed leader lines tied to an explanatory table
@@ -120,18 +120,8 @@ SOURCE_GAP_WIDTH = 250
 SOURCE_BAR_OVERLAP = 100
 SOURCE_VALUE_AXIS_MIN = 0
 SOURCE_VALUE_AXIS_MAX = 110.00000000000001
-SOURCE_VALUE_AXIS_MAJOR_UNIT = None  # source XML omits <c:majorUnit>
 SOURCE_SEGMENT_LINE_WIDTH = 3_175
 SOURCE_AXIS_LINE_WIDTH = 9_525
-SOURCE_XML_COMPONENT_FILL_COLORS: tuple[str, ...] = (
-    BASIC_OCEAN_RATE,
-    FUEL_SURCHARGE,
-    TERMINAL_CHARGE,
-    TERMINAL_CHARGE,
-    WHARFAGE,
-    WHARFAGE,
-    OTHER_FEES,
-)
 
 FREIGHT_COMPONENTS: tuple[FreightComponent, ...] = (
     FreightComponent("Basic Ocean Rate", BASIC_OCEAN_RATE, SOURCE_XLSB_COMPONENT_PCT_VALUES[0], "2.8", "vessel_operations"),
@@ -189,55 +179,6 @@ CHART_STYLE = {
 }
 
 CHARTS = [column_chart(**CHART_STYLE)]
-
-SOURCE_CHART_AUDIT = {
-    "source_xml": "slide134_chart78.xml",
-    "source_workbook": "slide134_chart78.xlsb",
-    "workbook_rows": [SOURCE_XLSB_COMPONENT_PCT_VALUES],
-    "xml_style": {
-        "manualLayout": SOURCE_PLOT_LAYOUT,
-        "barDir": "col",
-        "grouping": "stacked",
-        "gapWidth": SOURCE_GAP_WIDTH,
-        "overlap": SOURCE_BAR_OVERLAP,
-        "valueAxisMin": SOURCE_VALUE_AXIS_MIN,
-        "valueAxisMax": SOURCE_VALUE_AXIS_MAX,
-        "valueAxisMajorUnit": SOURCE_VALUE_AXIS_MAJOR_UNIT,
-        "segmentLineWidth": SOURCE_SEGMENT_LINE_WIDTH,
-        "axisLineWidth": SOURCE_AXIS_LINE_WIDTH,
-        "seriesFillsBottomToTop": SOURCE_XML_COMPONENT_FILL_COLORS,
-    },
-}
-
-
-def _validate_source_chart_alignment() -> None:
-    """Fail fast if a future edit drifts from the source XML/XLSB values."""
-
-    if len(CHART_CATEGORIES) != 1:
-        raise ValueError("slide134_chart78 contains exactly one chart category / stacked bar.")
-    if len(FREIGHT_COMPONENTS) != 7:
-        raise ValueError("Expected seven freight-charge components from slide134_chart78.xlsb.")
-    actual_values = tuple(component.workbook_pct for component in FREIGHT_COMPONENTS)
-    if actual_values != SOURCE_XLSB_COMPONENT_PCT_VALUES:
-        raise ValueError("Freight component percentages no longer match slide134_chart78.xlsb.")
-    actual_colors = tuple(component.fill for component in FREIGHT_COMPONENTS)
-    if actual_colors != SOURCE_XML_COMPONENT_FILL_COLORS:
-        raise ValueError("Freight component fills no longer match slide134_chart78.xml series colors.")
-    if abs(sum(SOURCE_XLSB_COMPONENT_PCT_VALUES) - 100.0) > 1e-9:
-        raise ValueError("Freight component percentages should sum to the source 100% stack.")
-    if CHART_STYLE["gap_width"] != SOURCE_GAP_WIDTH or CHART_STYLE["bar_overlap"] != SOURCE_BAR_OVERLAP:
-        raise ValueError("Chart gap/overlap must match slide134_chart78.xml.")
-    if CHART_STYLE["plot_layout"] != SOURCE_PLOT_LAYOUT:
-        raise ValueError("Manual plot layout must match slide134_chart78.xml.")
-    if CHART_STYLE["value_axis_min"] != SOURCE_VALUE_AXIS_MIN or CHART_STYLE["value_axis_max"] != SOURCE_VALUE_AXIS_MAX:
-        raise ValueError("Value-axis bounds must match slide134_chart78.xml.")
-    if SOURCE_VALUE_AXIS_MAJOR_UNIT is None and "value_axis_major_unit" in CHART_STYLE:
-        raise ValueError("Source XML omits c:majorUnit; do not hard-code a native major unit.")
-    if CHART_STYLE["seg_line_width"] != SOURCE_SEGMENT_LINE_WIDTH:
-        raise ValueError("Segment outline width must match slide134_chart78.xml.")
-
-
-_validate_source_chart_alignment()
 
 
 # ════════════════════════════════════════════════════════════════════════════

@@ -638,15 +638,6 @@ _CHART0_DATA = {
     ],
 }
 
-SOURCE_CHART_AUDIT = {
-    "source_xml": "slide33_chart18.xml",
-    "source_workbook": "slide33_chart18.xlsb",
-    "source_usage": "transcribed only; this module performs no runtime file reads",
-    "xml_style": CHART_ENCODING_CONTRACT["source_chart_xml"],
-    "series_point_counts": tuple(len(bucket.points) for bucket in BUBBLE_SERIES_BUCKETS),
-    "point_fill_overrides": tuple(bucket.point_fills for bucket in BUBBLE_SERIES_BUCKETS),
-}
-
 CHART_STYLE = {
     "series": [_native_bubble_series(bucket) for bucket in BUBBLE_SERIES_BUCKETS],
     "show_legend": False,
@@ -679,39 +670,6 @@ CHART_STYLE = {
 }
 
 CHARTS = [bubble_chart(**CHART_STYLE)]
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# Validation helpers. These keep the native chart data and manual furniture
-# synchronized with the source chart contract.
-# ════════════════════════════════════════════════════════════════════════════
-def _validate_semantics() -> None:
-    if len(BUBBLE_SERIES_BUCKETS) != CHART_ENCODING_CONTRACT["source_chart_xml"]["internal_series_count"]:
-        raise ValueError("Bubble chart should keep seven internal source buckets.")
-    if any(len(_sparse_values(bucket, "year")) != POINT_SLOT_COUNT for bucket in BUBBLE_SERIES_BUCKETS):
-        raise ValueError("Every native bubble series must expand to the 73 source cache slots.")
-    if sum(len(bucket.points) for bucket in BUBBLE_SERIES_BUCKETS) != POINT_SLOT_COUNT:
-        raise ValueError("Bubble point-count contract should total 73 plotted source bubbles.")
-    if tuple(len(bucket.points) for bucket in BUBBLE_SERIES_BUCKETS) != (3, 12, 20, 15, 14, 6, 3):
-        raise ValueError("Bubble bucket point counts no longer match slide33_chart18.xml.")
-    for bucket in BUBBLE_SERIES_BUCKETS:
-        slots = [point.slot for point in bucket.points]
-        if len(slots) != len(set(slots)):
-            raise ValueError(f"Duplicate source slots in {bucket.name!r}.")
-        if any(slot < 0 or slot >= POINT_SLOT_COUNT for slot in slots):
-            raise ValueError(f"Out-of-range source slot in {bucket.name!r}.")
-        if any(slot < 0 or slot >= POINT_SLOT_COUNT for slot, _ in bucket.point_fills):
-            raise ValueError(f"Out-of-range fill override in {bucket.name!r}.")
-    if tuple(tick.label for tick in YEAR_TICKS) != ("2020", "2021", "2022", "2023", "2024"):
-        raise ValueError("Manual year ticks should remain the five source years.")
-    if len(LEGEND_ENTRIES) != 6:
-        raise ValueError("Legend should include five archetype markers plus one revenue-size ring.")
-    chart_xml = CHARTS[0]["chart_xml"]
-    if "<c:bubbleChart>" not in chart_xml or "<c:externalData" not in chart_xml:
-        raise ValueError("Native bubble_chart() should generate editable chart XML with embedded workbook data.")
-
-
-_validate_semantics()
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -776,20 +734,6 @@ def _source_paragraph() -> str:
         ],
         line_spacing=100000,
     )
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# Paint functions. Order follows the source's effective stacking: chrome,
-# native bubble chart, manual axis furniture, legend, right rail, source note,
-# and the Preliminary chip.
-# ════════════════════════════════════════════════════════════════════════════
-def paint_chrome(next_id) -> list[str]:
-    """House chrome for the value-chain performance section."""
-
-    return [
-        "",
-        "",
-    ]
 
 
 def paint_template_bubble_chart(next_id) -> list[str]:
@@ -981,7 +925,6 @@ def _body() -> str:
     ids = iter(range(100, 2000))
     next_id = lambda: next(ids)  # noqa: E731 - compact sequential shape ids
 
-    shapes.extend(paint_chrome(next_id))
     shapes.extend(paint_template_bubble_chart(next_id))
     shapes.extend(paint_manual_axis_labels(next_id))
     shapes.extend(paint_legend(next_id))

@@ -44,7 +44,6 @@ FIDELITY NOTE
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from deck_core.authoring import (
     Chrome, IN, PT, body_slide, connector, line_break, paragraph, picture, run, text_box,
@@ -61,7 +60,6 @@ FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
-_SRC = Path(__file__).parent / "_src"
 CHARTS: list = []
 IMAGES = [
     {"rId": "rId2", "file": "image8_3071a231.jpeg"},
@@ -253,11 +251,6 @@ def _draw_box(out: list[str], n, shape: MatrixBox) -> None:
     )
 
 
-def paint_chrome(out: list[str]) -> None:
-    out.append("")
-    out.append("")
-
-
 def paint_row_bands_and_headers(out: list[str], n) -> None:
     for shape in (*FUNDING_HEADERS, *ROW_BANDS):
         _draw_box(out, n, shape)
@@ -306,7 +299,6 @@ def _body() -> str:
     out: list[str] = []
     ids = iter(range(100, 2000))
     n = lambda: next(ids)  # noqa: E731 - sequential shape ids
-    paint_chrome(out)
     paint_row_bands_and_headers(out, n)
     paint_mission_grid(out, n)
     paint_legend(out, n)

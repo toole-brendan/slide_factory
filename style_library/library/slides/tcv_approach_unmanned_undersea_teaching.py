@@ -39,7 +39,6 @@ FIDELITY NOTE
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from deck_core.authoring import (
     Chrome, IN, PT, body_slide, connector, line_break, paragraph, picture, run, text_box,
@@ -62,7 +61,6 @@ FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
-_SRC = Path(__file__).parent / "_src"
 CHARTS: list = []
 
 NO_BORDER = "none"
@@ -377,11 +375,6 @@ APPROACH_UNDERLINE = ConnectorSpec("approach_header_rule", "Approach underline",
 SCOPE_CHIP = TextSpec("scope_chip", "ScopeChip", Box(9.121, 0.074, 2.663, 0.500), (RunSpec("Unmanned-specified", PT(12), DK, bold=True),), SCOPE_BLUE, DK, 3175, "ctr")
 
 
-def paint_chrome(out: list[str], n) -> None:
-    out.append("")
-    out.append("")
-
-
 def paint_approach_rail(out: list[str], n) -> None:
     for step in APPROACH_STEPS:
         _draw_step(out, n, step)
@@ -421,7 +414,6 @@ def _body() -> str:
     out: list[str] = []
     ids = _shape_ids()
     n = lambda: next(ids)  # noqa: E731
-    paint_chrome(out, n)
     paint_approach_rail(out, n)
     paint_calculation_nodes(out, n)
     paint_operator_routes(out, n)

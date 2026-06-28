@@ -45,7 +45,6 @@ FIDELITY NOTE
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from deck_core.authoring import (
     Chrome, IN, PT, body_slide, connector, paragraph, picture, run, table, tcell_rich,
@@ -77,7 +76,6 @@ def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
 
 LAYOUT = "slideLayout4"
 
-_SRC = Path(__file__).parent / "_src"
 CHARTS: list = []
 IMAGES = [
     {"rId": "rId2", "file": "image13_672efe4b.png"},
@@ -446,12 +444,6 @@ def paint_connectors_and_callouts(out: list[str], n) -> None:
         )
 
 
-def paint_chrome(out: list[str]) -> None:
-    out.append("")
-    out.append("")
-    out.append("")
-
-
 def _body() -> str:
     out: list[str] = []
     ids = iter(range(100, 2000))
@@ -463,7 +455,6 @@ def _body() -> str:
     paint_marker_key(out, n)
     paint_logos(out, n)
     paint_connectors_and_callouts(out, n)
-    paint_chrome(out)
     return "".join(out)
 
 

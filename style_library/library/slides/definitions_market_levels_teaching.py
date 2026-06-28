@@ -42,7 +42,6 @@ FIDELITY NOTE
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from deck_core.authoring import (
     Chrome, IN, PT, body_slide, paragraph, picture, run, table, tbreak, tcell, tcell_rich,
@@ -87,7 +86,6 @@ def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
 
 LAYOUT = "slideLayout4"
 
-_SRC = Path(__file__).parent / "_src"
 CHARTS: list = []
 IMAGES = [
     {"rId": "rId2", "file": "image8_3071a231.jpeg"},
@@ -119,7 +117,6 @@ COPY_RULES = (
     "Use white tag text on BLUE_3/4/5 and black tag text on BLUE_1/2.",
     "Keep definition prose short; this slide is a reference, not a methodology page.",
 )
-
 
 
 @dataclass(frozen=True)

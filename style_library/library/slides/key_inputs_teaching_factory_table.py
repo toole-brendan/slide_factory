@@ -522,15 +522,6 @@ def _inputs_table_rows():
     ]
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Paint sections. Document order is PowerPoint paint order.
-# ════════════════════════════════════════════════════════════════════════════
-def paint_chrome(out: list[str]) -> None:
-    out.append("")
-    out.append("")
-    out.append("")
-
-
 def paint_inputs_table(out: list[str], ids: ShapeIds) -> None:
     # col_widths are physical grid tracks. Row builders carry row/column spans,
     # explicit borders, vertical anchors, and paragraph margins.
@@ -554,7 +545,6 @@ def _body() -> str:
 
     # Paint order matters in PowerPoint OOXML: later elements sit on top.
     # DROPPED graphicFrame ('think-cell data - do not delete') - think-cell OLE.
-    paint_chrome(out)
     paint_inputs_table(out, ids)
 
     return "".join(out)

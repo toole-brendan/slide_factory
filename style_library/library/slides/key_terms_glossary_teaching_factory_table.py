@@ -494,14 +494,6 @@ def paint_glossary_table(out: list[str], ids: ShapeIds, spec: GlossaryTable) -> 
     )
 
 
-def paint_chrome(out: list[str]) -> None:
-    # Paint order note: the source slide places chrome after the first table and
-    # before the two remaining tables. Keep that order even though chrome is often
-    # painted first in newly-authored modules.
-    out.append("")
-    out.append("")
-
-
 # ════════════════════════════════════════════════════════════════════════════
 # Slide render. Document order is PowerPoint paint order.
 # ════════════════════════════════════════════════════════════════════════════
@@ -511,7 +503,6 @@ def _body() -> str:
 
     # DROPPED graphicFrame ('think-cell data - do not delete') - think-cell OLE.
     paint_glossary_table(out, ids, INDUSTRIAL_POLICY_TABLE)
-    paint_chrome(out)
     paint_glossary_table(out, ids, MARKET_TABLE)
     paint_glossary_table(out, ids, ANALYSIS_TABLE)
 

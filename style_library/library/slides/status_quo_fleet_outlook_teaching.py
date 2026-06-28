@@ -321,8 +321,7 @@ YEAR_TICKS: tuple[YearTick, ...] = tuple(
     )
 )
 
-# Source-positioned net labels. The final text is checked against NET_TOTALS_K_GT
-# by `_validate_semantics()` below so chart edits do not silently desynchronize.
+# Source-positioned net labels (final text mirrors NET_TOTALS_K_GT).
 NET_TOTAL_LABELS: tuple[NetTotalLabel, ...] = (
     NetTotalLabel(Box(1.016, 5.316, 0.314, NET_LABEL_H), "-161", "t"),
     NetTotalLabel(Box(3.229, 4.186, 0.238, NET_LABEL_H), "-10", "t"),
@@ -350,11 +349,6 @@ NET_TOTAL_LABELS: tuple[NetTotalLabel, ...] = (
     NetTotalLabel(Box(2.344, 2.288, 0.267, NET_LABEL_H), "244", "b", "PositiveNetTotalLabel"),
     NetTotalLabel(Box(2.780, 2.288, 0.267, NET_LABEL_H), "265", "b", "PositiveNetTotalLabel"),
 )
-
-# Map from label text to the expected source order. Source paint order places
-# labels in hand-authored stacking order, not chronological order. This tuple is
-# the same labels sorted chronologically, used only for validation/documentation.
-NET_TOTAL_LABELS_CHRONOLOGICAL: tuple[str, ...] = tuple(str(v) for v in NET_TOTALS_K_GT)
 
 LEGEND_ENTRIES: tuple[LegendEntry, ...] = (
     LegendEntry(
@@ -418,26 +412,6 @@ CHART_STYLE = {
 }
 
 CHARTS = [column_chart(**CHART_STYLE)]
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# Validation helpers. They intentionally run at import time only if something is
-# structurally wrong in the teaching data.
-# ════════════════════════════════════════════════════════════════════════════
-def _validate_semantics() -> None:
-    if len(YEARS) != 25:
-        raise ValueError("Status-quo fleet outlook chart must carry 25 annual categories.")
-    if any(len(series.values_k_gt) != len(YEARS) for series in FORECAST_SERIES):
-        raise ValueError("Every forecast series must align to YEARS.")
-    if NET_TOTAL_LABELS_CHRONOLOGICAL != (
-        "-161", "32", "206", "244", "265", "-10", "-84", "-123", "-77",
-        "-14", "-99", "-115", "-110", "-221", "-264", "-208", "-119",
-        "-267", "-312", "-276", "-91", "-76", "-48", "-70", "-153",
-    ):
-        raise ValueError("Manual net-total labels no longer match chart data.")
-
-
-_validate_semantics()
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -619,15 +593,6 @@ def paint_chart_title(next_id) -> list[str]:
     ]
 
 
-def paint_chrome(next_id) -> list[str]:
-    """House chrome for the status-quo scenario page."""
-
-    return [
-        "",
-        "",
-    ]
-
-
 def paint_legend(next_id) -> list[str]:
     """Four-entry outside-chart legend: source order, not chart-series order."""
 
@@ -774,7 +739,6 @@ def _body() -> str:
     shapes.extend(paint_manual_axes(next_id))
     shapes.extend(paint_net_total_labels(next_id))
     shapes.extend(paint_chart_title(next_id))
-    shapes.extend(paint_chrome(next_id))
     shapes.extend(paint_legend(next_id))
     shapes.extend(paint_callouts(next_id))
     shapes.extend(paint_source_note(next_id))

@@ -38,7 +38,6 @@ FIDELITY NOTE
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from deck_core.authoring import (
     Chrome, IN, PT, body_slide, connector, line_break, paragraph, run, table, tcell_rich,
@@ -74,7 +73,6 @@ def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
 
 LAYOUT = "slideLayout4"
 
-_SRC = Path(__file__).parent / "_src"
 CHARTS: list = []
 
 GREEN_FORMULA = "2E7D32"
@@ -297,11 +295,6 @@ def _draw_callout(out: list[str], n, spec: CalloutSpec) -> None:
     out.append(text_box(n(), spec.name, *spec.box.emu(), [paragraph([run(spec.text, size=PT(8), italic=True, color=BLACK, font=FONT)], align=spec.align, line_spacing=100000)], fill=PRELIM, line_color=BLACK, prst="wedgeRectCallout", geom_adj=spec.geom_adj, anchor="ctr"))
 
 
-def paint_chrome(out: list[str], n) -> None:
-    out.append("")
-    out.append("")
-
-
 def paint_operator_glyphs_and_early_price_node(out: list[str], n) -> None:
     for glyph in [g for g in CALCULATION_OPERATORS if g.role == "equals"]:
         _draw_operator(out, n, glyph)
@@ -359,7 +352,6 @@ def _body() -> str:
     out: list[str] = []
     ids = _shape_ids()
     n = lambda: next(ids)  # noqa: E731
-    paint_chrome(out, n)
     paint_operator_glyphs_and_early_price_node(out, n)
     paint_input_nodes_and_headers(out, n)
     paint_price_formulas(out, n)

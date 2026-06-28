@@ -438,15 +438,6 @@ def _findings_cell_style_edges(style: FindingsTableStyle) -> dict[str, str]:
     return {"L": style.border, "R": style.border, "T": style.border, "B": style.border}
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Paint sections. Document order is PowerPoint paint order.
-# ════════════════════════════════════════════════════════════════════════════
-def paint_chrome(out: list[str]) -> None:
-    out.append("")
-    out.append("")
-    out.append("")
-
-
 def paint_findings_table(out: list[str], ids: ShapeIds) -> None:
     style = FINDINGS_TABLE_STYLE
     out.append(
@@ -517,7 +508,6 @@ def _body() -> str:
 
     # DROPPED graphicFrame ('think-cell data - do not delete') - think-cell OLE.
     # Paint order matters in PowerPoint OOXML: later elements sit on top.
-    paint_chrome(out)
     paint_findings_table(out, ids)
     paint_contingencies_callout(out, ids)
 

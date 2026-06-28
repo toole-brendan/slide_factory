@@ -35,7 +35,6 @@ SOURCE NOTE
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from deck_core.authoring import (
     Chrome, IN, PT, body_slide, line_break, paragraph, run, table, tcell, tcell_rich,
@@ -50,7 +49,6 @@ FONT = "Arial"
 
 LAYOUT = "slideLayout4"
 
-_SRC = Path(__file__).parent / "_src"
 CHARTS: list = []
 
 
@@ -485,16 +483,6 @@ def _border_for(label: NativeLabelTable) -> dict[str, dict[str, int | str]]:
     return {label.border_side: edge(label.border_color, label.border_width)}
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Paint sections. Document order is PowerPoint paint order.
-# ════════════════════════════════════════════════════════════════════════════
-def paint_chrome(out: list[str]) -> None:
-    out.append("")
-    out.append(
-        ""
-    )
-
-
 def paint_criteria_stack(out: list[str], ids: ShapeIds) -> None:
     for cell in CRITERIA_CELLS:
         out.append(
@@ -581,8 +569,6 @@ def _body() -> str:
     ids = ShapeIds(start=100)
 
     # Later elements paint on top. This module groups by role rather than by
-    # converter cluster: chrome, criteria, spines, rationale, then headers.
-    paint_chrome(out)
     paint_criteria_stack(out, ids)
     paint_tier_spines(out, ids)
     paint_rationale_column(out, ids)

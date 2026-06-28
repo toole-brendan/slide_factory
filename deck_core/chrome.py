@@ -22,7 +22,7 @@ sizes are private to this module - authors set chrome TEXT, never those.
 from __future__ import annotations
 from dataclasses import dataclass
 
-from deck_core.layout import LEFT_MARGIN, CONTENT_W
+from deck_core.layout import LEFT_MARGIN, CONTENT_W, SLIDE_W, SLIDE_H
 from deck_core.primitives import esc, placeholder_sp, slide
 
 # ── Locked chrome constants (private; verbatim from the template) ───────────
@@ -34,6 +34,10 @@ _SZ_BREADCRUMB = 1000
 _SZ_SLIDE_TITLE = 2000
 _SZ_PRELIM = 1200
 _SZ_SOURCES = 800
+_SZ_COVER_TITLE = 2800       # 28pt
+_SZ_COVER_SUBTITLE = 2000    # 20pt
+_SZ_DIVIDER_TITLE = 2800
+_SZ_DIVIDER_SUBTITLE = 2000
 _BREADCRUMB_X, _BREADCRUMB_Y, _BREADCRUMB_CX, _BREADCRUMB_CY = LEFT_MARGIN, 263_452, CONTENT_W, 153_888
 _TITLE_X, _TITLE_Y, _TITLE_CX, _TITLE_CY = LEFT_MARGIN, 554_500, CONTENT_W, 640_080
 _PRELIM_X, _PRELIM_Y, _PRELIM_CX, _PRELIM_CY = 10_267_829, 111_556, 1_467_612, 290_000
@@ -131,6 +135,201 @@ def layout_placeholder(sp_id, name, *, ph_type=None, ph_sz=None, ph_idx=None,
     placeholder primitive for richer layout-owned placeholders (subtitles, etc.)."""
     return placeholder_sp(sp_id, name, ph_type=ph_type, ph_sz=ph_sz, ph_idx=ph_idx,
                           geom=geom, paragraphs=paragraphs, body_pr_xml=body_pr_xml)
+
+
+# ── Full-slide layout compositions (cover / section divider) ─────────────────
+
+
+def cover_layout(title: str, subtitle: str | None = None, *,
+                 footer: str | None = None) -> str:
+    """Cover (deck-title) slide composition.
+
+    Binds to the Cover layout (slideLayout1). The slide module MUST declare
+    `LAYOUT = "slideLayout1"` at module scope so build() points the slide's rels
+    at the Cover layout.
+
+    Placeholder mapping (positioning inherited from slideLayout1):
+        body idx=12  -> title (28pt) on line 1; subtitle (20pt italic)
+                       on line 2 inside the same placeholder.
+        title (idx=) -> small footer/date line at the bottom.
+    """
+    title_text = esc(title)
+    paragraphs = (
+        f'<a:p>'
+        f'<a:pPr><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
+        f'<a:r>'
+        f'<a:rPr lang="en-US" sz="{_SZ_COVER_TITLE}" kern="1200" dirty="0"/>'
+        f'<a:t>{title_text}</a:t>'
+        f'</a:r>'
+        f'</a:p>'
+    )
+    if subtitle:
+        subtitle_text = esc(subtitle)
+        paragraphs += (
+            f'<a:p>'
+            f'<a:pPr><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
+            f'<a:r>'
+            f'<a:rPr lang="en-US" sz="{_SZ_COVER_SUBTITLE}" i="1" kern="1200" dirty="0"/>'
+            f'<a:t>{subtitle_text}</a:t>'
+            f'</a:r>'
+            f'</a:p>'
+        )
+
+    big_title_sp = (
+        f'<p:sp>'
+        f'<p:nvSpPr>'
+        f'<p:cNvPr id="100" name="CoverTitle"/>'
+        f'<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
+        f'<p:nvPr><p:ph type="body" sz="quarter" idx="12"/></p:nvPr>'
+        f'</p:nvSpPr>'
+        # Override the layout placeholder geometry. The inherited width
+        # (cx=7_776_399) wraps a multi-word title, so widen to the full content
+        # width. Top-anchor (anchor="t") and pin the block low (y=4_140_000,
+        # ~where the bottom-anchored 2-line cover used to sit) so a subtitle that
+        # wraps to a 2nd line grows DOWNWARD instead of pushing the title up.
+        f'<p:spPr>'
+        f'<a:xfrm><a:off x="453080" y="4140000"/>'
+        f'<a:ext cx="11285842" cy="2162129"/></a:xfrm>'
+        f'</p:spPr>'
+        f'<p:txBody>'
+        f'<a:bodyPr anchor="t"/>'
+        f'<a:lstStyle/>'
+        f'{paragraphs}'
+        f'</p:txBody>'
+        f'</p:sp>'
+    )
+
+    if footer:
+        footer_text = esc(footer)
+        footer_sp = (
+            f'<p:sp>'
+            f'<p:nvSpPr>'
+            f'<p:cNvPr id="101" name="CoverFooter"/>'
+            f'<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
+            f'<p:nvPr><p:ph type="title"/></p:nvPr>'
+            f'</p:nvSpPr>'
+            f'<p:spPr/>'
+            f'<p:txBody>'
+            f'<a:bodyPr/>'
+            f'<a:lstStyle/>'
+            f'<a:p>'
+            f'<a:pPr><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
+            f'<a:r>'
+            f'<a:rPr lang="en-US" kern="1200" dirty="0"/>'
+            f'<a:t>{footer_text}</a:t>'
+            f'</a:r>'
+            f'</a:p>'
+            f'</p:txBody>'
+            f'</p:sp>'
+        )
+        return big_title_sp + footer_sp
+    return big_title_sp
+
+
+def section_divider_layout(section: str, subtitle: str | None = None, *,
+                           page_num: int | None = None,
+                           total_pages: int | None = None) -> str:
+    """Section-divider (transition) slide composition.
+
+    Binds to the Section Divider layout (slideLayout2). The slide module MUST
+    declare `LAYOUT = "slideLayout2"` at module scope so build() points the
+    slide's rels at the divider layout.
+
+    Placeholder mapping: the section name (line 1, 28pt) and subtitle (line 2,
+    20pt italic) share ONE placeholder (body idx=11 - the slideLayout2 analog of
+    the cover's idx=12), overridden to the cover's geometry so the two lines land
+    exactly where cover_layout's title/subtitle do (full content width, top
+    anchored, pinned low so a wrapping subtitle grows downward).
+
+    If `page_num` and `total_pages` are both passed, an explicit page counter is
+    rendered at the bottom-right (dividers do not auto-number, so this optional
+    override is kept).
+    """
+    section_text = esc(section)
+    # Title (line 1) + subtitle (line 2) share ONE top-anchored placeholder,
+    # exactly like cover_layout, so the two lines land where the cover's do and a
+    # wrapping subtitle grows downward rather than pushing the title up.
+    paragraphs = (
+        f'<a:p>'
+        f'<a:pPr><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
+        f'<a:r>'
+        f'<a:rPr lang="en-US" sz="{_SZ_DIVIDER_TITLE}" kern="1200" dirty="0"/>'
+        f'<a:t>{section_text}</a:t>'
+        f'</a:r>'
+        f'</a:p>'
+    )
+    if subtitle:
+        subtitle_text = esc(subtitle)
+        paragraphs += (
+            f'<a:p>'
+            f'<a:pPr><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
+            f'<a:r>'
+            f'<a:rPr lang="en-US" sz="{_SZ_DIVIDER_SUBTITLE}" i="1" kern="1200" dirty="0"/>'
+            f'<a:t>{subtitle_text}</a:t>'
+            f'</a:r>'
+            f'</a:p>'
+        )
+
+    # Override idx=11 to the cover's title-block geometry: full content width,
+    # top-anchored (anchor="t") and pinned low (y=4_140_000) so it matches the
+    # cover and a wrapping subtitle grows downward (mirrors cover_layout).
+    out = (
+        f'<p:sp>'
+        f'<p:nvSpPr>'
+        f'<p:cNvPr id="110" name="DividerTitle"/>'
+        f'<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
+        f'<p:nvPr><p:ph type="body" sz="quarter" idx="11"/></p:nvPr>'
+        f'</p:nvSpPr>'
+        f'<p:spPr>'
+        f'<a:xfrm><a:off x="453080" y="4140000"/>'
+        f'<a:ext cx="11285842" cy="2162129"/></a:xfrm>'
+        f'</p:spPr>'
+        f'<p:txBody>'
+        f'<a:bodyPr anchor="t"/>'
+        f'<a:lstStyle/>'
+        f'{paragraphs}'
+        f'</p:txBody>'
+        f'</p:sp>'
+    )
+
+    if page_num is not None and total_pages is not None:
+        cx = 1_500_000
+        cy = 230_000
+        x = SLIDE_W - LEFT_MARGIN - cx
+        y = SLIDE_H - 290_000
+        pn_text = esc(f"{page_num} / {total_pages}")
+        out += (
+            f'<p:sp>'
+            f'<p:nvSpPr>'
+            f'<p:cNvPr id="4500" name="PageNumber"/>'
+            f'<p:cNvSpPr txBox="1"/>'
+            f'<p:nvPr/>'
+            f'</p:nvSpPr>'
+            f'<p:spPr>'
+            f'<a:xfrm><a:off x="{x}" y="{y}"/><a:ext cx="{cx}" cy="{cy}"/></a:xfrm>'
+            f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+            f'<a:noFill/>'
+            f'<a:ln><a:noFill/></a:ln>'
+            f'</p:spPr>'
+            f'<p:txBody>'
+            f'<a:bodyPr wrap="square" anchor="t" lIns="91440" tIns="45720" '
+            f'rIns="91440" bIns="45720"/>'
+            f'<a:lstStyle/>'
+            f'<a:p>'
+            f'<a:pPr algn="r"><a:lnSpc><a:spcPct val="115000"/></a:lnSpc></a:pPr>'
+            f'<a:r>'
+            f'<a:rPr lang="en-US" sz="{_SZ_SOURCES}" kern="1200" dirty="0">'
+            f'<a:solidFill><a:srgbClr val="{_DK}"/></a:solidFill>'
+            f'<a:latin typeface="Arial"/><a:ea typeface="Arial"/><a:cs typeface="Arial"/>'
+            f'</a:rPr>'
+            f'<a:t>{pn_text}</a:t>'
+            f'</a:r>'
+            f'</a:p>'
+            f'</p:txBody>'
+            f'</p:sp>'
+        )
+
+    return out
 
 
 @dataclass(frozen=True)

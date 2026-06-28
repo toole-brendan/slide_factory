@@ -305,16 +305,6 @@ def rcell(
     )
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Paint sections. Document order is PowerPoint paint order.
-# ════════════════════════════════════════════════════════════════════════════
-def paint_chrome(out: list[str]) -> None:
-    out.append("")
-    out.append(
-        ""
-    )
-
-
 def paint_cost_matrix(out: list[str], ids: ShapeIds) -> None:
     """Paint the dense cost-category matrix.
 
@@ -499,7 +489,6 @@ def _body() -> str:
     ids = ShapeIds(start=100)
 
     # Paint order matters in PowerPoint OOXML: later elements sit on top.
-    paint_chrome(out)
     paint_cost_matrix(out, ids)
     paint_normalization_callouts(out, ids)
     paint_cost_category_legend(out, ids)

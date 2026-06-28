@@ -184,18 +184,6 @@ COPY_RULES = [
     "The takeaway banner should state the threshold implication; do not repeat the table values there.",
 ]
 
-SOURCE_CHART_AUDIT = {
-    "source_xml": "slide45_chart27.xml",
-    "source_workbook": "slide45_chart27.xlsb",
-    "xml_type": "barChart with barDir='col' and grouping='stacked'",
-    "rebuild_strategy": "native column_chart with generated embedded .xlsx",
-    "axis_contract": "fixed value axis from -35 to +10 hulls, major unit 5",
-    "manualized_labels": (
-        "year ticks, net-hull labels, legend, chart title, callouts, table, "
-        "serial-production key, source note, and scenario chip live as slide text"
-    ),
-}
-
 
 # ════════════════════════════════════════════════════════════════════════════
 # Small semantic records.
@@ -320,11 +308,6 @@ CREW_FAST_SUPPLY_RETIREMENTS: tuple[int | None, ...] = (
     -2, -2, -1, -1, None, None, None, None, None, None,
 )
 
-SOURCE_WORKBOOK_ROWS: tuple[tuple[int | None, ...], ...] = (
-    PSV_RETIREMENTS,
-    CREW_FAST_SUPPLY_RETIREMENTS,
-)
-
 SOURCE_PLOT_LAYOUT = {
     "x": 0.06157112526539278,
     "y": 0.05652866242038217,
@@ -359,11 +342,6 @@ OFFSHORE_RETIREMENT_SERIES: tuple[OffshoreRetirementLayer, ...] = (
         {},
     ),
 )
-
-NET_HULLS_BY_YEAR: dict[str, int] = {
-    year: sum(value or 0 for value in year_values)
-    for year, year_values in zip(YEARS, zip(*(series.values for series in OFFSHORE_RETIREMENT_SERIES)))
-}
 
 YEAR_TICKS: tuple[YearTick, ...] = tuple(
     YearTick(Box(x, YEAR_TICK_Y, YEAR_TICK_W, YEAR_TICK_H), label)
@@ -498,28 +476,6 @@ CHART_STYLE = {
 
 CHARTS = [column_chart(**CHART_STYLE)]
 
-SOURCE_CHART_AUDIT.update({
-    "workbook_rows": SOURCE_WORKBOOK_ROWS,
-    "xml_style": {
-        "manualLayout": SOURCE_PLOT_LAYOUT,
-        "barDir": "col",
-        "grouping": "stacked",
-        "gapWidth": SOURCE_GAP_WIDTH,
-        "overlap": SOURCE_BAR_OVERLAP,
-        "valueAxisMin": SOURCE_VALUE_AXIS_MIN,
-        "valueAxisMax": SOURCE_VALUE_AXIS_MAX,
-        "valueAxisMajorUnit": SOURCE_VALUE_AXIS_MAJOR_UNIT,
-        "axisLineWidth": SOURCE_AXIS_LINE_WIDTH,
-        "seriesDefaultsAndPointOverrides": [
-            {
-                "defaultFill": layer.default_fill,
-                "pointFillOverrides": dict(layer.point_fill_overrides),
-            }
-            for layer in OFFSHORE_RETIREMENT_SERIES
-        ],
-    },
-})
-
 
 # ════════════════════════════════════════════════════════════════════════════
 # Validation helpers. These catch teaching-data drift early.
@@ -535,43 +491,6 @@ def _average_replacements_by_fill(fill: str) -> float:
 
 def _display_average(value: float) -> str:
     return f"~{value:.1f}"
-
-
-def _validate_semantics() -> None:
-    if len(YEARS) != 25:
-        raise ValueError("Offshore outlook chart must carry 25 annual categories.")
-    if tuple(layer.values for layer in OFFSHORE_RETIREMENT_SERIES) != SOURCE_WORKBOOK_ROWS:
-        raise ValueError("Native chart layers no longer match slide45_chart27.xlsb rows.")
-    if any(len(layer.values) != len(YEARS) for layer in OFFSHORE_RETIREMENT_SERIES):
-        raise ValueError("Every offshore-retirement layer must align to YEARS.")
-    if any(len(layer.point_fills()) != len(YEARS) for layer in OFFSHORE_RETIREMENT_SERIES):
-        raise ValueError("Every point-fill list must align to YEARS.")
-    if OFFSHORE_RETIREMENT_SERIES[0].point_fill_overrides != {1: CREW_FAST_SUPPLY_BLUE}:
-        raise ValueError("The source 2027 point-fill override must remain Crew/Fast Supply blue.")
-    for label in NET_HULL_LABELS:
-        expected = NET_HULLS_BY_YEAR[label.year]
-        if label.label != str(expected):
-            raise ValueError(f"Net-hull label for {label.year} is {label.label!r}, expected {expected!r}.")
-    if len(NET_HULL_LABELS) != len(YEARS):
-        raise ValueError("The native rebuild manualizes all 25 source net-hull labels.")
-    replacement_expectations = {
-        "Crew/Fast Supply": _display_average(_average_replacements_by_fill(CREW_FAST_SUPPLY_BLUE)),
-        "PSV": _display_average(_average_replacements_by_fill(PSV_BLUE)),
-    }
-    for row in RETIREMENT_REPLACEMENT_ROWS:
-        if row.total != replacement_expectations[row.archetype] or row.net_of_orderbook != replacement_expectations[row.archetype]:
-            raise ValueError(f"Replacement table row for {row.archetype} no longer matches chart colors/data.")
-    if CHART_STYLE["gap_width"] != SOURCE_GAP_WIDTH or CHART_STYLE["bar_overlap"] != SOURCE_BAR_OVERLAP:
-        raise ValueError("Chart gap/overlap must match slide45_chart27.xml.")
-    if CHART_STYLE["plot_layout"] != SOURCE_PLOT_LAYOUT:
-        raise ValueError("Manual plot layout must match slide45_chart27.xml.")
-    if CHART_STYLE["value_axis_min"] != SOURCE_VALUE_AXIS_MIN or CHART_STYLE["value_axis_max"] != SOURCE_VALUE_AXIS_MAX:
-        raise ValueError("Value-axis bounds must match slide45_chart27.xml.")
-    if CHART_STYLE["value_axis_major_unit"] != SOURCE_VALUE_AXIS_MAJOR_UNIT:
-        raise ValueError("Value-axis major unit must match slide45_chart27.xml.")
-
-
-_validate_semantics()
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -724,15 +643,6 @@ def paint_chart_title(next_id) -> list[str]:
             r_ins=0,
             b_ins=0,
         )
-    ]
-
-
-def paint_chrome(next_id) -> list[str]:
-    """House chrome for the status-quo offshore scenario."""
-
-    return [
-        "",
-        "",
     ]
 
 
@@ -990,7 +900,6 @@ def _body() -> str:
     shapes.extend(paint_manual_year_ticks(next_id))
     shapes.extend(paint_net_hull_labels(next_id))
     shapes.extend(paint_chart_title(next_id))
-    shapes.extend(paint_chrome(next_id))
     shapes.extend(paint_retirement_replacements_table(next_id))
     shapes.extend(paint_chart_callout_and_legend(next_id))
     shapes.extend(paint_source_note(next_id))

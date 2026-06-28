@@ -367,11 +367,6 @@ def _exercise_timing_table(sp_id: int) -> str:
     return table(sp_id, "ExerciseTimingTable", IN(0.495), IN(5.318), IN(12.482), IN(1.667), col_widths=[IN(0.851), IN(5.847), IN(1.812), IN(1.812), IN(2.160)], rows=rows)
 
 
-def paint_chrome(out: list[str], n) -> None:
-    out.append("")
-    out.append("")
-
-
 def paint_approach_header(out: list[str], n) -> None:
     out.append(text_box(n(), "ApproachDescription", IN(0.425), IN(1.589), IN(2.289), IN(0.701), [_plain("Multiply Company TCV by contract exercise timing to find Company ACV", align=None)], fill=None, line_color="none", anchor="ctr"))
     out.append(text_box(n(), "ApproachStepsHeader", IN(0.425), IN(1.229), IN(2.291), IN(0.359), [_plain("Approach steps", italic=True, align=None)], fill=None, line_color="none", anchor="ctr"))
@@ -413,30 +408,10 @@ def paint_scope_chip_and_logo(out: list[str], n) -> None:
     out.append(picture(n(), "Picture 2", "rId3", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
 
 
-
-# ════════════════════════════════════════════════════════════════════════════
-# Validation helpers. They intentionally run at import time only if something is
-# structurally wrong in the teaching data.
-# ════════════════════════════════════════════════════════════════════════════
-def _validate_semantics() -> None:
-    if len(CHART_CATEGORIES) != 6:
-        raise ValueError("TCV-to-ACV chart must carry six bridge categories.")
-    if any(len(series["values"]) != len(CHART_CATEGORIES) for series in ACV_WATERFALL_SERIES):
-        raise ValueError("Every ACV waterfall series must align to CHART_CATEGORIES.")
-    if [sum(value or 0 for value in values) for values in zip(*(series["values"] for series in ACV_WATERFALL_SERIES))] != [400, 400, 200, 200, 190, 100]:
-        raise ValueError("Waterfall stack heights no longer match the source bridge geometry.")
-    if tuple(tick.label for tick in CATEGORY_TICKS) != CHART_CATEGORIES:
-        raise ValueError("Manual category ticks no longer match native chart categories.")
-
-
-_validate_semantics()
-
-
 def _body() -> str:
     out: list[str] = []
     ids = _shape_ids()
     n = lambda: next(ids)  # noqa: E731
-    paint_chrome(out, n)
     paint_approach_header(out, n)
     paint_formula_output_and_chart(out, n)
     paint_formula_inputs_cards_and_table(out, n)

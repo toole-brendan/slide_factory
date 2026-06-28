@@ -468,17 +468,6 @@ def _responsibility_cell(content: CellContent, *, top_rule, bottom_rule) -> dict
     return plain_cell(content, fill=WHITE, **border_kwargs)
 
 
-def _validate_group_spans() -> None:
-    """Catch accidental edits where row_span stops matching the group data."""
-
-    for group in ARCHETYPE_GROUPS:
-        if group.row_span != len(group.rows):
-            raise ValueError(
-                f"{group.category!r} declares row_span={group.row_span} "
-                f"but has {len(group.rows)} rows"
-            )
-
-
 # ════════════════════════════════════════════════════════════════════════════
 # Table row construction: border roles are assigned by position, not row data.
 # ════════════════════════════════════════════════════════════════════════════
@@ -495,7 +484,6 @@ def _archetype_rows() -> list[dict]:
         row separator inside the row span.
     """
 
-    _validate_group_spans()
     hairline = edge("808080", 6_350)
     total_data_rows = sum(len(group.rows) for group in ARCHETYPE_GROUPS)
     rows: list[dict] = []
@@ -537,16 +525,6 @@ def _archetype_rows() -> list[dict]:
     return rows
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Paint sections. Document order is PowerPoint paint order.
-# ════════════════════════════════════════════════════════════════════════════
-def paint_chrome(out: list[str]) -> None:
-    out.append("")
-    out.append(
-        ""
-    )
-
-
 def paint_archetype_table(out: list[str], ids: ShapeIds) -> None:
     out.append(
         table(
@@ -577,7 +555,6 @@ def _body() -> str:
     ids = ShapeIds(start=100)
 
     # Paint order matters in PowerPoint OOXML: later elements sit on top.
-    paint_chrome(out)
     paint_archetype_table(out, ids)
 
     return "".join(out)

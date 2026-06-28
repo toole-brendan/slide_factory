@@ -75,27 +75,6 @@ MID_GRAY = "808080"
 RULE_GRAY = "808080"
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: useful for agents choosing an exemplar.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "strategy_conditions_matrix",
-    "use_when": (
-        "Use for a market-addressability or strategic-conditions matrix where "
-        "columns are market lanes, rows are offer / vessel classes, and the "
-        "body cells contain concise must-be-true bullets."
-    ),
-    "teaches": [
-        "native table as a strategic matrix",
-        "row_span and grid_span for multi-level row/column headers",
-        "explicit per-cell rules and no-fill omitted sides",
-        "rich table paragraphs with bullets and dash sub-bullets",
-        "italic caveat cells",
-        "inline table styling helpers",
-        "overlay callouts painted after the table",
-    ],
-}
-
 TEXT_FIT = {
     "matrix_table": {
         "box_in": (12.300, 5.000),

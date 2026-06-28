@@ -311,27 +311,6 @@ HYPERLINKS = [
 ]
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: comments a future agent can inspect programmatically.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "policy_mandate_comparison",
-    "use_when": (
-        "Use for a policy-backed demand comparison where a left stacked chart "
-        "quantifies totals and a right table documents mandate mechanics."
-    ),
-    "teaches": [
-        "native column_chart stacked chart rebuilt from source XML",
-        "per-point chart colors through data_point_colors",
-        "patterned chart series for a hatched segment",
-        "manual data-label chips over very thin stacked segments",
-        "source-positioned native chart data labels for Bulk/Other top segments",
-        "dense mandate table with rich cells and row spans",
-        "local table-cell helpers instead of centralized table_kit",
-        "PowerPoint paint order split into semantic paint functions",
-    ],
-}
-
 TEXT_FIT = {
     "mandate_table": {
         "box_in": (7.089, 4.007),

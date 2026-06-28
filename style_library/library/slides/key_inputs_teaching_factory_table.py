@@ -68,27 +68,6 @@ BULLET_MAR_L = 171_450
 BULLET_INDENT = -171_450
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: useful for agents choosing an exemplar.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "model_inputs_reference_table",
-    "use_when": (
-        "Use for a model-input appendix where the table must make each input, "
-        "its category, and its data source auditable on the slide."
-    ),
-    "teaches": [
-        "full-width native table as a reference exhibit",
-        "row-spanned category spine",
-        "grid-spanned semantic input column",
-        "shared source cells with row spans",
-        "rich table paragraphs with tbreak line breaks",
-        "bulleted sub-lists inside table cells",
-        "inline table styling helpers",
-        "0.5pt inner gridline rules",
-    ],
-}
-
 TEXT_FIT = {
     "inputs_table": {
         "box_in": (12.300, 5.933),

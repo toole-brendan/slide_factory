@@ -329,16 +329,6 @@ def _draw_legend(out: list[str], n) -> None:
 
 IMAGES = [{"rId": "rId2", "file": "image8_3071a231.jpeg"}]
 
-TEACHING_METADATA = {
-    "role": "market_sizing_flow / unmanned_usv_tcv",
-    "use_when": "USV-specified funding rolls into Total Funding, TAM, SAM, and Company TCV.",
-    "teaches": (
-        "method rail beside calculation body",
-        "blue-gradient summary stack",
-        "operator glyphs as visual math",
-        "four-state addressability legend",
-    ),
-}
 
 TEXT_FIT: tuple[TextFitZone, ...] = (
     TextFitZone("approach_rail", Box(0.426, 1.593, 2.101, 3.756), "Arial 10pt; one method sentence per card", "copy for sizing-method spines"),

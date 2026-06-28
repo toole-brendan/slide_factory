@@ -288,16 +288,6 @@ def _draw_legend(out: list[str], n, entries: tuple[LegendEntry, ...]) -> None:
 
 IMAGES = [{"rId": "rId2", "file": "image6_3071a231.jpeg"}]
 
-TEACHING_METADATA = {
-    "role": "market_sizing_flow / unmanned_undersea_tcv",
-    "use_when": "UUV platform classes and undersea budget items roll into Company TCV.",
-    "teaches": (
-        "domain-adapted five-step approach rail",
-        "platform taxonomy inputs feeding budget items",
-        "operator glyphs and braces as calculation syntax",
-        "right-hand Total Funding → TAM → SAM → TCV stack",
-    ),
-}
 
 TEXT_FIT: tuple[TextFitZone, ...] = (
     TextFitZone("approach_rail", Box(0.425, 1.593, 2.101, 3.756), "Arial 10pt; one action per card", "copy for left-spine method rails"),

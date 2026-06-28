@@ -74,27 +74,6 @@ LAYOUT = "slideLayout4"
 CHARTS: list = []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: comments the module can expose programmatically.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "methodology_reference",
-    "use_when": (
-        "Use for a compact financial-methodology table where categories and "
-        "components explain how model line items are calculated."
-    ),
-    "teaches": [
-        "native table primitive",
-        "inline table-cell kit",
-        "rich table-cell paragraphs",
-        "position-driven border rules",
-        "continuation-category rows without row_span",
-        "bulleted methodology cells",
-        "raw placeholder preservation",
-        "full-width explanatory banner",
-    ],
-}
-
 TEXT_FIT = {
     "methodology_table": {
         "box_in": (12.338, 3.655),

@@ -52,25 +52,6 @@ LAYOUT = "slideLayout4"
 CHARTS: list = []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: deliberately programmatic so an exemplar index can read it.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "define_scope_or_taxonomy",
-    "use_when": (
-        "Use for inclusion/exclusion logic: left-side categorical gates, "
-        "right-side rationale, and tier labels that explain how the gates group."
-    ),
-    "teaches": [
-        "criteria stack",
-        "right rationale column",
-        "tier-spine labels as one-cell native tables",
-        "column headers as rule-underlined native tables",
-        "text-fit precedent for 14pt rationale rows",
-        "scope taxonomy without charts or connectors",
-    ],
-}
-
 TEXT_FIT = {
     "rationale_row": {
         "box_in": (8.677, 0.500),

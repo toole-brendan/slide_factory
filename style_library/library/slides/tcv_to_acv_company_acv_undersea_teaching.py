@@ -259,22 +259,6 @@ class TimingRow:
     bottom_rule: str
 
 
-TEACHING_METADATA = {
-    "role": "market_sizing_flow / tcv_to_acv_timing_bridge",
-    "use_when": "Translate total contract value into annual contract value using exercise timing.",
-    "source_module": "tcv_to_acv_company_acv_undersea.py",
-    "rebuild_strategy": "replace chart-template wrapper with native column_chart",
-    "teaches": (
-        "formula band above native factory chart",
-        "fully declarative native stacked-column chart",
-        "floating-waterfall columns via white spacer segments",
-        "manual chart ticks and value badges",
-        "explicit chart categories / series / colors / axis scale",
-        "ACV by year output cards",
-        "semantic assumptions table",
-    ),
-}
-
 TEXT_FIT: tuple[TextFitZone, ...] = (
     TextFitZone("approach_step", Box(0.425, 1.229, 2.291, 1.061), "Arial 10pt; one sentence below italic header", "copy for compact methodology headers"),
     TextFitZone("chart_axis_labels", Box(1.031, 4.634, 11.740, 0.167), "Arial 10pt, no-wrap, zero insets", "copy for manual labels under a native chart"),

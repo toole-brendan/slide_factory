@@ -294,16 +294,6 @@ HYPERLINKS = [
     {"rId": "rId4", "url": "https://www.law.cornell.edu/uscode/text/46/8103"},
 ]
 
-TEACHING_METADATA = {
-    "role": "policy_flow / funding_and_subsidy_system",
-    "use_when": "A policy mechanism turns fees or penalties into subsidy-backed demand.",
-    "teaches": (
-        "bottom-to-top money flow",
-        "left-side actor tier bands",
-        "edge verbs on connector routes",
-        "funding-pool horizontal bands",
-    ),
-}
 
 TEXT_FIT: tuple[TextFitZone, ...] = (
     TextFitZone("money_flow_nodes", Box(2.744, 2.870, 10.092, 3.782), "10pt bold centered labels", "copy for policy/actor/funding nodes"),

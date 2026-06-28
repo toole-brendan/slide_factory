@@ -77,27 +77,6 @@ PRELIM_BORDER = "121415"
 DEFAULT_TABLE_ROW_H = 0.406
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: small programmatic index for retrieval / agent search.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "deck_orientation / executive_context",
-    "use_when": (
-        "Use for a table-first overview slide with a left Context block, a right "
-        "Objectives block, and a bottom caveat banner."
-    ),
-    "teaches": [
-        "slideLayout3 preservation",
-        "layout-inherited title placeholder",
-        "semantic native table bodies",
-        "bullet hierarchy in tpara records",
-        "italic inline runs in table cells",
-        "bottom preliminary banner",
-    ],
-    "source_module": "overview.py",
-    "rebuild_strategy": "promote native table body content into semantic records",
-}
-
 TEXT_FIT = {
     "context_table": {
         "box_in": (5.700, 3.089),

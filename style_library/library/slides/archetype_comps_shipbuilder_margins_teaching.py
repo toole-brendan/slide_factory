@@ -264,27 +264,6 @@ _CHART3_DATA = {"categories": COMPANY_CATEGORIES, "series": [{"name": "2023 Reve
 _CHART4_DATA = {"categories": COMPANY_CATEGORIES, "series": [{"name": "2024 Revenue", "values": list(REVENUE_VALUES_BY_YEAR[2024])}, {"name": "2024 EBIT Margin", "values": list(EBIT_MARGIN_VALUES_BY_YEAR[2024])}]}
 
 
-TEACHING_METADATA = {
-    "role": "archetype_comparison / margin_profile_small_multiples",
-    "use_when": (
-        "Use for repeated company-comparison panels where revenue magnitude and "
-        "EBIT-margin profile must both be visible, with manual labels carrying "
-        "the analytical readout."
-    ),
-    "teaches": [
-        "native revenue column charts",
-        "native secondary-axis EBIT dash markers",
-        "native right-side EBIT-margin axis labels at 100 / 50 / 0 / -50",
-        "small-multiple chart alignment",
-        "manual value-axis ticks",
-        "manual company labels",
-        "manual data labels and revenue chips",
-        "archetype band headers and dividers",
-    ],
-    "source_module": "archetype_comps_shipbuilder_margins.py",
-    "rebuild_strategy": "replace five styled_chart combo templates with native column_chart panels plus native no-fill line overlays for EBIT dash markers",
-}
-
 TEXT_FIT = {
     "margin_point_labels": {
         "box_in": "0.193-0.292 wide x 0.134 high",

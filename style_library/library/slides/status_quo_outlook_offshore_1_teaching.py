@@ -113,29 +113,6 @@ QUIET_RULE = "808080"
 CALLOUT_DARK_LINE = "121415"
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: small programmatic index for retrieval / agent search.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "scenario_forecast / serial_production_threshold",
-    "use_when": (
-        "Use for an addressable-offshore forecast where negative retirement "
-        "replacement volume must be compared against a serial-production threshold."
-    ),
-    "teaches": [
-        "native negative stacked-column chart",
-        "manual dense year ticks on a 25-year horizon",
-        "selective net-hull labels rather than every bar label",
-        "no-orderbook evidence band beside the chart",
-        "right-side retirement replacement table with commentary",
-        "serial-production threshold key using glyph markers",
-        "takeaway banner below supporting table",
-    ],
-    "source_module": "status_quo_outlook_offshore_1.py",
-    "source_chart_assets": ("slide45_chart27.xml", "slide45_chart27.xlsb"),
-    "rebuild_strategy": "replace external chart assets with native column_chart",
-}
-
 TEXT_FIT = {
     "orderbook_note": {
         "box_in": (1.354, 4.276),

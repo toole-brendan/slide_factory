@@ -177,17 +177,6 @@ def _draw_connector(out: list[str], n, spec: ConnectorSpec) -> None:
     out.append(connector(n(), spec.name, *spec.box.emu(), color=spec.color, width=spec.width, arrow=spec.arrow, prst=spec.prst, dashed=spec.dashed, flip_h=spec.flip_h, flip_v=spec.flip_v, rot=spec.rot, adj=spec.adj))
 
 
-TEACHING_METADATA = {
-    "role": "market_sizing_flow / two_track_volume_price_build",
-    "use_when": "Volume and price formulas roll up into a weighted-average $/TEU estimate.",
-    "teaches": (
-        "parallel volume and price tracks",
-        "operator glyphs as math syntax",
-        "green formula boxes vs gray/outline inputs",
-        "repeat frames and Preliminary caveats",
-    ),
-}
-
 TEXT_FIT: tuple[TextFitZone, ...] = (
     TextFitZone("formula_nodes", Box(0.495, 1.883, 12.300, 4.830), "Arial 10pt; compact formula labels", "copy for calculation diagrams"),
     TextFitZone("track_labels", Box(0.486, 1.163, 3.393, 0.236), "Arial 8pt, no-wrap", "copy for track-axis labels"),

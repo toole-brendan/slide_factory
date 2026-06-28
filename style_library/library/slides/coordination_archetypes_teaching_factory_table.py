@@ -62,25 +62,6 @@ LAYOUT = "slideLayout4"
 CHARTS: list = []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: these are comments the module can expose programmatically.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "reference_table",
-    "use_when": (
-        "Use for a full-width, dense taxonomy/reference table where category "
-        "labels span multiple rows and the border system carries the grouping."
-    ),
-    "teaches": [
-        "native table primitive",
-        "inline table-cell kit",
-        "row-spanned category bands",
-        "position-driven borders",
-        "dense 10pt table text",
-        "source-faithful text quirks",
-    ],
-}
-
 TEXT_FIT = {
     "archetype_table": {
         "box_in": (12.300, 4.800),

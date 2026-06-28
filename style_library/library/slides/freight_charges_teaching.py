@@ -192,30 +192,6 @@ HYPERLINKS = [
 ]
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: these are comments the module can expose programmatically.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "unit_economics / freight_charge_breakdown",
-    "use_when": (
-        "Use for a single-route freight price decomposition where one stacked "
-        "chart needs to be read with a component legend, addressability table, "
-        "and explicit vessel-operations vs. shoreside grouping."
-    ),
-    "teaches": [
-        "native stacked column chart with one category",
-        "source workbook values embedded as Python constants",
-        "source XML styling embedded in CHART_STYLE",
-        "manual dollar-value labels over percentage-normalized geometry",
-        "manual legend labels for one-bar composition charts",
-        "custom geometry status icons in an explanatory table",
-        "dashed leader lines from chart components to table rows",
-        "hyperlinked source-note runs copied from the source module",
-    ],
-    "source_module": "freight_charges.py",
-    "rebuild_strategy": "replace styled_chart template with native column_chart",
-}
-
 TEXT_FIT = {
     "chart_component_labels": {
         "box_in": "0.229-0.311 wide x 0.167 high",

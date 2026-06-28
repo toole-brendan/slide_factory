@@ -64,26 +64,6 @@ LAYOUT = "slideLayout4"
 CHARTS: list = []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: slide-level guidance AI authors can inspect.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "executive_summary_financial_outlook",
-    "use_when": (
-        "Use for a dense key-findings page whose body is best authored as one "
-        "rich native-table cell, with a compact dependency callout layered on top."
-    ),
-    "teaches": [
-        "single-cell rich native table",
-        "multi-level bullet hierarchy in tpara()",
-        "local run specs for PT12 Arial prose",
-        "explicit no-border table-cell styling",
-        "text-fit precedent for dense prose",
-        "dashed contingency callout",
-        "paint-order preservation",
-    ],
-}
-
 TEXT_FIT = {
     "findings_narrative_table": {
         "box_in": (12.300, 5.950),

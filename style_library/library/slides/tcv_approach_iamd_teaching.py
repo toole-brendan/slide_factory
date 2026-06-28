@@ -283,16 +283,6 @@ def _draw_legend(out: list[str], n, entries: tuple[LegendEntry, ...]) -> None:
 
 IMAGES = [{"rId": "rId2", "file": "image8_3071a231.jpeg"}]
 
-TEACHING_METADATA = {
-    "role": "market_sizing_flow / domain_role_allocation_tcv",
-    "use_when": "Funding must be filtered by domain and kill-chain role before sizing TAM/SAM/TCV.",
-    "teaches": (
-        "allocation boxes as method notes",
-        "domain and kill-chain filters inside a TCV build-up",
-        "raw title placeholder preservation",
-        "right-hand Total Funding → TAM → SAM → TCV stack",
-    ),
-}
 
 TEXT_FIT: tuple[TextFitZone, ...] = (
     TextFitZone("step_rail", Box(0.522, 1.882, 2.385, 4.359), "Arial 10pt; step 1 includes a short italic qualifier", "copy for filtered sizing methods"),

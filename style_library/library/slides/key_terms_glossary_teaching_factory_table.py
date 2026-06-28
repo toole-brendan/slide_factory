@@ -67,25 +67,6 @@ LAYOUT = "slideLayout4"
 CHARTS: list = []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: slide-level guidance AI authors can inspect.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "reference_glossary",
-    "use_when": (
-        "Use for compact reference slides composed of multiple two-column "
-        "native tables with strong section banners and simple row rules."
-    ),
-    "teaches": [
-        "inline native-table styling",
-        "semantic glossary entry records",
-        "rich cells from run specs",
-        "banner/header/data-row table anatomy",
-        "hairline row separators and open table foot",
-        "paint-order preservation around chrome",
-    ],
-}
-
 TEXT_FIT = {
     "industrial_policy_terms": {
         "box_in": (6.000, 3.300),

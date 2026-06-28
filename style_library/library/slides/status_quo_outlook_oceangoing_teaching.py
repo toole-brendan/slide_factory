@@ -277,25 +277,6 @@ RETIREMENT_REPLACEMENT_ROWS: tuple[ReplacementRow, ...] = (
     ReplacementRow("Tanker", TANKER_RETIREMENT, "~1.7", "~1.2"),
 )
 
-TEACHING_METADATA = {
-    "role": "scenario_forecast / net_hull_retirement_replacements",
-    "use_when": (
-        "Use for a 25-year status-quo forecast where orderbook deliveries and "
-        "retirements are sparse, and the key readout is whether replacement demand "
-        "can support serial production."
-    ),
-    "teaches": [
-        "native stacked column chart with positive and negative hull counts",
-        "source XLSB rows embedded as constants",
-        "source XML styling embedded in CHART_STYLE",
-        "point-level colors for archetype/orderbook semantics",
-        "manual year ticks and net bar-total labels",
-        "replacement-rate table generated from semantic rows",
-        "serial-production key and scenario chip",
-    ],
-    "source_module": "status_quo_outlook_oceangoing.py",
-    "rebuild_strategy": "replace styled_chart template with native column_chart",
-}
 
 TEXT_FIT = {
     "chart_title": {

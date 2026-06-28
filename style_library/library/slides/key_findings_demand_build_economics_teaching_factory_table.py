@@ -65,26 +65,6 @@ _TITLE = "Key Findings (1/3)"
 _TAKEAWAY = "Demand, build cost, and vessel economics."
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: useful for agents choosing an exemplar.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "executive_summary",
-    "use_when": (
-        "Use for a dense findings page where one native table cell acts as the "
-        "narrative frame and the important authoring problem is rich bullet "
-        "hierarchy, not data-grid construction."
-    ),
-    "teaches": [
-        "one-cell native table as a rich-text frame",
-        "rich table paragraphs via tpara/trun",
-        "auto-numbered framing questions",
-        "nested bullets and dash note bullets",
-        "inline table styling helpers",
-        "off-house footnote box preservation",
-    ],
-}
-
 TEXT_FIT = {
     "findings_table": {
         "box_in": (12.300, 5.900),

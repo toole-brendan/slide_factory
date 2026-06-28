@@ -173,18 +173,6 @@ class LegendEntry:
     fill: str | None
 
 
-TEACHING_METADATA = {
-    "role": "value_chain_archetype_map / value_capture_flow_diagram",
-    "use_when": "Explain participants, relationships, and value capture in one value-chain step.",
-    "teaches": (
-        "archetype nodes as semantic records",
-        "description blocks that define each stage/archetype",
-        "relationship connectors labeled with small italic text",
-        "manual metric labels for value capture",
-    ),
-    "fidelity": "source geometry and text preserved; diagram grammar promoted into typed data",
-}
-
 TEXT_FIT: tuple[TextFitZone, ...] = (
     TextFitZone("description_blocks", Box(2.285, 2.094, 10.410, 3.468), "10pt centered; zero left/right insets; 1.9in width", "copy for compact explanatory blurbs"),
     TextFitZone("archetype_nodes", Box(2.235, 3.938, 10.560, 2.709), "10pt bold centered; dark nodes use white text", "copy when a diagram mixes in-scope and out-of-scope actors"),

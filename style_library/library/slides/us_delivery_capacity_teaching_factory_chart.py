@@ -159,28 +159,6 @@ CHART_STYLE = {
 CHARTS = [column_chart(**CHART_STYLE)]
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: these are comments the module can expose programmatically.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "scenario_forecast",
-    "use_when": (
-        "Use for a dominant multi-year capacity forecast with a right assumptions "
-        "rail, a manual chart-label system, bottom milestone badges, and a few "
-        "callouts."
-    ),
-    "teaches": [
-        "fully declarative column_chart stacked chart",
-        "inline chart categories / series / colors / axis scale",
-        "manual year ticks",
-        "manual data labels",
-        "shipyard legend",
-        "dense no-fill assumptions rail",
-        "summary ellipse badge strip",
-        "white callouts over chart/summary content",
-    ],
-}
-
 TEXT_FIT = {
     "assumptions_rail": {
         "box_in": (3.674, 4.365),

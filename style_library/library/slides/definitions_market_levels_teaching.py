@@ -91,20 +91,6 @@ IMAGES = [
     {"rId": "rId2", "file": "image8_3071a231.jpeg"},
 ]
 
-TEACHING_METADATA = {
-    "role": "definition_diagram / nested_market_level_funnel",
-    "use_when": (
-        "Use when nested market-sizing terms must be taught once and then reused "
-        "throughout a deck."
-    ),
-    "teaches": [
-        "largest-first nested-layer paint order",
-        "contrast-aware layer tags",
-        "right-hand definition table that mirrors diagram terminology",
-        "raw title-placeholder residue documented as source fidelity",
-        "simple logo slot wiring",
-    ],
-}
 
 TEXT_FIT = {
     "funnel_tag": {"box_in": (1.949, 0.386), "font_pt": "default run size", "content": "one level name"},

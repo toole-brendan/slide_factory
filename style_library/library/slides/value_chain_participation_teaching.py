@@ -198,18 +198,6 @@ class ConnectorSpec:
     adj: dict[str, str] | None = None
 
 
-TEACHING_METADATA = {
-    "role": "value_chain_logo_matrix / integration_span_map",
-    "use_when": "Prove participation patterns with logos first, then overlay span claims and callouts.",
-    "teaches": (
-        "logo slots are semantic evidence, not decoration",
-        "integration spans should be claims, not data containers",
-        "stage headers and row labels form the reading scaffold",
-        "callouts are painted last because they interpret the logo evidence",
-    ),
-    "fidelity": "source coordinates and image relationships preserved; paint layers made conceptual",
-}
-
 TEXT_FIT: tuple[TextFitZone, ...] = (
     TextFitZone("stage_headers", Box(2.235, 1.641, 10.560, 0.400), "10pt bold; one step per 2.1in header", "copy for horizontal chain maps"),
     TextFitZone("representative_players", Box(0.495, 2.193, 1.600, 4.794), "10pt bold row label in a single native table cell", "copy for a logo row/field with a left spine"),

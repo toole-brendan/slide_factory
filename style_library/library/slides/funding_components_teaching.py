@@ -127,18 +127,6 @@ class ConnectorSpec:
     flip_v: bool = False
 
 
-TEACHING_METADATA = {
-    "role": "funding_scope_matrix / addressability_legend_grid",
-    "use_when": "Define which funding inputs and mission areas are included in a sizing model.",
-    "teaches": (
-        "addressability encoded as cell fill/outline",
-        "rotated spine labels as row-group scaffolding",
-        "legend states as machine-readable data",
-        "off-house source note preserved as a matrix footnote row",
-    ),
-    "fidelity": "source coordinates, cell text, footnotes, and logo relationship preserved",
-}
-
 TEXT_FIT: tuple[TextFitZone, ...] = (
     TextFitZone("mission_cells", Box(0.902, 2.323, 11.911, 1.632), "Arial 9pt centered in 0.333in-high cells", "copy for very dense addressability matrices"),
     TextFitZone("funding_headers", Box(0.604, 1.889, 12.229, 0.333), "Arial 11pt centered; one header wraps to two lines", "copy for grouped column headers over a matrix"),

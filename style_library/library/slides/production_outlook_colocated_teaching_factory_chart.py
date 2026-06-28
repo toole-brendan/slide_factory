@@ -204,31 +204,6 @@ CHART_STYLE = {
 CHARTS = [combo_chart(**CHART_STYLE)]
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: comments the module can expose programmatically.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "production_ramp",
-    "use_when": (
-        "Use for a phased production-ramp chart with cumulative milestone rings, "
-        "manual fiscal-year ticks, phase legend keys, and short forecast "
-        "assumption blocks under the exhibit."
-    ),
-    "teaches": [
-        "native stacked column + line combo chart",
-        "data-point colors for phase transitions",
-        "real line_overlay series for Franklin capacity",
-        "manual category ticks",
-        "manualized source chart data labels",
-        "manual in-year total labels",
-        "manual cumulative data labels",
-        "ellipse callout rings over a chart",
-        "two-panel forecast assumptions",
-        "requirement-met callout",
-        "off-house preliminary chip and footnote preservation",
-    ],
-}
-
 TEXT_FIT = {
     "forecast_assumptions_left": {
         "box_in": (6.206, 1.279),

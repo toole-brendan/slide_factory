@@ -198,29 +198,6 @@ CHART_STYLE = {
 CHARTS = [combo_chart(**CHART_STYLE)]
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: comments the module can expose programmatically.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "production_ramp",
-    "use_when": (
-        "Use for a phased production-ramp chart with cumulative milestone rings, "
-        "manual fiscal-year ticks, phase legend keys, and short forecast "
-        "assumption blocks under the exhibit."
-    ),
-    "teaches": [
-        "native stacked column + line combo chart",
-        "data-point colors for phase transitions",
-        "real line_overlay series for Franklin capacity",
-        "manual category ticks",
-        "manualized source chart data labels",
-        "manual cumulative data labels",
-        "ellipse callout rings over a chart",
-        "two-panel forecast assumptions",
-        "off-house preliminary chip and footnote preservation",
-    ],
-}
-
 NATIVE_CHART_CONTRACT = {
     "factory": "combo_chart(mode='stacked') with line_overlay_axis='same'",
     "series_order": (
@@ -308,7 +285,6 @@ class LegendEntry:
     fill: str | None
     key_box: Box | None
     caption: Box
-
 
 
 @dataclass(frozen=True)
@@ -621,7 +597,6 @@ def paint_chart(out: list[str], ids: ShapeIds) -> None:
             rId="rId2",
         )
     )
-
 
 
 def paint_chart_manual_labels(out: list[str], ids: ShapeIds) -> None:

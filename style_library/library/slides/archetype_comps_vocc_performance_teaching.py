@@ -100,31 +100,6 @@ TERMINAL_INTEGRATED_BLUE = "6F8DB9"
 TERMINAL_STANDALONE_GRAY = "8A8F93"
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: small programmatic index for retrieval / agent search.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "archetype_comparison / performance_bubble_chart",
-    "use_when": (
-        "Use when a slide compares performance across business archetypes with "
-        "a style-dense bubble chart, where marker position shows margin, bubble "
-        "size shows revenue, and the right rail explains period-specific drivers."
-    ),
-    "teaches": [
-        "native editable bubble_chart rebuild",
-        "sparse chart-cache data transcribed into Python",
-        "manual year ticks over a bubble chart",
-        "manual y-axis title outside the chart frame",
-        "external legend for marker color, hatch pattern, and bubble size",
-        "dense narrative rail with section heads and hanging bullets",
-        "single-cell table as rail header",
-        "compact colored source note",
-    ],
-    "source_module": "archetype_comps_vocc_performance.py",
-    "source_chart_assets_transcribed_from": ("slide33_chart18.xml", "slide33_chart18.xlsb"),
-    "rebuild_strategy": "replace bundled XML/XLSB with native bubble_chart data and generated embedded xlsx",
-}
-
 TEXT_FIT = {
     "narrative_rail": {
         "box_in": (3.136, 4.870),

@@ -247,22 +247,6 @@ class TimingRow:
     bottom_rule: str
 
 
-TEACHING_METADATA = {
-    "role": "market_sizing_bridge / contract_timing_to_acv",
-    "use_when": "Company TCV must be translated into ACV by year.",
-    "source_module": "tcv_to_acv_company_acv.py",
-    "rebuild_strategy": "replace chart-template wrapper with native column_chart",
-    "teaches": (
-        "formula band over native factory chart",
-        "fully declarative native stacked-column chart",
-        "floating-waterfall columns via white spacer segments",
-        "manual chart ticks and dollar badges",
-        "explicit chart categories / series / colors / axis scale",
-        "two-year ACV output cards",
-        "semantic product timing table",
-    ),
-}
-
 TEXT_FIT: tuple[TextFitZone, ...] = (
     TextFitZone("formula_band", Box(3.515, 1.760, 9.464, 0.359), "Arial 10pt variable labels", "copy for conversion bridge slides"),
     TextFitZone("chart_axis_labels", Box(1.378, 5.002, 11.144, 0.167), "Arial 10pt, no-wrap, zero insets", "copy for manual chart ticks"),

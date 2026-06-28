@@ -77,28 +77,6 @@ LAYOUT = "slideLayout4"
 CHARTS: list = []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: comments the module can expose programmatically.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "method_matrix",
-    "use_when": (
-        "Use for a dense methodology matrix where each row item must be placed "
-        "in the frequency column where it is reported or incurred, then annotated "
-        "with normalization logic."
-    ),
-    "teaches": [
-        "native table primitive",
-        "inline table-cell kit",
-        "row spans and grid spans",
-        "source-sized blank cells plus tiny true spacer cells",
-        "section-colored border rules",
-        "dense 9pt table labels",
-        "dashed normalization callouts",
-        "compact no-wrap legend captions",
-    ],
-}
-
 TEXT_FIT = {
     "cost_matrix": {
         "box_in": (12.300, 5.550),

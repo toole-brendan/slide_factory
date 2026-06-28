@@ -89,33 +89,6 @@ TERMINAL_INTEGRATED_BLUE = "6F8DB9"
 TERMINAL_STANDALONE_GRAY = "8A8F93"
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: small programmatic index for retrieval / agent search.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "archetype_comparison / margin_recovery_timeline",
-    "use_when": (
-        "Use when a slide compares margin behavior across value-chain "
-        "archetypes with one full-width, style-dense bubble chart and a "
-        "manual legend, rather than a chart-plus-commentary-rail layout."
-    ),
-    "teaches": [
-        "native editable bubble_chart rebuilt from source XML/XLSB",
-        "source workbook rows embedded as Python constants",
-        "point-level bubble colors through data_point_colors",
-        "patterned bubble series for standalone terminal operators",
-        "full-width chart-dominant layout",
-        "manual year ticks over a native bubble chart",
-        "manual y-axis title outside the chart frame",
-        "source plot-area exterior border inside native chart XML",
-        "external legend for marker color, hatch pattern, and bubble size",
-        "compact colored source note",
-    ],
-    "source_module": "archetype_comps_newbuild_prices.py",
-    "source_chart_assets": ("slide32_chart17.xml", "slide32_chart17.xlsb"),
-    "rebuild_strategy": "replace bundled source-chart assets with native bubble_chart",
-}
-
 TEXT_FIT = {
     "chart_frame": {
         "box_in": (12.540, 5.200),

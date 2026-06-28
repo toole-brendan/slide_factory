@@ -164,26 +164,6 @@ CHART_STYLE = {
 CHARTS = [column_chart(**CHART_STYLE)]
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: comments a future agent can inspect programmatically.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "cost_capability_comparison",
-    "use_when": (
-        "Use for a procurement-cost comparison where a left chart proves rough "
-        "cost parity and a right table proves capability leverage."
-    ),
-    "teaches": [
-        "native column_chart stacked chart rebuilt from source XML",
-        "per-point chart colors through data_point_colors",
-        "manual in-bar and above-bar labels over a chart",
-        "one-row native table title bar",
-        "comparison table with row spans and spacer column",
-        "local table-cell helpers instead of centralized table_kit",
-        "picture rId wiring for two top-right logos",
-    ],
-}
-
 TEXT_FIT = {
     "chart_axis_title": {
         "box_in": (1.502, 0.167),

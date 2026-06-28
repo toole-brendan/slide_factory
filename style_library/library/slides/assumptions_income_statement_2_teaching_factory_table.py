@@ -65,26 +65,6 @@ LAYOUT = "slideLayout4"
 CHARTS: list = []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: slide-level guidance AI authors can inspect.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "methodology_reference_operating_expenses",
-    "use_when": (
-        "Use for a dense financial-model assumptions appendix where each line "
-        "item needs a component label and one or more methodology bullets."
-    ),
-    "teaches": [
-        "large native assumptions table",
-        "inline table styling helpers",
-        "semantic component-row records",
-        "section/header/interior/open-foot border grammar",
-        "bulleted methodology paragraphs in rich cells",
-        "raw layout-placeholder containment",
-        "off-house source-note preservation",
-    ],
-}
-
 TEXT_FIT = {
     "operating_expense_assumptions_table": {
         "box_in": (12.338, 5.395),
@@ -190,8 +170,6 @@ class AssumptionsTable:
     header_h: float
     style: AssumptionsTableStyle
     rows: tuple[AssumptionRow, ...]
-
-
 
 
 @dataclass(frozen=True)

@@ -106,31 +106,6 @@ SOURCE_VALUE_AXIS_MAX_K_GT = 350
 SOURCE_VALUE_AXIS_MAJOR_UNIT_K_GT = 50
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: a small programmatic index for retrieval / agent search.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "scenario_forecast / net_fleet_change",
-    "use_when": (
-        "Use for a forecast chart where early positive additions transition into "
-        "long-run negative retirements, and the slide should foreground net totals."
-    ),
-    "teaches": [
-        "native stacked column chart with positive and negative values",
-        "fixed hidden value axis plus manual value-axis tick labels",
-        "manual category ticks for a dense 25-year horizon",
-        "manual signed bar-total labels",
-        "orderbook-data availability band",
-        "outside-chart four-entry legend",
-        "dashed trend connector with callouts",
-        "source XML plot layout and point-color bridge overrides",
-        "chart-factory audit fixes for hidden gridlines and left value-axis registration",
-    ],
-    "source_module": "status_quo_fleet_outlook.py",
-    "source_chart_assets_used_for_transcription": ("status_quo_fleet_outlook.xml", "status_quo_fleet_outlook.xlsb"),
-    "rebuild_strategy": "replace styled_chart template with native column_chart while preserving source plot layout, axis scale, and point colors",
-}
-
 TEXT_FIT = {
     "orderbook_data_band": {
         "box_in": (2.182, 4.196),

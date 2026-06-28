@@ -147,30 +147,6 @@ CHART_STYLE = {
 CHARTS = [area_chart(mode="stacked", **CHART_STYLE)]
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: comments the module can expose programmatically.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "scenario_forecast",
-    "use_when": (
-        "Use for a dominant demand-volume forecast with a manual demand-band "
-        "legend, confidence-scale annotation, phase-capacity reference rules, "
-        "bottom milestone badges, and scenario caveats."
-    ),
-    "teaches": [
-        "native area_chart(mode=\"stacked\") factory",
-        "explicit series values/colors/pattern fill",
-        "manual year ticks",
-        "manual demand-band legend",
-        "capacity phase reference rules",
-        "right-arrow marker shapes",
-        "confidence scale annotation",
-        "summary ellipse badge row",
-        "callouts layered on top of chart content",
-        "source paint order with early chrome",
-    ],
-}
-
 TEXT_FIT = {
     "scenario_chip": {
         "box_in": (2.977, 0.218),
@@ -314,7 +290,6 @@ class ShapeIds:
         value = self._next
         self._next += 1
         return value
-
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -700,7 +675,6 @@ def _hyperlink_hotspot(ids: ShapeIds, hotspot: SourceHotspot) -> str:
         '<a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>'
         '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="en-US"/></a:p></p:txBody></p:sp>'
     )
-
 
 
 # ════════════════════════════════════════════════════════════════════════════

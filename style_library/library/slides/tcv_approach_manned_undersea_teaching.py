@@ -321,16 +321,6 @@ def _draw_legend(out: list[str], n) -> None:
 
 IMAGES = [{"rId": "rId2", "file": "image6_3071a231.jpeg"}]
 
-TEACHING_METADATA = {
-    "role": "market_sizing_flow / undersea_cmc_tcv",
-    "use_when": "Undersea manned capability funding must be mapped from missions/submarine classes into TAM/SAM/TCV.",
-    "teaches": (
-        "undersea mission grid",
-        "platform/effectors row",
-        "blue-gradient output stack",
-        "addressability legend",
-    ),
-}
 
 TEXT_FIT: tuple[TextFitZone, ...] = (
     TextFitZone("approach_rail", Box(0.426, 1.484, 2.101, 5.285), "Arial 10pt; six numbered method cards plus one 2b card", "copy for undersea CMC build-ups"),

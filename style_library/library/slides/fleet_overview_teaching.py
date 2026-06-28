@@ -76,26 +76,6 @@ NEAR_BLACK_RULE = "121415"
 NEGATIVE_RED = "C00000"
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Teaching metadata: these are comments the module can expose programmatically.
-# ════════════════════════════════════════════════════════════════════════════
-TEACHING_METADATA = {
-    "role": "scenario_context",
-    "use_when": (
-        "Use for a baseline exhibit where a compact composition bar chart needs to be "
-        "paired with a three-card KPI comparison on the right."
-    ),
-    "teaches": [
-        "native bar_chart composition chart",
-        "per-bar colors with data_point_colors",
-        "manual category tick labels",
-        "manual bar-end value labels",
-        "big-number comparison card stack",
-        "chart legend outside the native chart",
-        "compact off-house source/note block",
-    ],
-}
-
 TEXT_FIT = {
     "chart_title": {
         "box_in": (4.997, 0.167),

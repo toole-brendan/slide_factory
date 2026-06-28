@@ -393,7 +393,7 @@ def paint_row_labels(out: list[str], n) -> None:
                 f"RowLabel:{label}",
                 *_xywh(box),
                 col_widths=[IN(box.w)],
-                rows=[trow([rcell([tpara([trun(label, size=PT(10), bold=True, color=BLACK, font=FONT)], mar_l=0, indent=0)], fill=WHITE, R=edge(BLACK, 38100))], h=IN(box.h))],
+                rows=[trow([rcell([tpara([trun(label, size=PT(10), bold=True, color=BLACK, font=FONT)], mar_l=0, indent=0)], fill=WHITE, anchor="t", R=edge(BLACK, 38100))], h=IN(box.h))],
             )
         )
 

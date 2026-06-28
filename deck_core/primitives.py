@@ -90,15 +90,20 @@ def esc(s: str) -> str:
 
 
 def run(text, *, size=None, bold=None, italic=None, underline=None, color=None, font=None,
-        highlight=None, lang="en-US"):
+        highlight=None, lang="en-US", hyperlink_rid=None, baseline=None):
     """An <a:r> run. Any attribute left None is omitted from <a:rPr> so the
     placeholder / layout / master default applies. size is 1/100 pt
     (DENSE_BODY_10PT=1000 => 10pt, BODY_12PT=1200 => 12pt); color is 6-char
     hex, "scheme:tx1", or None. highlight is the PowerPoint text-highlighter
-    colour (6-char hex / "scheme:NAME", e.g. "FFFF00"), or None for none."""
+    colour (6-char hex / "scheme:NAME", e.g. "FFFF00"), or None for none.
+    hyperlink_rid wires an external link: pass the slide-rels rId declared in the
+    module's HYPERLINKS list ({"rId": ..., "url": ...}) to emit <a:hlinkClick>.
+    baseline raises/lowers the run (OOXML 1/1000 %, e.g. 30000 = a superscript
+    footnote marker, -25000 = subscript); None keeps it on the baseline."""
     return _emit_run({"text": text, "size": size, "bold": bold, "italic": italic,
                       "underline": underline, "color": color, "font": font,
-                      "highlight": highlight, "lang": lang})
+                      "highlight": highlight, "lang": lang, "hyperlink_rid": hyperlink_rid,
+                      "baseline": baseline})
 
 
 def line_break():
@@ -184,7 +189,7 @@ def text_box(sp_id, name, x, y, cx, cy, paragraphs, *, anchor="t",
              fill=None, fill_alpha=None, pattern_fill=None, line_color=_AUTO, line_width=12700,
              dashed_line=False, num_cols=1, rot=0, prst="rect", geom_adj=None,
              l_ins=91440, t_ins=45720, r_ins=91440, b_ins=45720,
-             insets=None, wrap="square", body_attrs_extra="", tx_box=True,
+             insets=None, wrap="square", vert=None, body_attrs_extra="", tx_box=True,
              placeholder=None, effects=None):
     """A <p:sp> with a text body. `paragraphs` is a list of paragraph()
     strings. fill/line_color are 6-char hex or None; pass an INSETS_* tuple via
@@ -231,6 +236,7 @@ def text_box(sp_id, name, x, y, cx, cy, paragraphs, *, anchor="t",
         line_xml = (f'<a:ln w="{line_width}"><a:solidFill>'
                     f'<a:srgbClr val="{line_color}"/></a:solidFill>{dash}</a:ln>')
     col_attr = f' numCol="{num_cols}" spcCol="91440"' if num_cols > 1 else ''
+    vert_attr = f' vert="{vert}"' if vert else ''
     rot_attr = f' rot="{rot}"' if rot else ""
     body = "".join(paragraphs)
     if placeholder is not None:
@@ -253,7 +259,7 @@ def text_box(sp_id, name, x, y, cx, cy, paragraphs, *, anchor="t",
     return (f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="{esc(name)}"/>'
             f'{cNvSpPr}{nv_pr}</p:nvSpPr>{sp_pr}'
             f'<p:txBody><a:bodyPr wrap="{wrap}" anchor="{anchor}" lIns="{l_ins}" '
-            f'tIns="{t_ins}" rIns="{r_ins}" bIns="{b_ins}"{col_attr}{body_attrs_extra}/>'
+            f'tIns="{t_ins}" rIns="{r_ins}" bIns="{b_ins}"{col_attr}{vert_attr}{body_attrs_extra}/>'
             f'<a:lstStyle/>{body}</p:txBody></p:sp>')
 
 
@@ -344,13 +350,24 @@ def picture(sp_id, name, r_embed, x, y, cx, cy, *, src_rect=None):
             f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>')
 
 
-def connector(sp_id, name, x, y, cx, cy, *, color=BLACK, dashed=False,
-              width=12700, arrow=False, prst="line", flip_h=False, flip_v=False,
-              rot=0, adj=None):
-    """Straight / right-angled connector. arrow=True adds a tail arrowhead;
+def connector(sp_id, name, x, y, cx, cy, *, color=BLACK, dashed=False, dash=None,
+              width=12700, arrow=False, grad=None, grad_angle=5400000,
+              prst="line", flip_h=False, flip_v=False, rot=0, adj=None):
+    """Straight / right-angled connector. arrow adds a triangle arrowhead:
+    True/"tail" on the tail, "head" on the head, "both" on both ends.
     width in EMU (12700 = 1pt). color None or "none" => invisible line.
     Connector lines default to BLACK (always black; solid or dashed, usually
     with an arrow at one end).
+
+    grad (optional) makes the line a gradient instead of a solid colour: a list
+    of (pos, hex) stops, e.g. [(0, "C30C3E"), (100000, "008600")] for a red->green
+    confidence scale; grad_angle is the linear angle in 60000ths of a degree
+    (5400000 = top-to-bottom). When set it overrides `color`.
+
+    Dash control: `dash` names the prstDash preset explicitly ("dash", "lgDash",
+    "sysDash", "sysDot", ...) to match a source line exactly; it takes precedence
+    over the legacy `dashed=True` shorthand (which still means val="dash"). Leave
+    both unset for a solid line.
 
     DrawingML <a:ext> must be a non-negative size box: a left/up vector
     (negative cx/cy) is normalized to a positive extent + flipH/flipV with the
@@ -370,14 +387,24 @@ def connector(sp_id, name, x, y, cx, cy, *, color=BLACK, dashed=False,
     cx, cy = abs(cx), abs(cy)
     flip_attr = (' flipH="1"' if do_flip_h else '') + (' flipV="1"' if do_flip_v else '')
     rot_attr = f' rot="{rot}"' if rot else ''
-    dash_xml = '<a:prstDash val="dash"/>' if dashed else ''
-    tail = '<a:tailEnd type="triangle" w="med" len="med"/>' if arrow else ''
+    if dash:
+        dash_xml = f'<a:prstDash val="{dash}"/>'
+    elif dashed:
+        dash_xml = '<a:prstDash val="dash"/>'
+    else:
+        dash_xml = ''
+    head = '<a:headEnd type="triangle" w="med" len="med"/>' if arrow in ("head", "both") else ''
+    tail = '<a:tailEnd type="triangle" w="med" len="med"/>' if arrow in (True, "tail", "both") else ''
     if adj:
         av_xml = '<a:avLst>' + ''.join(
             f'<a:gd name="{k}" fmla="{v}"/>' for k, v in adj.items()) + '</a:avLst>'
     else:
         av_xml = '<a:avLst/>'
-    if color in (None, "none"):
+    if grad:
+        stops = "".join(f'<a:gs pos="{pos}"><a:srgbClr val="{c}"/></a:gs>' for pos, c in grad)
+        ln_fill = (f'<a:gradFill flip="none" rotWithShape="1"><a:gsLst>{stops}</a:gsLst>'
+                   f'<a:lin ang="{grad_angle}" scaled="1"/></a:gradFill>')
+    elif color in (None, "none"):
         ln_fill = '<a:noFill/>'
     else:
         ln_fill = f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>'
@@ -386,7 +413,7 @@ def connector(sp_id, name, x, y, cx, cy, *, color=BLACK, dashed=False,
             f'<p:spPr><a:xfrm{rot_attr}{flip_attr}><a:off x="{off_x}" y="{off_y}"/>'
             f'<a:ext cx="{cx}" cy="{cy}"/></a:xfrm>'
             f'<a:prstGeom prst="{prst}">{av_xml}</a:prstGeom>'
-            f'<a:ln w="{width}">{ln_fill}{dash_xml}{tail}</a:ln></p:spPr></p:cxnSp>')
+            f'<a:ln w="{width}">{ln_fill}{dash_xml}{head}{tail}</a:ln></p:spPr></p:cxnSp>')
 
 
 # -- Tables (native <a:tbl> via <p:graphicFrame>) -----------------------------
@@ -399,10 +426,14 @@ NO_STYLE_NO_GRID = "{2D5ABB26-0587-4C30-8999-92F81FD0307C}"
 
 
 def trun(text, *, size=DENSE_BODY_10PT, bold=None, italic=None, underline=None,
-         color=BLACK, font=FONT):
-    """Run dict for table cells (consumed by tpara / tcell_rich)."""
+         color=BLACK, font=FONT, hyperlink_rid=None, baseline=None):
+    """Run dict for table cells (consumed by tpara / tcell_rich). hyperlink_rid
+    wires an external link via the module's HYPERLINKS rId (see run()). baseline
+    raises/lowers the run (OOXML 1/1000 %, e.g. 30000 = a superscript footnote
+    marker); None keeps it on the baseline."""
     return {"text": text, "size": size, "bold": bold, "italic": italic,
-            "underline": underline, "color": color, "font": font}
+            "underline": underline, "color": color, "font": font,
+            "hyperlink_rid": hyperlink_rid, "baseline": baseline}
 
 
 def tbreak():
@@ -444,14 +475,16 @@ def tpara(runs, *, align="l", line_spacing=LNSPC_SINGLE, space_after=None, space
 
 
 def tcell_rich(paragraphs, *, fill=None, grid_span=1, row_span=1, anchor="ctr",
-               l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, borders=None):
+               l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, borders=None,
+               vert=None):
     """Multi-paragraph table cell. gridSpan/rowSpan filler cells are
     synthesized by the framework - do not author them. `borders` is keyed by
     side ("L"/"R"/"T"/"B") -> "none" or {"color": hex, "width": EMU}. t_ins/b_ins are
     the vertical text insets (EMU); tighten them to fit a dense, many-row table inside
-    its frame height (think-cell auto-rows render compact)."""
+    its frame height (think-cell auto-rows render compact). `vert` rotates the cell
+    text via tcPr (e.g. "vert270" for a 270° spine label); None keeps it horizontal."""
     return {"paragraphs": paragraphs, "fill": fill, "gridSpan": grid_span,
-            "rowSpan": row_span, "anchor": anchor,
+            "rowSpan": row_span, "anchor": anchor, "vert": vert,
             "body_pr": {"lIns": l_ins, "rIns": r_ins, "tIns": t_ins, "bIns": b_ins},
             "borders": borders or {}}
 
@@ -459,7 +492,7 @@ def tcell_rich(paragraphs, *, fill=None, grid_span=1, row_span=1, anchor="ctr",
 def tcell(text, *, fill=None, size=DENSE_BODY_10PT, bold=None, italic=None, color=BLACK,
           align="l", grid_span=1, row_span=1, anchor="ctr", font=FONT,
           l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, borders=None,
-          line_spacing=LNSPC_SINGLE):
+          line_spacing=LNSPC_SINGLE, vert=None):
     """Single-paragraph single-run cell - shortcut over tcell_rich(). line_spacing
     defaults to single (100%): tabular density, not the 115% body default. An empty
     text ("") emits a runless paragraph whose <a:endParaRPr> carries `size`, so a
@@ -472,7 +505,8 @@ def tcell(text, *, fill=None, size=DENSE_BODY_10PT, bold=None, italic=None, colo
                            color=color, font=font)], align=align, line_spacing=line_spacing)
     return tcell_rich([para],
                       fill=fill, grid_span=grid_span, row_span=row_span, anchor=anchor,
-                      l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=borders)
+                      l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=borders,
+                      vert=vert)
 
 
 def trow(cells, *, h=274_320):
@@ -553,8 +587,10 @@ def _emit_cell(cell):
                 border_xml += f'<a:ln{side}{attr_w}><a:noFill/></a:ln{side}>'
     fill_xml = (f'<a:solidFill><a:srgbClr val="{fill}"/></a:solidFill>'
                 if fill and fill != "none" else '<a:noFill/>')
+    vert = cell.get("vert")
+    vert_attr = f' vert="{vert}"' if vert else ''
     tcPr = (f'<a:tcPr marL="{lIns}" marR="{rIns}" marT="{tIns}" '
-            f'marB="{bIns}" anchor="{anchor}">{border_xml}{fill_xml}</a:tcPr>')
+            f'marB="{bIns}" anchor="{anchor}"{vert_attr}>{border_xml}{fill_xml}</a:tcPr>')
     span_attrs = ""
     if cell.get("gridSpan", 1) > 1:
         span_attrs += f' gridSpan="{cell["gridSpan"]}"'
@@ -637,6 +673,9 @@ def _emit_run(r):
         rpr_attrs.append(f'i="{1 if italic else 0}"')
     if underline:
         rpr_attrs.append('u="sng"')
+    baseline = r.get("baseline")
+    if baseline is not None:
+        rpr_attrs.append(f'baseline="{baseline}"')   # superscript/subscript (1/1000 %)
     rpr_attr_str = " " + " ".join(rpr_attrs)
     rpr_children = ""
     if color is not None:
@@ -655,6 +694,11 @@ def _emit_run(r):
     if font is not None:
         rpr_children += (f'<a:latin typeface="{font}"/><a:ea typeface="{font}"/>'
                          f'<a:cs typeface="{font}"/>')
+    # <a:hlinkClick> is the last rPr child (schema order); r: is declared on the
+    # slide root, so a bare r:id resolves (same as chart graphic-frame refs).
+    hyperlink_rid = r.get("hyperlink_rid")
+    if hyperlink_rid:
+        rpr_children += f'<a:hlinkClick r:id="{hyperlink_rid}"/>'
     if rpr_children:
         rpr = f'<a:rPr{rpr_attr_str} dirty="0">{rpr_children}</a:rPr>'
     else:

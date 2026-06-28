@@ -920,6 +920,7 @@ def paint_scope_chip(out: list[str], ids: ShapeIds) -> None:
             [paragraph([_r("All Scenarios", size_pt=12, bold=True)], align="ctr", line_spacing=100_000)],
             fill=None,
             line_color=BLACK,
+            line_width=19050,  # 1.5pt — reference chip border (theme lnRef idx=2)
             anchor="ctr",
         )
     )

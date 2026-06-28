@@ -530,7 +530,7 @@ def _commentary_paragraph(text: str, italic_tail: str | None = None) -> str:
 
 
 def _blank_bullet_spacing() -> str:
-    return tpara([], bullet=True, mar_l=171450, indent=-171450)
+    return tpara([], bullet=True, mar_l=171450, indent=-171450, end_size=PT(10))
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -587,6 +587,7 @@ def paint_manual_year_ticks(next_id) -> list[str]:
                 line_color="none",
                 anchor="ctr",
                 wrap="none",
+                vert="vert270",   # rotate years to read bottom-to-top, matching the source
                 l_ins=0,
                 t_ins=0,
                 r_ins=0,
@@ -657,14 +658,14 @@ def paint_retirement_replacements_table(next_id) -> list[str]:
 
     rows = [
         trow(
-            [cell("Average retirement replacements required per year ’26-’50", bold=True, span=3, B=edge(BLACK))],
+            [cell("Average retirement replacements required per year ’26-’50", bold=True, anchor="t", span=3, B=edge(BLACK))],
             h=IN(0),
         ),
         trow(
             [
                 cell("Archetype", bold=True, align="ctr", T=edge(BLACK), B=edge(BLACK)),
-                cell("Total", bold=True, align="ctr", T=edge(BLACK), B=edge(BLACK)),
-                cell("Net of Orderbook Deliveries", bold=True, align="ctr", T=edge(BLACK), B=edge(BLACK)),
+                cell("Total", bold=True, align="ctr", anchor="t", T=edge(BLACK), B=edge(BLACK)),
+                cell("Net of Orderbook Deliveries", bold=True, align="ctr", anchor="t", T=edge(BLACK), B=edge(BLACK)),
             ],
             h=IN(0),
         ),
@@ -848,6 +849,15 @@ def paint_serial_production_key(next_id) -> list[str]:
     return shapes
 
 
+# Reference drop-shadow on the light-blue callout (outerShdw, verbatim params from
+# the source deck): 0.056" blur, 0.03" offset down-right, black @ 40% alpha.
+CALLOUT_SHADOW = (
+    '<a:effectLst><a:outerShdw blurRad="50800" dist="38100" dir="2700000" '
+    'algn="tl" rotWithShape="0"><a:prstClr val="black"><a:alpha val="40000"/>'
+    '</a:prstClr></a:outerShdw></a:effectLst>'
+)
+
+
 def paint_takeaway_banner(next_id) -> list[str]:
     """Decision-relevant implication below the right-side evidence table."""
 
@@ -867,6 +877,7 @@ def paint_takeaway_banner(next_id) -> list[str]:
             fill=SCENARIO_BLUE,
             line_color="none",
             anchor="ctr",
+            effects=CALLOUT_SHADOW,
         )
     ]
 
@@ -881,8 +892,9 @@ def paint_scenario_chrome(next_id) -> list[str]:
             "ScenarioChip",
             SCENARIO_CHIP,
             [_one_line("(1) Status Quo Scenario", size=PT(12), bold=True, align="ctr")],
-            fill=SCENARIO_BLUE,
+            fill=SCENARIO_BLUE,         # CEDDEC = theme bg2 @ 90% lum (reference chip fill)
             line_color=BLACK,
+            line_width=19050,           # 1.5pt — reference chip border (theme lnRef idx=2)
             anchor="ctr",
         ),
     ]

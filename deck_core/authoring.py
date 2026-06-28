@@ -29,7 +29,7 @@ from deck_core.primitives import (
 
 # ── house chrome — the author-facing furniture (chrome) ─────────────────────
 from deck_core.chrome import (
-    Chrome, Sources, body_slide,
+    Chrome, Sources, Link, body_slide,
     breadcrumb, slide_title, preliminary_chip, source_note,
     layout_title, layout_placeholder, cover_layout, section_divider_layout,
 )

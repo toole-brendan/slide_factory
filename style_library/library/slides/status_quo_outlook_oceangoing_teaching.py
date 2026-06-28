@@ -86,6 +86,13 @@ TANKER_ORDERBOOK = BLACK
 SCENARIO_BLUE = "CEDDEC"
 TABLE_VALUE_RED = "C30C3E"
 OUTLINE_NEAR_BLACK = "121415"
+# Reference drop-shadow on the light-blue takeaway banner (outerShdw, verbatim from
+# the source deck): 0.056" blur, 0.03" offset down-right, black @ 40% alpha.
+CALLOUT_SHADOW = (
+    '<a:effectLst><a:outerShdw blurRad="50800" dist="38100" dir="2700000" '
+    'algn="tl" rotWithShape="0"><a:prstClr val="black"><a:alpha val="40000"/>'
+    '</a:prstClr></a:outerShdw></a:effectLst>'
+)
 
 YEARS: tuple[str, ...] = tuple(str(year) for year in range(2026, 2051))
 
@@ -544,7 +551,7 @@ def _body() -> str:
     # Tick labels are right-aligned, no-wrap, and zero-inset so their boxes
     # register precisely to the plotted categories.
     for _x, _t in _CATEGORY_TICK_LABELS:
-        out.append(text_box(n(), "YearLabel", IN(_x), _AXIS_Y, _AXIS_W, _AXIS_H, [paragraph([run(_t, size=PT(8), color=BLACK, font=FONT)], align="r", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
+        out.append(text_box(n(), "YearLabel", IN(_x), _AXIS_Y, _AXIS_W, _AXIS_H, [paragraph([run(_t, size=PT(8), color=BLACK, font=FONT)], align="r", mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", vert="vert270", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black; vert270 = rotated 270° (reads bottom-to-top), per source
     # ── chart title ──
     out.append(text_box(n(), "Text Placeholder 25", IN(0.484), IN(1.752), IN(6.707), IN(0.167), [paragraph([run("Implied Retirements vs. Orderbook of US-Built, US-Flagged Oceangoing Commercial Vessels (# Hulls)", size=PT(10), bold=True, color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="b", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
     # ── data labels: bar totals (net hulls added/removed) ──
@@ -572,11 +579,11 @@ def _body() -> str:
     for _x, _y, _cx, _t in _LEGEND_LABELS:
         out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), _LEGEND_LBL_H, [paragraph([run(_t, size=PT(10), color=BLACK, font=FONT)], mar_l=0, indent=0, line_spacing=100000)], fill=None, line_color="none", anchor="ctr", wrap="none", l_ins=0, t_ins=0, r_ins=0, b_ins=0))   # 000000 black
     out.append(text_box(n(), "Speech Bubble: Rectangle 645", IN(5.193), IN(1.965), IN(2.382), IN(0.425), [paragraph([run("Bar total values indicate net hulls added (removed) each year", size=PT(10), italic=True, color=BLACK, font=FONT)], line_spacing=100000)], fill=WHITE, line_color="none", prst="wedgeRectCallout", geom_adj={"adj1": "val -19106", "adj2": "val -3267"}, anchor="ctr"))   # FFFFFF white
-    out.append(text_box(n(), "Rectangle 839", IN(5.325), IN(2.412), IN(0.849), IN(0.159), [paragraph([run("Retirements", size=PT(8), italic=True, color=BLACK, font=FONT), run("1", size=PT(8), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white
+    out.append(text_box(n(), "Rectangle 839", IN(5.325), IN(2.412), IN(0.849), IN(0.159), [paragraph([run("Retirements", size=PT(8), italic=True, color=BLACK, font=FONT), run("1", size=PT(8), italic=True, baseline=30000, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white; "1" = superscript footnote marker
     out.append(text_box(n(), "Rectangle 688", IN(6.247), IN(2.488), IN(0.932), IN(0.98), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color=OUTLINE_NEAR_BLACK, anchor="ctr"))   # 121415 near-black outline
-    out.append(text_box(n(), "Rectangle 689", IN(6.288), IN(2.412), IN(0.849), IN(0.159), [paragraph([run("Orderbook", size=PT(8), italic=True, color=BLACK, font=FONT), run("2", size=PT(8), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white
+    out.append(text_box(n(), "Rectangle 689", IN(6.288), IN(2.412), IN(0.849), IN(0.159), [paragraph([run("Orderbook", size=PT(8), italic=True, color=BLACK, font=FONT), run("2", size=PT(8), italic=True, baseline=30000, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white; "2" = superscript footnote marker
     # ── takeaway banner ──
-    out.append(text_box(n(), "Rectangle 690", IN(7.79), IN(5.652), IN(5.094), IN(0.68), [paragraph([run("~0.2-1.2 vessels per year is insufficient for serial production ", size=PT(12), bold=True, color=BLACK, font=FONT), run("(5+ hulls/yr. to achieve max labor efficiencies by end of year 2)", size=PT(12), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=SCENARIO_BLUE, line_color="none", anchor="ctr"))   # CEDDEC pale blue
+    out.append(text_box(n(), "Rectangle 690", IN(7.79), IN(5.652), IN(5.094), IN(0.68), [paragraph([run("~0.2-1.2 vessels per year is insufficient for serial production ", size=PT(12), bold=True, color=BLACK, font=FONT), run("(5+ hulls/yr. to achieve max labor efficiencies by end of year 2)", size=PT(12), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=SCENARIO_BLUE, line_color="none", anchor="ctr", effects=CALLOUT_SHADOW))   # CEDDEC pale blue
     # ── footnote — kept verbatim (sits off the house Source position) ──
     out.append(text_box(n(), "Rectangle 694", IN(0.495), IN(6.68), IN(12.367), IN(0.317), [paragraph([run("Note: (1) Service life assumptions – 40 years for Bulk, Container, General Cargo, and RORO, 35 years for Tankers, 30 years for PSVs, and 25 years for Crew/FSVs; (2) All Oceangoing Commercial vessels in orderbook are built at Hanwha Philly, including containerships purchased by Matson and 12x tankers (10x Chemical & Oil and 2x LNG) purchased by Hanwha Shipping | Source: Clarksons (US fleet size and GT data)", size=PT(8), color=BLACK, font=FONT)], line_spacing=100000)], fill=None, line_color="none"))   # 000000 black
     # ── serial-production key — red "#" (does not support) / green "#" (supports) ──
@@ -588,7 +595,7 @@ def _body() -> str:
     # ── Hanwha callout (wedge over the chart) ──
     out.append(text_box(n(), "Speech Bubble: Rectangle 2", IN(2.239), IN(3.166), IN(1.501), IN(0.416), [paragraph([run("12x purchased by Hanwha Shipping", size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color=BLACK, prst="wedgeRectCallout", geom_adj={"adj1": "val -59329", "adj2": "val -21373"}, anchor="ctr"))   # 000000 black outline
     # ── scenario chip (top-right) ──
-    out.append(text_box(n(), "Rectangle 4", IN(8.069), IN(0.174), IN(2.977), IN(0.217), [paragraph([run("(1) Status Quo Scenario", size=PT(12), bold=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=SCENARIO_BLUE, line_color=BLACK, anchor="ctr"))   # CEDDEC pale blue
+    out.append(text_box(n(), "Rectangle 4", IN(8.069), IN(0.174), IN(2.977), IN(0.217), [paragraph([run("(1) Status Quo Scenario", size=PT(12), bold=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=SCENARIO_BLUE, line_color=BLACK, line_width=19050, anchor="ctr"))   # CEDDEC pale blue; 1.5pt border (source lnRef idx 2)
     return "".join(out)
 
 

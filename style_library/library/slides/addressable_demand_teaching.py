@@ -474,7 +474,7 @@ def _criteria_paragraphs(cell: CriteriaCell) -> list[str]:
 
 def _native_label_paras(label: NativeLabelTable):
     return [
-        tpara([_tr(line, size_pt=12, color=label.color)], mar_l=0, indent=0)
+        tpara([_tr(line, size_pt=12, bold=True, color=label.color)], mar_l=0, indent=0)
         for line in label.text
     ]
 
@@ -511,6 +511,7 @@ def paint_tier_spines(out: list[str], ids: ShapeIds) -> None:
                         [
                             rich_cell(
                                 _native_label_paras(label),
+                                anchor="t",
                                 **_border_for(label),
                             )
                         ],
@@ -550,7 +551,9 @@ def paint_column_headers(out: list[str], ids: ShapeIds) -> None:
                             plain_cell(
                                 header.text[0],
                                 size=PT(12),
+                                bold=True,
                                 color=header.color,
+                                anchor="t",
                                 **_border_for(header),
                             )
                         ],

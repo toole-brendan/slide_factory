@@ -28,6 +28,13 @@ TEXT-FIT PRECEDENT
     copy_when: the chart itself is the exhibit and the surrounding text should be
                limited to axis title, legend, and source detail
 
+  plot_area_border:
+    geometry: inner plot rectangle from the source chart manual layout
+    type: c:plotArea/c:spPr no-fill outline restored in the generated chart XML
+    content: visible 0.75pt source chart frame around the inner plot rectangle
+    copy_when: a native chart factory does not expose plot-area line styling but
+               the reference slide uses a visible exterior chart border
+
   manual_legend:
     geometry: approx. 2.46in wide x 1.50in high, bottom-right of chart body
     type: Arial 10pt no-wrap labels
@@ -53,7 +60,7 @@ FIDELITY NOTE
   This is a practical factory-native rebuild, not a byte-identical chart-template
   port. It preserves the visible chart semantics, 73 source points, point fills,
   the standalone-terminal hatch, fixed axes, manual plot layout, bubble scale,
-  manual year ticks, legend, source note, Preliminary chip, and body chrome.
+  manual year ticks, source plot-area border, legend, source note, source-exact Preliminary chip, and body chrome.
   Tiny differences can remain in PowerPoint's native bubble rendering versus the
   original chart part.
 """
@@ -68,6 +75,7 @@ from deck_core.authoring import (
 # House colors (hex lives in the module; no shared palette).
 BLACK = "000000"
 DK = "162029"
+PRELIM = "FFFFCC"
 FONT = "Arial"
 
 LAYOUT = "slideLayout4"
@@ -99,6 +107,7 @@ TEACHING_METADATA = {
         "full-width chart-dominant layout",
         "manual year ticks over a native bubble chart",
         "manual y-axis title outside the chart frame",
+        "source plot-area exterior border inside native chart XML",
         "external legend for marker color, hatch pattern, and bubble size",
         "compact colored source note",
     ],
@@ -136,6 +145,7 @@ COPY_RULES = [
     "Use a full-width chart frame when the chart is the evidence and no explanatory right rail is needed.",
     "Use the slide-level legend as the semantic contract when the native chart series preserve source buckets rather than clean archetype groups.",
     "Keep manual ticks and y-axis title outside the chart when the source chart hid or suppressed native labels.",
+    "Patch c:plotArea/c:spPr into the generated chart XML when the source chart had a visible plot-area border that the native factory does not expose.",
     "Use a colored source note for constituent detail when a full appendix table would overtake the exhibit.",
 ]
 
@@ -156,8 +166,8 @@ NATIVE_CHART_CONTRACT = {
         "y_axis_min_max": (-50, 70),
     },
     "manual_shapes": (
-        "year ticks, EBIT Margin y-axis title, archetype legend, revenue ring key, "
-        "compact source note, and Preliminary chip"
+        "year ticks, EBIT Margin y-axis title, source plot-area border, "
+        "archetype legend, revenue ring key, compact source note, and Preliminary chip"
     ),
 }
 
@@ -264,6 +274,9 @@ YEAR_TICK_SIZE = (0.306, 0.167)
 LEGEND_ZONE = Box(10.283, 5.139, 2.457, 1.500)
 LEGEND_LABEL_H = 0.167
 SOURCE_NOTE = Box(0.495, 7.081, 5.102, 0.349)
+# Source deck chip geometry: slide3.xml / p:cNvPr name="PrelimChip".
+# Keep raw EMU so the recurring preliminary-banner fix is exact, not rounded.
+PRELIM_CHIP_EMU = (10_267_829, 111_556, 1_467_612, 290_000)
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -286,6 +299,7 @@ SOURCE_PLOT_LAYOUT = {
     "w": 0.95666620517790391,
     "h": 0.92754590984974961,
 }
+
 SOURCE_BUBBLE_SCALE = 66
 SOURCE_X_AXIS_MIN = 2019
 SOURCE_X_AXIS_MAX = 2025
@@ -295,6 +309,7 @@ SOURCE_Y_AXIS_MAX = 70
 SOURCE_Y_AXIS_MAJOR_UNIT = 10
 SOURCE_AXIS_LINE_WIDTH = 9_525
 SOURCE_BUBBLE_LINE_WIDTH = 3_175
+SOURCE_POINT_COUNT = 73
 STANDALONE_PATTERN = {"prst": "pct50", "fg": "scheme:tx1", "bg": "scheme:bg1"}
 
 BUBBLE_SOURCE_SERIES: tuple[BubbleSeries, ...] = (
@@ -578,15 +593,57 @@ BUBBLE_SOURCE_SERIES: tuple[BubbleSeries, ...] = (
     ),
 )
 
+# The source bubble chart keeps every source bucket on a 73-row workbook/cache
+# range and leaves non-bucket points blank. Keeping those sparse point indices
+# avoids renderer drift versus the source chart part, especially for the low
+# negative-margin shipbuilder bubbles.
+SOURCE_SERIES_START_INDICES: tuple[int, ...] = tuple(
+    sum(series.point_count for series in BUBBLE_SOURCE_SERIES[:idx])
+    for idx in range(len(BUBBLE_SOURCE_SERIES))
+)
+
+
+def _sparse_series_chart_dict(series: BubbleSeries, start_idx: int) -> dict:
+    """Expand a compact source bucket into the source chart's 73-row cache shape."""
+
+    if start_idx + series.point_count > SOURCE_POINT_COUNT:
+        raise ValueError(f"{series.name} exceeds {SOURCE_POINT_COUNT} source points")
+
+    def sparse(values):
+        out = [None] * SOURCE_POINT_COUNT
+        out[start_idx:start_idx + series.point_count] = list(values)
+        return out
+
+    out = {
+        "name": series.name,
+        "x_values": sparse(series.x_values),
+        "y_values": sparse(series.y_values),
+        "bubble_sizes": sparse(series.bubble_sizes),
+    }
+    if series.color is not None:
+        out["color"] = series.color
+    if series.pattern is not None:
+        out["pattern"] = dict(series.pattern)
+    if series.data_point_colors is not None:
+        out["data_point_colors"] = sparse(series.data_point_colors)
+    return out
+
+
+SPARSE_BUBBLE_CHART_SERIES: tuple[dict, ...] = tuple(
+    _sparse_series_chart_dict(series, start_idx)
+    for series, start_idx in zip(BUBBLE_SOURCE_SERIES, SOURCE_SERIES_START_INDICES)
+)
+
 # Readable data mirror for agents/tools that expect the converted-slide dict
-# shape. CHARTS consumes the same values through bubble_chart().
+# shape. CHARTS consumes the same sparse point-indexed values through
+# bubble_chart(), preserving the source cache indexes.
 _CHART0_DATA = {
     "categories": None,
-    "series": [series.chart_dict() for series in BUBBLE_SOURCE_SERIES],
+    "series": [dict(series) for series in SPARSE_BUBBLE_CHART_SERIES],
 }
 
 CHART_STYLE = {
-    "series": [series.chart_dict() for series in BUBBLE_SOURCE_SERIES],
+    "series": [dict(series) for series in SPARSE_BUBBLE_CHART_SERIES],
     "show_legend": False,
     "x_axis_format": "General",
     "y_axis_format": '#,##0;"-"#,##0',
@@ -613,7 +670,38 @@ CHART_STYLE = {
     "plot_layout": dict(SOURCE_PLOT_LAYOUT),
 }
 
-CHARTS = [bubble_chart(**CHART_STYLE)]
+# The source chart part includes a plot-area <c:spPr> with no fill and a
+# 0.75pt theme-text line. deck_core.bubble_chart() currently exposes plot-area
+# fill but not plot-area border, so the module injects this one source-faithful
+# XML fragment into the generated native chart instead of using an overlay shape.
+SOURCE_PLOT_AREA_BORDER_XML = (
+    '<c:spPr><a:noFill/><a:ln w="9525" cmpd="sng" algn="ctr">'
+    '<a:solidFill><a:schemeClr val="tx1"/></a:solidFill>'
+    '<a:prstDash val="solid"/></a:ln></c:spPr>'
+)
+
+
+def _with_source_plot_area_border(chart: dict) -> dict:
+    """Restore the source chart's exterior plot-area border.
+
+    The native bubble-chart factory emits the source data, axes, point fills,
+    and manual plot layout. The reference chart also carries a plot-area outline
+    as the final ``c:spPr`` child of ``c:plotArea``; inserting that XML keeps
+    the border part of the editable chart instead of drawing a loose overlay.
+    """
+
+    chart_xml = chart["chart_xml"]
+    marker = "</c:plotArea>"
+    if SOURCE_PLOT_AREA_BORDER_XML in chart_xml:
+        return chart
+    if marker not in chart_xml:
+        raise ValueError("bubble chart XML is missing </c:plotArea>; cannot add source border")
+    out = dict(chart)
+    out["chart_xml"] = chart_xml.replace(marker, SOURCE_PLOT_AREA_BORDER_XML + marker, 1)
+    return out
+
+
+CHARTS = [_with_source_plot_area_border(bubble_chart(**CHART_STYLE))]
 
 CHART_READINGS: tuple[ChartReading, ...] = (
     ChartReading(
@@ -873,9 +961,25 @@ def paint_source_note(next_id) -> list[str]:
 
 
 def paint_preliminary_chip(next_id) -> list[str]:
-    """House Preliminary chip, intentionally painted after body content."""
+    """Source-exact Preliminary chip dimensions from the reference deck."""
 
-    return [""]
+    return [
+        text_box(
+            4,
+            "PrelimChip",
+            *PRELIM_CHIP_EMU,
+            [_one_line("Preliminary", size=PT(12), bold=True, align="ctr")],
+            fill=PRELIM,
+            line_color=BLACK,
+            line_width=19050,
+            anchor="ctr",
+            wrap="square",
+            l_ins=45720,
+            t_ins=9144,
+            r_ins=45720,
+            b_ins=9144,
+        )
+    ]
 
 
 def _body() -> str:
@@ -896,6 +1000,7 @@ CHROME = Chrome(
     topic="Performance",
     title="Archetype Comps (1/3)",
     takeaway="Despite seeing improvement from rising new build prices and increased orders, shipbuilders only achieved low-to-mid-single digit EBIT margins by ‘24.",
+    preliminary=False,  # painted manually to match source-deck chip geometry exactly
 )
 
 

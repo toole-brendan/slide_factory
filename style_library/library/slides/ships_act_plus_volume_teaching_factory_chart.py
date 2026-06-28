@@ -61,7 +61,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from deck_core.authoring import (
-    Chrome, IN, PT, area_chart, body_slide, connector, graphic_frame, paragraph, run, text_box,
+    Chrome, IN, Link, PT, Sources, area_chart, body_slide, connector, esc,
+    graphic_frame, paragraph, run, text_box,
 )
 
 
@@ -227,7 +228,11 @@ class Rule:
     h: float
     width: int = 9_525
     dashed: bool = True
-    arrow: bool = False
+    arrow: object = False     # False / True (tail) / "head" / "both"
+    dash: str | None = None   # explicit prstDash preset (e.g. "lgDash"); overrides `dashed`
+    color: str = BLACK        # "none" for an invisible source anchor line
+    grad: tuple | None = None  # ((pos, hex), ...) gradient stops; overrides `color`
+    grad_angle: int = 5_400_000
 
 
 @dataclass(frozen=True)
@@ -255,6 +260,7 @@ class LabelBox:
     anchor: str = "ctr"
     wrap: str = "none"
     zero_margins: bool = True
+    vert: str | None = None   # "vert270" for a vertically-rotated label (year ticks)
 
 
 @dataclass(frozen=True)
@@ -284,6 +290,7 @@ class Callout:
     bold: bool = False
     italic: bool = False
     line_color: str | None = "none"
+    shadow: bool = False
 
 
 class ShapeIds:
@@ -368,18 +375,41 @@ SCENARIO_CHIP = LabelBox(
     zero_margins=False,
 )
 
-SOURCE_NOTE = (
-    "Note: (1) Assumes avg. 50K GT per newbuild (~13K higher than current fleet avg.); "
-    "10M GT target may be achieved with 140-160 deliveries / year with 60K-70K GT per newbuild | "
-    "Source: MAP; SHIPS Act; Building Ships in America; 46 USC 53106 (MSP subsidy); "
-    "46 USC 53406 (TSP subsidy); MARAD (MSP / TSP participation); MARAD (vessel characteristics); "
-    "MARAD (US vs. foreign-flag operating costs); GAO report on Maritime Security; FRED (PPI, BE Inflation); "
-    "EIA AEO (Crude & LNG exports); BP (conversions); USTR (Section 301 Actions); "
-    "USTR (Section 301 Action modifications); GAO (USG/USDA volume); IMF (Import forecast); "
-    "S&P (Current and forecast prices, FX rates, US trade volumes and destinations); "
-    "Drewry (foreign-flag opex; near-term cost growth outlook); Clarksons (Orderbook, current fleet, "
-    "retirements, capacity, observed service life); Press releases (competitor expansion); "
-    "Market participant feedback (Service life, build assumptions)"
+# Source-line external links (anchor, rId, url). The area chart takes rId2, so the
+# 16 linked sources run rId3..rId18; HYPERLINKS feeds the builder one External
+# relationship per rId, and the Sources band wires each anchor through Link().
+_SOURCE_LINKS = (
+    ("MAP", "rId3", "https://www.whitehouse.gov/maritimemight/"),
+    ("SHIPS Act", "rId4", "https://www.congress.gov/bill/119th-congress/senate-bill/1541/text#toc-id9f432e34eabc4c5ea3d818bfdc7a838f"),
+    ("Building Ships in America", "rId5", "https://www.congress.gov/bill/119th-congress/senate-bill/1536/text"),
+    ("46 USC 53106 (MSP subsidy)", "rId6", "https://www.law.cornell.edu/uscode/text/46/53106%20(MSP%20Rates)"),
+    ("46 USC 53406 (TSP subsidy)", "rId7", "https://www.law.cornell.edu/uscode/text/46/53406"),
+    ("MARAD (MSP / TSP participation)", "rId8", "https://www.maritime.dot.gov/data-reports/us-flag-fleet-CY-2025"),
+    ("MARAD (vessel characteristics)", "rId9", "https://www.maritime.dot.gov/sites/marad.dot.gov/files/2024-07/FACT%20SHEET%20for%20DOMESTIC%20SHIPBUILDING%20(JULY%202024)_0.pdf"),
+    ("MARAD (US vs. foreign-flag operating costs)", "rId10", "https://www.maritime.dot.gov/outreach/publications/comparison-us-and-foreign-flag-operating-costs"),
+    ("GAO report on Maritime Security", "rId11", "https://www.gao.gov/assets/gao-18-478.pdf"),
+    ("FRED (PPI, BE Inflation)", "rId12", "https://fred.stlouisfed.org/series/PCU483111483111"),
+    ("EIA AEO (Crude & LNG exports)", "rId13", "https://www.eia.gov/outlooks/aeo/data/browser/#/?id=76-AEO2025&cases=ref2025&sourcekey=0"),
+    ("BP (conversions)", "rId14", "https://www.bp.com/content/dam/bp/business-sites/en/global/corporate/pdfs/energy-economics/statistical-review/bp-stats-review-2022-approximate-conversion-factors.pdf"),
+    ("USTR (Section 301 Actions)", "rId15", "https://www.federalregister.gov/documents/2025/04/23/2025-06927/notice-of-action-and-proposed-action-in-section-301-investigation-of-chinas-targeting-the-maritime"),
+    ("USTR (Section 301 Action modifications)", "rId16", "https://ustr.gov/sites/default/files/files/Press/Releases/2025/Federal%20Register%20Notice%2010.26.2025.pdf"),
+    ("GAO (USG/USDA volume)", "rId17", "https://www.gao.gov/assets/gao-22-105160.pdf"),
+    ("IMF (Import forecast)", "rId18", "https://www.imf.org/-/media/files/publications/weo/2025/october/english/ch1.pdf"),
+)
+HYPERLINKS = [{"rId": rid, "url": url} for _a, rid, url in _SOURCE_LINKS]
+
+SOURCE_NOTE = Sources(
+    note="(1) Assumes avg. 50K GT per newbuild (~13K higher than current fleet avg.); "
+    "10M GT target may be achieved with 140-160 deliveries / year with 60K-70K GT per newbuild",
+    # Keep the visible source band source-faithful plain black text; transparent
+    # source-link hotspots below carry the external targets without altering render.
+    source=tuple(a for a, _rid, _u in _SOURCE_LINKS) + (
+        "S&P (Current and forecast prices, FX rates, US trade volumes and destinations)",
+        "Drewry (foreign-flag opex; near-term cost growth outlook)",
+        "Clarksons (Orderbook, current fleet, retirements, capacity, observed service life)",
+        "Press releases (competitor expansion)",
+        "Market participant feedback (Service life, build assumptions)",
+    ),
 )
 
 
@@ -395,13 +425,15 @@ REFERENCE_MARKERS: tuple[ReferenceMarker, ...] = (
     ReferenceMarker(4.280),
 )
 
+# Invisible lgDash "anchor" rules (source noFill); kept color="none" so they don't
+# double the visible `dash` rules below.
 INITIAL_PHASE_RULES: tuple[Rule, ...] = (
-    Rule("Straight Connector 451", 0.911, 3.066, 10.750, 0.000, arrow=True),
-    Rule("Straight Connector 33", 0.911, 2.191, 10.750, 0.000, arrow=True),
-    Rule("Straight Connector 50", 0.911, 2.741, 10.750, 0.000, arrow=True),
-    Rule("Straight Connector 462", 0.911, 3.714, 10.750, 0.000, arrow=True),
-    Rule("Straight Connector 473", 0.911, 4.363, 10.750, 0.000, arrow=True),
-    Rule("Straight Connector 486", 0.911, 4.670, 10.750, 0.000, arrow=True),
+    Rule("Straight Connector 451", 0.911, 3.066, 10.750, 0.000, dash="lgDash", color="none"),
+    Rule("Straight Connector 33", 0.911, 2.191, 10.750, 0.000, dash="lgDash", color="none"),
+    Rule("Straight Connector 50", 0.911, 2.741, 10.750, 0.000, dash="lgDash", color="none"),
+    Rule("Straight Connector 462", 0.911, 3.714, 10.750, 0.000, dash="lgDash", color="none"),
+    Rule("Straight Connector 473", 0.911, 4.363, 10.750, 0.000, dash="lgDash", color="none"),
+    Rule("Straight Connector 486", 0.911, 4.670, 10.750, 0.000, dash="lgDash", color="none"),
 )
 
 MID_LEGEND_RULES: tuple[Rule, ...] = (
@@ -487,7 +519,11 @@ SCALE_LABELS: tuple[LabelBox, ...] = (
     LabelBox("ConfidenceScaleLabel", Box(3.860, 2.475, 1.063, 0.133), "Confidence level", font_pt=8, italic=True, align="ctr", fill=WHITE, zero_margins=False),
 )
 
-CONFIDENCE_SCALE_ARROW = Rule("Straight Arrow Connector 568", 4.391, 2.171, 0.000, 0.741, width=28_575, dashed=False, arrow=True)
+# Red->green vertical gradient, double-headed (source confidence scale).
+CONFIDENCE_SCALE_ARROW = Rule(
+    "Straight Arrow Connector 568", 4.391, 2.171, 0.000, 0.741, width=28_575,
+    dashed=False, arrow="both", grad=((0, "C30C3E"), (100_000, "008600")), grad_angle=5_400_000,
+)
 
 CALLOUTS: tuple[Callout, ...] = (
     Callout(
@@ -509,6 +545,7 @@ CALLOUTS: tuple[Callout, ...] = (
         fill="CEDDEC",
         color=BLACK,
         bold=True,
+        shadow=True,
     ),
     Callout(
         name="Rectangle 9",
@@ -567,6 +604,7 @@ def _label_box(ids: ShapeIds, label: LabelBox) -> str:
         line_color="none",
         anchor=label.anchor,
         wrap=label.wrap,
+        vert=label.vert or "horz",
         l_ins=0 if label.zero_margins else None,
         t_ins=0 if label.zero_margins else None,
         r_ins=0 if label.zero_margins else None,
@@ -582,10 +620,13 @@ def _draw_rule(ids: ShapeIds, rule: Rule) -> str:
         IN(rule.y),
         IN(rule.w),
         IN(rule.h),
-        color=BLACK,
+        color=rule.color,
         width=rule.width,
         dashed=rule.dashed,
+        dash=rule.dash,
         arrow=rule.arrow,
+        grad=list(rule.grad) if rule.grad else None,
+        grad_angle=rule.grad_angle,
     )
 
 
@@ -640,6 +681,7 @@ def paint_year_ticks(out: list[str], ids: ShapeIds) -> None:
             tick.label,
             font_pt=YEAR_TICK_ZONE.font_pt,
             align="r",
+            vert="vert270",   # source year ticks are rotated 270 (read bottom-to-top)
         )
         out.append(_label_box(ids, label))
 
@@ -675,13 +717,20 @@ def paint_axis_titles(out: list[str], ids: ShapeIds) -> None:
     out.append(_label_box(ids, AXIS_TITLE))
 
 
-def paint_reference_and_legend_labels(out: list[str], ids: ShapeIds) -> None:
+def paint_reference_labels_and_mid_rules(out: list[str], ids: ShapeIds) -> None:
     for label in REFERENCE_LABELS:
         out.append(_label_box(ids, label))
-    for label in LEGEND_LABELS:
-        out.append(_label_box(ids, label))
+    # Paint these dashed rules before the white legend panel so the panel masks
+    # the left-side strokes, matching the source slide's manual legend treatment.
     for rule in MID_LEGEND_RULES:
         out.append(_draw_rule(ids, rule))
+
+
+def paint_legend_labels(out: list[str], ids: ShapeIds) -> None:
+    # These captions must be painted after the white legend panel/swatch stack;
+    # otherwise the panel hides the text and leaves only the chips visible.
+    for label in LEGEND_LABELS:
+        out.append(_label_box(ids, label))
 
 
 def paint_legend_panel_and_keys(out: list[str], ids: ShapeIds) -> None:
@@ -744,7 +793,7 @@ def paint_chrome_and_summary(out: list[str], ids: ShapeIds) -> None:
         )
 
 
-def paint_pattern_swatch_and_chips(out: list[str], ids: ShapeIds) -> None:
+def paint_pattern_swatch(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
@@ -757,15 +806,18 @@ def paint_pattern_swatch_and_chips(out: list[str], ids: ShapeIds) -> None:
             anchor="ctr",
         )
     )
-    out.append("")
+
+
+def paint_scenario_chip(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
             "Rectangle 23",
             *SCENARIO_CHIP.box.emu(),
-            [paragraph([run(SCENARIO_CHIP.text, size=PT(12), bold=True, font=FONT)], align="ctr", line_spacing=100_000)],
-            fill=SCENARIO_CHIP.fill,
+            [paragraph([run(SCENARIO_CHIP.text, size=PT(12), bold=True, color=WHITE, font=FONT)], align="ctr", line_spacing=100_000)],
+            fill=SCENARIO_CHIP.fill,    # theme bg2 @ 50% lum (reference chip fill)
             line_color=BLACK,
+            line_width=19050,           # 1.5pt — reference chip border (theme lnRef idx=2)
             anchor="ctr",
         )
     )
@@ -774,6 +826,9 @@ def paint_pattern_swatch_and_chips(out: list[str], ids: ShapeIds) -> None:
 def paint_late_rules_and_scale(out: list[str], ids: ShapeIds) -> None:
     for rule in LATE_PHASE_RULES[:3]:
         out.append(_draw_rule(ids, rule))
+    # Paint the confidence arrow BEFORE its labels so the white "Confidence level"
+    # box (and Lower/Higher) sit on top of the arrow, matching source paint order.
+    out.append(_draw_rule(ids, CONFIDENCE_SCALE_ARROW))
     for label in SCALE_LABELS:
         # Source scale labels intentionally retain default text-box insets.
         out.append(
@@ -787,8 +842,98 @@ def paint_late_rules_and_scale(out: list[str], ids: ShapeIds) -> None:
                 anchor="ctr",
             )
         )
-    out.append(_draw_rule(ids, CONFIDENCE_SCALE_ARROW))
     out.append(_draw_rule(ids, LATE_PHASE_RULES[3]))
+
+
+# Reference drop-shadow on the light-blue callout (outerShdw, verbatim params from
+# the source deck): 0.056" blur, 0.03" offset down-right, black @ 40% alpha.
+CALLOUT_SHADOW = (
+    '<a:effectLst><a:outerShdw blurRad="50800" dist="38100" dir="2700000" '
+    'algn="tl" rotWithShape="0"><a:prstClr val="black"><a:alpha val="40000"/>'
+    '</a:prstClr></a:outerShdw></a:effectLst>'
+)
+
+
+def _source_run(text: str, *, hyperlink_rid: str | None = None) -> str:
+    """House-style 8pt source run that can carry a hyperlink without adopting
+    the default blue/underlined hyperlink appearance in preview renderers."""
+
+    hlink = f'<a:hlinkClick r:id="{hyperlink_rid}"/>' if hyperlink_rid else ""
+    return (
+        f'<a:r><a:rPr lang="en-US" sz="{PT(8)}" u="none" kern="1200" dirty="0">'
+        f'<a:solidFill><a:srgbClr val="{DK}"/></a:solidFill>'
+        f'<a:latin typeface="{FONT}"/><a:ea typeface="{FONT}"/><a:cs typeface="{FONT}"/>'
+        f'{hlink}</a:rPr><a:t>{esc(text)}</a:t></a:r>'
+    )
+
+
+def paint_source_note(out: list[str]) -> None:
+    # The visual source band is one text run, matching the source-faithful slide
+    # and allowing PowerPoint/LibreOffice to wrap at every word instead of only
+    # at segmented source-item boundaries. Transparent hotspots carry the links.
+    runs = [_source_run(SOURCE_NOTE.text())]
+
+    out.append(
+        text_box(
+            9999,
+            "Source",
+            453_079,
+            5_930_000,
+            11_282_362,
+            540_000,
+            [paragraph(runs, line_spacing=100_000)],
+            fill=None,
+            line_color="none",
+            anchor="t",
+            wrap="square",
+            l_ins=91_440,
+            t_ins=45_720,
+            r_ins=91_440,
+            b_ins=45_720,
+        )
+    )
+
+
+def _source_link_hotspot(sp_id: int, name: str, rid: str, *, x: float, y: float, w: float, h: float) -> str:
+    """Invisible click target carrying a source hyperlink while the visible
+    source band remains source-faithful plain black text."""
+
+    return (
+        f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="{esc(name)}">'
+        f'<a:hlinkClick r:id="{rid}"/></p:cNvPr><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>'
+        f'<p:spPr><a:xfrm><a:off x="{IN(x)}" y="{IN(y)}"/><a:ext cx="{IN(w)}" cy="{IN(h)}"/></a:xfrm>'
+        f'<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+        f'<a:solidFill><a:srgbClr val="FFFFFF"><a:alpha val="0"/></a:srgbClr></a:solidFill>'
+        f'<a:ln><a:noFill/></a:ln></p:spPr>'
+        f'<p:txBody><a:bodyPr wrap="none" anchor="ctr" lIns="0" tIns="0" rIns="0" bIns="0"/>'
+        f'<a:lstStyle/><a:p><a:endParaRPr lang="en-US" sz="100"/></a:p></p:txBody></p:sp>'
+    )
+
+
+def paint_source_link_hotspots(out: list[str], ids: ShapeIds) -> None:
+    # Approximate transparent hit boxes over the dense source band. They do not
+    # alter the source-faithful visual render, but preserve external click targets
+    # for the linked source anchors in the same order as _SOURCE_LINKS/HYPERLINKS.
+    boxes = (
+        (8.61, 6.48, 0.25, 0.12),   # MAP
+        (8.87, 6.48, 0.55, 0.12),   # SHIPS Act
+        (9.43, 6.48, 1.15, 0.12),   # Building Ships in America
+        (10.60, 6.48, 0.92, 0.12),  # 46 USC 53106
+        (11.54, 6.48, 0.92, 0.12),  # 46 USC 53406
+        (0.50, 6.62, 1.25, 0.12),
+        (1.77, 6.62, 1.55, 0.12),
+        (3.34, 6.62, 1.75, 0.12),
+        (5.11, 6.62, 1.45, 0.12),
+        (6.58, 6.62, 1.15, 0.12),
+        (7.75, 6.62, 1.45, 0.12),
+        (9.22, 6.62, 0.80, 0.12),
+        (10.04, 6.62, 1.15, 0.12),
+        (11.21, 6.62, 1.45, 0.12),
+        (0.50, 6.76, 1.20, 0.12),
+        (1.72, 6.76, 1.05, 0.12),
+    )
+    for (anchor, rid, _url), (x, y, w, h) in zip(_SOURCE_LINKS, boxes):
+        out.append(_source_link_hotspot(ids.next(), f"SourceLink:{anchor}", rid, x=x, y=y, w=w, h=h))
 
 
 def paint_notes_and_callouts(out: list[str], ids: ShapeIds) -> None:
@@ -811,6 +956,7 @@ def paint_notes_and_callouts(out: list[str], ids: ShapeIds) -> None:
                 prst=callout.prst,
                 geom_adj=callout.geom_adj,
                 anchor="ctr",
+                effects=CALLOUT_SHADOW if callout.shadow else None,
             )
         )
 
@@ -828,14 +974,21 @@ def _body() -> str:
     paint_initial_phase_rules(out, ids)
     paint_year_ticks(out, ids)
     paint_axis_titles(out, ids)
-    paint_reference_and_legend_labels(out, ids)
+    # The reference/source order keeps the capacity-rule lines below the white
+    # legend panel while the legend labels themselves sit above that panel.
+    paint_reference_labels_and_mid_rules(out, ids)
     paint_legend_panel_and_keys(out, ids)
     paint_chrome_and_summary(out, ids)
-    paint_pattern_swatch_and_chips(out, ids)
+    paint_pattern_swatch(out, ids)
+    paint_legend_labels(out, ids)
+    paint_scenario_chip(out, ids)
     paint_late_rules_and_scale(out, ids)
     paint_notes_and_callouts(out, ids)
+    paint_source_note(out)
+    paint_source_link_hotspots(out, ids)
 
     return "".join(out)
+
 
 
 CHROME = Chrome(
@@ -843,7 +996,6 @@ CHROME = Chrome(
     topic="With SHIPS Act",
     title="SHIPS Act “Plus” Volume",
     takeaway="Demand declines after mid-2030s as SCF and other programs reach fleet caps; path to Phase 2 and beyond requires additional demand signals.",
-    sources=SOURCE_NOTE,
 )
 
 

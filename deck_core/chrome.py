@@ -40,7 +40,7 @@ _SZ_DIVIDER_TITLE = 2800
 _SZ_DIVIDER_SUBTITLE = 2000
 _BREADCRUMB_X, _BREADCRUMB_Y, _BREADCRUMB_CX, _BREADCRUMB_CY = LEFT_MARGIN, 263_452, CONTENT_W, 153_888
 _TITLE_X, _TITLE_Y, _TITLE_CX, _TITLE_CY = LEFT_MARGIN, 554_500, CONTENT_W, 640_080
-_PRELIM_X, _PRELIM_Y, _PRELIM_CX, _PRELIM_CY = 10_267_829, 111_556, 1_467_612, 290_000
+_PRELIM_X, _PRELIM_Y, _PRELIM_CX, _PRELIM_CY = 10_232_214, 158_582, 1_467_986, 198_438
 _SOURCES_X, _SOURCES_Y, _SOURCES_CX, _SOURCES_CY = LEFT_MARGIN, 5_930_000, CONTENT_W, 540_000
 _SP_ID_BREADCRUMB = 2
 _SP_ID_TITLE = 3
@@ -48,14 +48,17 @@ _SP_ID_PRELIM = 4
 _SP_ID_SOURCES = 9999
 
 
-def _chrome_run(text, *, size, bold=False, color=_DK):
+def _chrome_run(text, *, size, bold=False, color=_DK, hyperlink_rid=None):
     """Locked chrome run: Arial, kern=1200, explicit size + color. Body text uses
-    run(); chrome uses this so the staples stay byte-stable."""
+    run(); chrome uses this so the staples stay byte-stable. hyperlink_rid wires an
+    external link (slide-rels rId from the module's HYPERLINKS); None keeps the run
+    byte-identical to the un-linked staple."""
     b = ' b="1"' if bold else ""
+    hl = f'<a:hlinkClick r:id="{hyperlink_rid}"/>' if hyperlink_rid else ""
     return (f'<a:r><a:rPr lang="en-US" sz="{size}"{b} kern="1200" dirty="0">'
             f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>'
             f'<a:latin typeface="Arial"/><a:ea typeface="Arial"/><a:cs typeface="Arial"/>'
-            f'</a:rPr><a:t>{esc(text)}</a:t></a:r>')
+            f'{hl}</a:rPr><a:t>{esc(text)}</a:t></a:r>')
 
 
 def breadcrumb(section, topic_label, *, sp_id=_SP_ID_BREADCRUMB):
@@ -72,14 +75,15 @@ def breadcrumb(section, topic_label, *, sp_id=_SP_ID_BREADCRUMB):
             + '</a:p></p:txBody></p:sp>')
 
 
-def slide_title(topic, takeaway, *, sp_id=_SP_ID_TITLE):
+def slide_title(topic, takeaway, *, sp_id=_SP_ID_TITLE, cx=None):
     """Slide title bound to the layout title placeholder: single run
-    "{Topic} | {Finding}", Arial 20pt, dark."""
+    "{Topic} | {Finding}", Arial 20pt, dark. cx overrides the box width (EMU) to
+    match a source title narrowed to clear top-right logos; None = full house width."""
     return (f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="Title"/>'
             f'<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>'
             f'<p:nvPr><p:ph type="title"/></p:nvPr></p:nvSpPr>'
             f'<p:spPr><a:xfrm><a:off x="{_TITLE_X}" y="{_TITLE_Y}"/>'
-            f'<a:ext cx="{_TITLE_CX}" cy="{_TITLE_CY}"/></a:xfrm></p:spPr>'
+            f'<a:ext cx="{cx if cx is not None else _TITLE_CX}" cy="{_TITLE_CY}"/></a:xfrm></p:spPr>'
             f'<p:txBody><a:bodyPr rIns="0"/><a:lstStyle/><a:p>'
             + _chrome_run(f"{topic} | {takeaway}", size=_SZ_SLIDE_TITLE, color=_DK)
             + '</a:p></p:txBody></p:sp>')
@@ -105,7 +109,19 @@ def source_note(text, *, sp_id=_SP_ID_SOURCES, y=_SOURCES_Y):
     """Bottom strip: "Source: ...; ..." (singular "Source" per house style, even
     with many sources; semicolon-separated, no parenthetical numbering; a Note line
     may be combined via a pipe), Arial 8pt, top-anchored. Pass y to lift it above
-    content that reaches the default band."""
+    content that reaches the default band.
+
+    `text` is a plain string (one staple run), or an iterable of segments — plain
+    str pieces and Link(text, rId) pieces — for a source line carrying external
+    hyperlinks. The plain-string path is byte-identical to the un-linked staple."""
+    if isinstance(text, str):
+        runs = _chrome_run(text, size=_SZ_SOURCES, color=_DK)
+    else:
+        runs = "".join(
+            _chrome_run(seg.text, size=_SZ_SOURCES, color=_DK, hyperlink_rid=seg.rId)
+            if isinstance(seg, Link)
+            else _chrome_run(seg, size=_SZ_SOURCES, color=_DK)
+            for seg in text)
     return (f'<p:sp><p:nvSpPr><p:cNvPr id="{sp_id}" name="Source"/>'
             f'<p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>'
             f'<p:spPr><a:xfrm><a:off x="{_SOURCES_X}" y="{y}"/>'
@@ -114,7 +130,7 @@ def source_note(text, *, sp_id=_SP_ID_SOURCES, y=_SOURCES_Y):
             f'<a:noFill/><a:ln><a:noFill/></a:ln></p:spPr>'
             f'<p:txBody><a:bodyPr wrap="square" anchor="t" lIns="91440" tIns="45720" '
             f'rIns="91440" bIns="45720"/><a:lstStyle/><a:p>'
-            + _chrome_run(text, size=_SZ_SOURCES, color=_DK)
+            + runs
             + '</a:p></p:txBody></p:sp>')
 
 
@@ -333,13 +349,31 @@ def section_divider_layout(section: str, subtitle: str | None = None, *,
 
 
 @dataclass(frozen=True)
+class Link:
+    """A hyperlinked span in a source line: visible `text` wired to the slide-rels
+    `rId` declared in the module's HYPERLINKS list ({"rId": ..., "url": ...}). Drop
+    Link(...) pieces into a Sources `source` tuple alongside plain strings."""
+    text: str
+    rId: str
+
+
+@dataclass(frozen=True)
 class Sources:
     """The house Sources band, as fields. `source` is a string or a tuple of
-    strings (joined with "; "); `note` prepends a "Note: ..." segment; `y` lifts
-    the band above content that reaches the default floor."""
-    source: object = None          # str | tuple[str, ...] | None
+    items (joined with "; "); a tuple item may be a Link(...) to hyperlink that
+    span. `note` prepends a "Note: ..." segment; `y` lifts the band above content
+    that reaches the default floor."""
+    source: object = None          # str | tuple[str | Link, ...] | None
     note: object = None            # str | None
     y: object = None               # int | None
+
+    def _items(self) -> tuple:
+        if not self.source:
+            return ()
+        return (self.source,) if isinstance(self.source, str) else tuple(self.source)
+
+    def has_links(self) -> bool:
+        return any(isinstance(it, Link) for it in self._items())
 
     def text(self) -> str:
         parts = []
@@ -349,6 +383,23 @@ class Sources:
             src = self.source if isinstance(self.source, str) else "; ".join(self.source)
             parts.append(f"Source: {src}")
         return " | ".join(parts)
+
+    def segments(self) -> list:
+        """The source line as a flat list of plain-str and Link segments — the rich
+        equivalent of text(), used when any source item is a Link."""
+        out = []
+        if self.note:
+            out.append(f"Note: {self.note}")
+        items = self._items()
+        if items:
+            if self.note:
+                out.append(" | ")
+            out.append("Source: ")
+            for i, it in enumerate(items):
+                if i:
+                    out.append("; ")
+                out.append(it)
+        return out
 
 
 @dataclass(frozen=True)
@@ -363,6 +414,7 @@ class Chrome:
     preliminary: bool = True
     preliminary_text: str = "Preliminary"
     sources: object = None         # Sources | str | None
+    title_cx: object = None        # int | None - narrow the title box (EMU) to clear top-right logos
 
 
 def body_slide(chrome: Chrome, body_xml: str) -> str:
@@ -373,15 +425,16 @@ def body_slide(chrome: Chrome, body_xml: str) -> str:
     pieces = []
     if chrome.section is not None:
         pieces.append(breadcrumb(chrome.section, chrome.topic))
-    pieces.append(slide_title(chrome.title, chrome.takeaway))
+    pieces.append(slide_title(chrome.title, chrome.takeaway, cx=chrome.title_cx))
     if chrome.preliminary:
         pieces.append(preliminary_chip(text=chrome.preliminary_text))
     pieces.append(body_xml)
     src = chrome.sources
     if src is not None:
         if isinstance(src, Sources):
-            pieces.append(source_note(src.text(), y=src.y) if src.y is not None
-                          else source_note(src.text()))
+            payload = src.segments() if src.has_links() else src.text()
+            pieces.append(source_note(payload, y=src.y) if src.y is not None
+                          else source_note(payload))
         else:
             pieces.append(source_note(src))
     return slide("".join(pieces))

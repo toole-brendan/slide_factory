@@ -176,8 +176,11 @@ def _presentation_rels_xml(n_slides: int) -> str:
 def _slide_rels_xml(n: int, slide_rels: dict) -> str:
     rels = slide_rels[n]
     parts = []
-    for rId, t, target in rels:
-        parts.append(f'<Relationship Id="{rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/{t}" Target="{target}"/>')
+    for rel in rels:
+        rId, t, target = rel[0], rel[1], rel[2]
+        mode = rel[3] if len(rel) > 3 else None
+        mode_attr = f' TargetMode="{mode}"' if mode else ''
+        parts.append(f'<Relationship Id="{rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/{t}" Target="{target}"{mode_attr}/>')
     return (f'{XML_DECL}\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
             + "".join(parts) + '</Relationships>')
 
@@ -246,7 +249,7 @@ def build_pptx(slide_module_renders, *, out: Path, extracted: Path, assets: Path
         # IMAGES = [{"rId": "rIdN", "file": "<name in ppt/media>"}, ...] and its
         # picture(..., r_embed="rIdN") must use the same rId. Image rIds continue
         # AFTER chart rIds (no charts -> first image rId2; one chart -> rId3).
-        used_rids = [r for (r, _, _) in slide_rels[slide_idx]]
+        used_rids = [rel[0] for rel in slide_rels[slide_idx]]
         first_image_rid = f"rId{len(used_rids) + 1}"
         for img in list(getattr(mod, "IMAGES", [])):
             if not (isinstance(img, dict) and "rId" in img and "file" in img):
@@ -262,6 +265,23 @@ def build_pptx(slide_module_renders, *, out: Path, extracted: Path, assets: Path
             used_rids.append(rId)
             slide_rels[slide_idx].append((rId, "image", f"../media/{fname}"))
             declared_images.append((slide_idx, fname))
+        # Wire per-slide external-hyperlink rels (symmetric to images). A module
+        # declares HYPERLINKS = [{"rId": "rIdN", "url": "https://..."}, ...] and the
+        # linked run uses run(..., hyperlink_rid="rIdN") / trun(..., hyperlink_rid=).
+        # Hyperlink rIds continue AFTER chart + image rIds and emit TargetMode=External.
+        for link in list(getattr(mod, "HYPERLINKS", [])):
+            if not (isinstance(link, dict) and "rId" in link and "url" in link):
+                raise ValueError(
+                    f"slide {slide_idx}: each HYPERLINKS entry must be a dict with "
+                    f"'rId' and 'url' keys (got {link!r})")
+            rId, url = link["rId"], link["url"]
+            if rId in used_rids:
+                raise ValueError(
+                    f"slide {slide_idx}: hyperlink rId {rId!r} collides with the layout, "
+                    f"a chart, an image, or another hyperlink")
+            used_rids.append(rId)
+            slide_rels[slide_idx].append(
+                (rId, "hyperlink", _escape(url, {'"': "&quot;"}), "External"))
 
     for nidx in hidden:
         if not 1 <= nidx <= n_slides:

@@ -16,7 +16,7 @@ TEACHES
     Per Voyage, and Per Unit columns
   - section-color rules that act as table structure: green Price, gray
     shoreside variable costs, navy vessel-related variable costs, gray Opex
-  - empty table-cell paragraphs with tiny end_size to prevent row-height inflation
+  - source-calibrated empty table-cell paragraphs: 9pt blanks for row fit, 1pt blanks for true spacers
   - dashed normalization callouts layered beside and over the table
   - compact legend swatches with two-line no-wrap captions
 
@@ -91,7 +91,7 @@ TEACHING_METADATA = {
         "native table primitive",
         "inline table-cell kit",
         "row spans and grid spans",
-        "empty spacer cells with tiny end-size paragraphs",
+        "source-sized blank cells plus tiny true spacer cells",
         "section-colored border rules",
         "dense 9pt table labels",
         "dashed normalization callouts",
@@ -107,14 +107,14 @@ TEXT_FIT = {
         "content": "dense Price / Variable Costs / Operating Expenses frequency matrix",
         "note": (
             "Most table rows have zero minimum height; the combination of rich "
-            "cell content, 60960 EMU padding, and tiny empty paragraphs controls "
-            "the apparent row heights."
+            "cell content, 60960 EMU padding, source-sized 9pt blanks, and tiny "
+            "1pt spacer blanks controls the apparent row heights."
         ),
     },
     "empty_matrix_cells": {
-        "font_pt": 1,
-        "content": "empty tpara([]) with end_size=PT(1)",
-        "note": "Use this when spacer rows/cells must not grow from default table text height.",
+        "font_pt": "1 or 9",
+        "content": "empty tpara([]) with end_size=PT(1) for spacers and PT(9) for source-sized blanks",
+        "note": "Use PT(1) when spacer rows/cells must collapse; use PT(9) where the reference table relies on a blank cell to preserve row fit.",
     },
     "normalization_callouts": {
         "font_pt": 9,
@@ -251,14 +251,27 @@ def bd(L=None, R=None, T=None, B=None):
     return {k: v for k, v in (("L", L), ("R", R), ("T", T), ("B", B)) if v is not None} or None
 
 
-def mt(align="ctr"):
+def mt(align="ctr", *, end_size=PT(1)):
     """Empty matrix-cell paragraph.
 
-    The explicit end_size=PT(1) is a table-fit trick: empty cells stay empty and
-    do not expand to LibreOffice / PowerPoint's default text height.
+    The default end_size=PT(1) is a table-fit trick: true spacer cells stay
+    empty and do not expand to LibreOffice / PowerPoint's default text height.
+    Use mt9() for the source-calibrated blank cells whose 9pt end paragraph
+    participates in the row-height balance of the Matson reference render.
     """
 
-    return tpara([], align=align, mar_l=0, indent=0, end_size=PT(1))
+    return tpara([], align=align, mar_l=0, indent=0, end_size=end_size)
+
+
+def mt9(align="ctr"):
+    """Source-sized empty matrix-cell paragraph (9pt end run).
+
+    The source-faithful Matson module alternates 9pt blank cells with tiny 1pt
+    spacer cells. Keeping that distinction preserves the table's PowerPoint row
+    fitting while leaving the teaching call sites readable.
+    """
+
+    return mt(align, end_size=PT(9))
 
 
 def tx(text, *, color=BLACK, align="ctr", bold=True, italic=False, size=PT(9)):
@@ -317,11 +330,11 @@ def paint_cost_matrix(out: list[str], ids: ShapeIds) -> None:
         # ── header: frequency banner over Annual / Per Voyage / Per Unit ──
         trow([
             rcell([tx("For each route and vessel size / type", align="l", bold=False, italic=True)], rowspan=2, anchor="b", B=edge(BLACK)),
-            rcell([mt()], anchor="b"),
+            rcell([mt9()], anchor="b"),
             rcell([tx("Price / cost categories by frequency (reported or incurred)")], span=5, anchor="b", B=edge(DK)),
         ], h=IN(0.129)),
         trow([
-            rcell([mt()], anchor="b", B=edge(BLACK)),
+            rcell([mt9()], anchor="b", B=edge(BLACK)),
             rcell([tx("Annual")], anchor="b", R=edge(WHITE), T=edge(DK), B=edge(BLACK)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(DK), B=edge(BLACK)),
             rcell([tx("Per Voyage")], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(DK), B=edge(BLACK)),
@@ -340,38 +353,38 @@ def paint_cost_matrix(out: list[str], ids: ShapeIds) -> None:
         ], h=IN(0)),
         # ── Price (green section rule) ──
         trow([
-            rcell([tx("Price", align="l")], R=edge("2E7D32", SECTION_RULE_W)),
-            rcell([mt()], anchor="b", L=edge("2E7D32", SECTION_RULE_W)),
-            rcell([mt()], anchor="b", R=edge(WHITE)),
+            rcell([tx("Price", align="l")], anchor="t", R=edge("2E7D32", SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", L=edge("2E7D32", SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", R=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
-            rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
+            rcell([mt9()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
             rcell([tx("Basic Ocean Rate", color=WHITE)], fill="2E7D32", anchor="b", **PAD, L=edge(WHITE), B=edge(WHITE)),
         ], h=IN(0)),
         trow([
-            rcell([mt("l")], R=edge("2E7D32", SECTION_RULE_W)),
-            rcell([mt()], anchor="b", L=edge("2E7D32", SECTION_RULE_W)),
-            rcell([mt()], anchor="b", R=edge(WHITE)),
+            rcell([mt9("l")], R=edge("2E7D32", SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", L=edge("2E7D32", SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", R=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
-            rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
+            rcell([mt9()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
             rcell([tx("Fuel Adjustment Factor", color=WHITE)], fill="2E7D32", anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
         ], h=IN(0)),
         trow([
-            rcell([mt("l")], R=edge("2E7D32", SECTION_RULE_W)),
-            rcell([mt()], anchor="b", L=edge("2E7D32", SECTION_RULE_W)),
-            rcell([mt()], anchor="b", R=edge(WHITE)),
+            rcell([mt9("l")], R=edge("2E7D32", SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", L=edge("2E7D32", SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", R=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
-            rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
+            rcell([mt9()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), B=edge(WHITE, HAIRLINE_W)),
             rcell([tx("Terminal Handling / Stevedoring", color=WHITE)], fill="2E7D32", anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
         ], h=IN(0)),
         trow([
-            rcell([mt("l")], R=edge("2E7D32", SECTION_RULE_W)),
-            rcell([mt()], anchor="b", L=edge("2E7D32", SECTION_RULE_W)),
-            rcell([mt()], anchor="b", R=edge(WHITE)),
+            rcell([mt9("l")], R=edge("2E7D32", SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", L=edge("2E7D32", SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", R=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
-            rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
+            rcell([mt9()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE, HAIRLINE_W), B=edge(WHITE, HAIRLINE_W)),
             rcell([tx("Wharfage / Other Fees", color=WHITE)], fill="2E7D32", anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE, HAIRLINE_W)),
         ], h=IN(0)),
@@ -387,30 +400,30 @@ def paint_cost_matrix(out: list[str], ids: ShapeIds) -> None:
         ], h=IN(0)),
         # ── Variable Costs (gray shoreside / blue vessel); label spans 2 rows ──
         trow([
-            rcell([tx("Variable Costs ", align="l")], rowspan=2, R=edge(GRAY_3, SECTION_RULE_W)),
-            rcell([mt()], anchor="b", L=edge(GRAY_3, SECTION_RULE_W)),
-            rcell([mt()], anchor="b"),
+            rcell([tx("Variable Costs ", align="l")], anchor="t", rowspan=2, R=edge(GRAY_3, SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", L=edge(GRAY_3, SECTION_RULE_W)),
+            rcell([mt9()], anchor="b"),
             rcell([mt()], anchor="b", **PAD, T=edge(WHITE), B=edge(WHITE)),
             rcell([tx("Pilotage & Tugboats")], fill=GRAY_3, anchor="b", **PAD, R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
             rcell([tx("Terminal Handling & Stevedoring", color=WHITE)], fill=BLUE_5, anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
         ], h=IN(0)),
         trow([
-            rcell([mt()], anchor="b", L=edge(GRAY_3, SECTION_RULE_W)),
-            rcell([mt()], anchor="b"),
+            rcell([mt9()], anchor="b", L=edge(GRAY_3, SECTION_RULE_W)),
+            rcell([mt9()], anchor="b"),
             rcell([mt()], anchor="b", **PAD, T=edge(WHITE), B=edge(WHITE)),
             rcell([tx("Bunker fuel")], fill=GRAY_3, anchor="b", **PAD, R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
             rcell([tx("Wharfage & Other Fees", color=WHITE)], fill=BLUE_5, anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
         ], h=IN(0)),
         trow([
-            rcell([mt("l")], R=edge(GRAY_3, SECTION_RULE_W)),
-            rcell([mt()], anchor="b", L=edge(GRAY_3, SECTION_RULE_W)),
-            rcell([mt()], anchor="b"),
+            rcell([mt9("l")], R=edge(GRAY_3, SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", L=edge(GRAY_3, SECTION_RULE_W)),
+            rcell([mt9()], anchor="b"),
             rcell([mt()], anchor="b", **PAD, T=edge(WHITE), B=edge(WHITE)),
             rcell([tx("Dockage & Other Usage Fees", color=WHITE)], fill=BLUE_5, anchor="b", **PAD, R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
-            rcell([mt()], fill=GRAY_3, anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
+            rcell([mt9()], fill=GRAY_3, anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
         ], h=IN(0)),
         # ── spacer (Variable Costs → Operating Expenses) ──
         trow([
@@ -424,32 +437,32 @@ def paint_cost_matrix(out: list[str], ids: ShapeIds) -> None:
         ], h=IN(0)),
         # ── Operating Expenses (dark gray); label spans 8 rows. First row = Crew. ──
         trow([
-            rcell([tx("Operating Expenses", align="l")], rowspan=8, R=edge(OPEX_GRAY, SECTION_RULE_W)),
-            rcell([mt()], anchor="b", L=edge(OPEX_GRAY, SECTION_RULE_W)),
+            rcell([tx("Operating Expenses", align="l")], anchor="t", rowspan=8, R=edge(OPEX_GRAY, SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", L=edge(OPEX_GRAY, SECTION_RULE_W)),
             rcell([tx("Crew", color=WHITE)], fill=OPEX_GRAY, anchor="b", R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
+            rcell([mt9()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
-            rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
-            rcell([mt()], anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
+            rcell([mt9()], anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
         ], h=IN(0)),
         # the remaining 7 Opex line items are one uniform family (label in the Annual column):
         *[trow([
-            rcell([mt()], anchor="b", L=edge(OPEX_GRAY, SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", L=edge(OPEX_GRAY, SECTION_RULE_W)),
             rcell([tx(_label, color=WHITE)], fill=OPEX_GRAY, anchor="b", R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
+            rcell([mt9()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
-            rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
-            rcell([mt()], anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
+            rcell([mt9()], anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
         ], h=IN(0)) for _label in OPEX_ANNUAL_ITEMS],
         # ── final Opex row (outside the 8-row span): Other ──
         trow([
-            rcell([mt("l")], R=edge(OPEX_GRAY, SECTION_RULE_W)),
-            rcell([mt()], anchor="b", L=edge(OPEX_GRAY, SECTION_RULE_W)),
+            rcell([mt9("l")], R=edge(OPEX_GRAY, SECTION_RULE_W)),
+            rcell([mt9()], anchor="b", L=edge(OPEX_GRAY, SECTION_RULE_W)),
             rcell([tx("Other (e.g., Travel)", color=WHITE)], fill=OPEX_GRAY, anchor="b", R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
+            rcell([mt9()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
             rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
-            rcell([mt()], anchor="b", **PAD, L=edge(WHITE), R=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
-            rcell([mt()], anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
+            rcell([mt9()], anchor="b", **PAD, L=edge(WHITE), T=edge(WHITE), B=edge(WHITE)),
         ], h=IN(0)),
     ]))
 
@@ -459,12 +472,12 @@ def paint_normalization_callouts(out: list[str], ids: ShapeIds) -> None:
     # Normalization annotations retain explicit zero side padding where text
     # must span the full dashed region; anchor/paragraph align state vertical
     # and horizontal placement independently.
-    out.append(text_box(ids.next(), "Rectangle 19", IN(5.827), IN(3.316), IN(3.453), IN(1.318), [paragraph([run("To find Normalized Cost of Sales: Divide by ", size=PT(9), italic=True, color=BLACK, font=FONT), run("average cargo units per relevant voyage", size=PT(9), italic=True, color=BLACK, font=FONT), run(" (route-specific volume)", size=PT(9), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color=BLACK, dashed_line=True, anchor="b", l_ins=0, r_ins=0))   # 000000 black outline
+    out.append(text_box(ids.next(), "Rectangle 19", IN(5.827), IN(3.316), IN(3.453), IN(1.318), [paragraph([run("To find Normalized Cost of Sales: Divide by ", size=PT(9), italic=True, color=BLACK, font=FONT), run("average cargo units per relevant voyage", size=PT(9), italic=True, underline=True, color=BLACK, font=FONT), run(" (route-specific volume)", size=PT(9), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color=BLACK, dashed_line=True, anchor="b", l_ins=0, r_ins=0))   # 000000 black outline
     out.append(text_box(ids.next(), "Rectangle 20", IN(2.25), IN(4.354), IN(3.453), IN(2.616), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color=BLACK, dashed_line=True, anchor="b"))   # 000000 black outline
     out.append(connector(ids.next(), "Connector: Elbow 22", IN(9.28), IN(3.975), IN(0.225), IN(0.124), color=BLACK, width=12700, arrow=True, prst="bentConnector3"))   # 000000 black
     out.append(text_box(ids.next(), "Rectangle 25", IN(9.505), IN(3.963), IN(3.289), IN(0.273), [paragraph([run("Normalized (per unit) Variable Costs", size=PT(10), bold=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color=BLACK, dashed_line=True, anchor="ctr"))   # 000000 black outline
     out.append(text_box(ids.next(), "Rectangle 32", IN(9.53), IN(4.411), IN(3.289), IN(2.347), [paragraph([run("Normalized (per unit) Opex", size=PT(10), bold=True, color=WHITE, font=FONT)], align="ctr", line_spacing=100000)], fill=OPEX_GRAY, line_color=BLACK, dashed_line=True, anchor="ctr"))   # 808080 gray
-    out.append(text_box(ids.next(), "TextBox 41", IN(5.697), IN(5.674), IN(3.836), IN(1.313), [paragraph([run("To find Normalized Opex:", size=PT(9), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000), paragraph([run("Multiply ", size=PT(9), italic=True, color=BLACK, font=FONT), run("annual Opex", size=PT(9), italic=True, color=BLACK, font=FONT), run(" by ", size=PT(9), italic=True, color=BLACK, font=FONT), run("proportion of relevant days", size=PT(9), italic=True, color=BLACK, font=FONT), run(" to find annual Opex per route, then divide by ", size=PT(9), italic=True, color=BLACK, font=FONT), run("annual relevant voyages", size=PT(9), italic=True, color=BLACK, font=FONT), run(" to find Opex per voyage, then divide by ", size=PT(9), italic=True, color=BLACK, font=FONT), run("average cargo units per relevant voyage", size=PT(9), italic=True, color=BLACK, font=FONT), run(" (route-specific volume)", size=PT(9), italic=True, color=BLACK, font=FONT), line_break(), line_break(), run("To find proportion of relevant days: Days on route + days idle (loiter, maintenance, in port) attributable to a given route / 365 days", size=PT(9), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color="none", anchor="ctr", l_ins=0, r_ins=0))   # 000000 black
+    out.append(text_box(ids.next(), "TextBox 41", IN(5.697), IN(5.674), IN(3.836), IN(1.313), [paragraph([run("To find Normalized Opex:", size=PT(9), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000), paragraph([run("Multiply ", size=PT(9), italic=True, color=BLACK, font=FONT), run("annual Opex", size=PT(9), italic=True, underline=True, color=BLACK, font=FONT), run(" by ", size=PT(9), italic=True, color=BLACK, font=FONT), run("proportion of relevant days", size=PT(9), italic=True, underline=True, color=BLACK, font=FONT), run(" to find annual Opex per route, then divide by ", size=PT(9), italic=True, color=BLACK, font=FONT), run("annual relevant voyages", size=PT(9), italic=True, underline=True, color=BLACK, font=FONT), run(" to find Opex per voyage, then divide by ", size=PT(9), italic=True, color=BLACK, font=FONT), run("average cargo units per relevant voyage", size=PT(9), italic=True, underline=True, color=BLACK, font=FONT), run(" (route-specific volume)", size=PT(9), italic=True, color=BLACK, font=FONT), line_break(), line_break(), run("To find proportion of relevant days: Days on route + days idle (loiter, maintenance, in port) attributable to a given route / 365 days", size=PT(9), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=None, line_color="none", anchor="ctr", l_ins=0, r_ins=0))   # 000000 black
     out.append(connector(ids.next(), "Connector: Elbow 42", IN(5.703), IN(5.585), IN(3.827), IN(0.077), color=BLACK, width=12700, arrow=True, prst="bentConnector3", flip_v=True))   # 000000 black
 
 

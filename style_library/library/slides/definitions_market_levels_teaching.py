@@ -180,7 +180,7 @@ DEFINITION_ROWS: tuple[DefinitionRow, ...] = (
         "Total Addressable Market (TAM)",
         1.272,
         (
-            "Funding for missions that could be performed by unmanned platforms",
+            "Funding for missions that «could» be performed by unmanned platforms",
             "Portion of Total Funding for platforms allocated to specific missions",
         ),
         label_breaks=2,
@@ -190,7 +190,7 @@ DEFINITION_ROWS: tuple[DefinitionRow, ...] = (
         "Serviceable Addressable Market (SAM)",
         1.044,
         (
-            "Funding for missions performed by unmanned platforms (i.e., adoption)",
+            "Funding for missions «performed» by unmanned platforms (i.e., adoption)",
             "Portion of TAM that USVs can likely penetrate",
         ),
         separate_definition_paragraphs=True,
@@ -200,7 +200,7 @@ DEFINITION_ROWS: tuple[DefinitionRow, ...] = (
         "Company TCV",
         0.956,
         (
-            "Funding for Saronic unmanned platforms (i.e., market share)",
+            "Funding for «Saronic» unmanned platforms (i.e., market share)",
             "Share of SAM that Saronic can likely capture",
         ),
         blank_definition_paragraph_between=True,
@@ -209,26 +209,42 @@ DEFINITION_ROWS: tuple[DefinitionRow, ...] = (
 )
 
 
-def _r(text: str, *, size_pt: float = 14, bold: bool = False, color: str = BLACK):
-    return trun(text, size=PT(size_pt), bold=bold or None, color=color, font=FONT)
+def _r(text: str, *, size_pt: float = 14, bold: bool = False, underline: bool = False, color: str = BLACK):
+    return trun(text, size=PT(size_pt), bold=bold or None, underline=underline or None, color=color, font=FONT)
+
+
+def _def_runs(text: str) -> list[str]:
+    """Split a definition string into runs on «…» markers, underlining the marked
+    keyword (the source emphasises one term per definition with an underline)."""
+    runs: list[str] = []
+    rest = text
+    while "«" in rest:
+        pre, _, after = rest.partition("«")
+        word, _, rest = after.partition("»")
+        if pre:
+            runs.append(_r(pre))
+        runs.append(_r(word, underline=True))
+    if rest:
+        runs.append(_r(rest))
+    return runs
 
 
 def _label_cell(row: DefinitionRow):
     # TAM keeps two trailing line breaks from the source to align with its taller definition cell.
     runs = [_r(row.level)] + [tbreak() for _ in range(row.label_breaks)]
-    return rcell([tpara(runs, mar_l=0, indent=0)], **TABLE_PAD, T=edge(DK, row.top_rule_width), **({} if row.bottom_rule_width is None else {"B": edge(DK, row.bottom_rule_width)}))
+    return rcell([tpara(runs, mar_l=0, indent=0)], anchor="t", **TABLE_PAD, T=edge(DK, row.top_rule_width), **({} if row.bottom_rule_width is None else {"B": edge(DK, row.bottom_rule_width)}))
 
 
 def _definition_cell(row: DefinitionRow):
     if row.separate_definition_paragraphs:
-        paras = [tpara([_r(row.definition_parts[0]), tbreak()]), tpara([_r(row.definition_parts[1])])]
+        paras = [tpara([*_def_runs(row.definition_parts[0]), tbreak()]), tpara(_def_runs(row.definition_parts[1]))]
     elif row.blank_definition_paragraph_between:
-        paras = [tpara([_r(row.definition_parts[0])]), tpara([]), tpara([_r(row.definition_parts[1])])]
+        paras = [tpara(_def_runs(row.definition_parts[0])), tpara([], end_size=PT(14)), tpara(_def_runs(row.definition_parts[1]))]
     elif len(row.definition_parts) == 2:
-        paras = [tpara([_r(row.definition_parts[0]), tbreak(), tbreak(), _r(row.definition_parts[1])])]
+        paras = [tpara([*_def_runs(row.definition_parts[0]), tbreak(), tbreak(), *_def_runs(row.definition_parts[1])])]
     else:
-        paras = [tpara([_r(row.definition_parts[0])])]
-    return rcell(paras, **TABLE_PAD, T=edge(DK, row.top_rule_width), **({} if row.bottom_rule_width is None else {"B": edge(DK, row.bottom_rule_width)}))
+        paras = [tpara(_def_runs(row.definition_parts[0]))]
+    return rcell(paras, anchor="t", **TABLE_PAD, T=edge(DK, row.top_rule_width), **({} if row.bottom_rule_width is None else {"B": edge(DK, row.bottom_rule_width)}))
 
 
 TABLE_PAD = dict(l_ins=60960, r_ins=60960, t_ins=60960, b_ins=60960)

@@ -288,9 +288,11 @@ def bullet_para(text: str, *, color: str = BLACK) -> TableParagraph:
 
 
 def empty_para() -> TableParagraph:
-    """Runless spacer paragraph; PT1 end size keeps blank category cells compact."""
+    """Runless spacer paragraph for the blank category cells; PT12 end size matches
+    the source (the row height is driven by the methodology bullets, so this is inert
+    but keeps the cell byte-identical to the converted original)."""
 
-    return TableParagraph(tuple(), mar_l=0, indent=0, end_size_pt=1)
+    return TableParagraph(tuple(), mar_l=0, indent=0, end_size_pt=12)
 
 
 def _table_run_xml(spec: TableRun) -> dict:

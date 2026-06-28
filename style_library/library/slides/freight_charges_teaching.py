@@ -15,7 +15,7 @@ TEACHES
   - manual on-bar dollar labels over a percentage-normalized stacked chart
   - separate legend/category labels when the chart has a single category
   - status icons and dashed leader lines tied to an explanatory table
-  - off-house status note, footnote, and Preliminary chip preservation
+  - off-house status note, hyperlinked source note, footnote, and Preliminary chip preservation
 
 TEXT-FIT PRECEDENT
   chart_component_labels:
@@ -46,7 +46,7 @@ FIDELITY NOTE
   This is a practical factory-native rebuild, not a byte-identical chart-template
   port. It preserves the visible chart semantics, percentage-normalized stack,
   manual $K labels, total label, route label, legend, grouping brackets, table,
-  custom status icons, leader lines, source note, and Preliminary chip. Minor
+  custom status icons, leader lines, hyperlinked source note, and Preliminary chip. Minor
   differences can remain in PowerPoint's internal chart XML ordering versus the
   original chart part.
 """
@@ -172,6 +172,9 @@ CHART_STYLE = {
     "seg_line_width": SOURCE_SEGMENT_LINE_WIDTH,
     "axis_line_color": BLACK,
     "axis_line_width": SOURCE_AXIS_LINE_WIDTH,
+    "value_axis_line_color": "none",      # audit-fix: source hides the value (y) axis; keep only the category spine
+    "cat_axis_crosses": "min",            # source chart part uses crosses="min" on both axes
+    "value_axis_crosses": "min",
     "value_axis_min": SOURCE_VALUE_AXIS_MIN,
     "value_axis_max": SOURCE_VALUE_AXIS_MAX,
     "plot_layout": dict(SOURCE_PLOT_LAYOUT),
@@ -179,6 +182,14 @@ CHART_STYLE = {
 }
 
 CHARTS = [column_chart(**CHART_STYLE)]
+
+# Source-line external links. The native chart takes rId2, so source-note links
+# start at rId3 and mirror the source-faithful freight_charges.py module.
+HYPERLINKS = [
+    {"rId": "rId3", "url": "https://www.pashahawaiitariffs.com/tariffs/rates#0200-00-0500/false/"},
+    {"rId": "rId4", "url": "https://www.alohafreight.com/hawaii-fsc-decrease-09-14-25"},
+    {"rId": "rId5", "url": "https://hidot.hawaii.gov/harbors/files/2025/04/Cargo-Wharfage-Tariff-Rates-Effective-July-1-2025-June-30-2026.pdf"},
+]
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -199,6 +210,7 @@ TEACHING_METADATA = {
         "manual legend labels for one-bar composition charts",
         "custom geometry status icons in an explanatory table",
         "dashed leader lines from chart components to table rows",
+        "hyperlinked source-note runs copied from the source module",
     ],
     "source_module": "freight_charges.py",
     "rebuild_strategy": "replace styled_chart template with native column_chart",
@@ -478,20 +490,27 @@ def _body() -> str:
     for _kind, _y, _fill in _STATUS_ICONS:
         _name, _geom = _STATUS_GEOMS[_kind]
         out.append(custom_geometry(n(), _name, _GLYPH_X, IN(_y), _GLYPH_SZ, _GLYPH_SZ, _geom, fill=_fill))
-    for _x, _y, _cx, _cy, _fill, _lc, _t in _GROUP_CAPTIONS:
-        out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr"))
+
+    # Source paint order matters here. The lower vessel-operations caption does
+    # not overlap the gray bracket, but "Shoreside charges" must be drawn after
+    # the bracket and leaders so the white label sits in front of the exterior
+    # border line.
+    _x, _y, _cx, _cy, _fill, _lc, _t = _GROUP_CAPTIONS[0]
+    out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr"))
+    out.append(text_box(n(), "Rectangle 326", IN(0.439), IN(4.009), IN(1.965), IN(1.264), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color="969696", anchor="ctr"))   # 969696 gray outline
     for _x, _y, _cx, _cy, _fill, _lc, _t in _ANNOTATION_BOXES:
         out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr"))
-    out.append(text_box(n(), "Rectangle 326", IN(0.439), IN(4.009), IN(1.965), IN(1.264), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color="969696", anchor="ctr"))   # 969696 gray outline
     out.append("")
-    out.append(text_box(n(), "Rectangle 407", IN(0.495), IN(6.681), IN(12.367), IN(0.317), [paragraph([run("Note: (1) Matson and Pasha charge a Fuel Surcharge of 16.5% as of September 2025; Basic Ocean Rates largely derived from Pasha Hawaii, whereas Terminal Charges are specific to Matson", size=PT(8), color=BLACK, font=FONT), line_break(), run("Source: ", size=PT(8), color=BLACK, font=FONT), run("Pasha Hawaii", size=PT(8), color=BLACK, font=FONT), run("; ", size=PT(8), color=BLACK, font=FONT), run("Aloha Freight", size=PT(8), color=BLACK, font=FONT), run("; ", size=PT(8), color=BLACK, font=FONT), run("Hawaii Department of Transportation", size=PT(8), color=BLACK, font=FONT)], line_spacing=100000)], fill=None, line_color="none"))   # 000000 black
+    out.append(text_box(n(), "Rectangle 407", IN(0.495), IN(6.681), IN(12.367), IN(0.317), [paragraph([run("Note: (1) Matson and Pasha charge a Fuel Surcharge of 16.5% as of September 2025; Basic Ocean Rates largely derived from Pasha Hawaii, whereas Terminal Charges are specific to Matson", size=PT(8), color=BLACK, font=FONT), line_break(), run("Source: ", size=PT(8), color=BLACK, font=FONT), run("Pasha Hawaii", size=PT(8), color=BLACK, hyperlink_rid="rId3", font=FONT), run("; ", size=PT(8), color=BLACK, font=FONT), run("Aloha Freight", size=PT(8), color=BLACK, hyperlink_rid="rId4", font=FONT), run("; ", size=PT(8), color=BLACK, font=FONT), run("Hawaii Department of Transportation", size=PT(8), color=BLACK, hyperlink_rid="rId5", font=FONT)], line_spacing=100000)], fill=None, line_color="none"))   # 000000 black
     out.append(text_box(n(), "Rectangle 453", IN(6.153), IN(4.094), IN(6.643), IN(1.959), [paragraph([], align="ctr", line_spacing=100000)], fill=None, line_color="FB6B3C", line_width=19050, anchor="ctr"))   # FB6B3C orange outline
     out.append(text_box(n(), "Rectangle 465", IN(7.548), IN(5.909), IN(5.054), IN(0.293), [paragraph([run("Directly related to vessel operations; percentage varies based on basic ocean rate, fuel surcharge, discounts, and other factors ", size=PT(10), bold=True, color="FB6B3C", font=FONT)], align="ctr", line_spacing=100000)], fill=WHITE, line_color="none", anchor="ctr"))   # FFFFFF white
-    out.append(connector(n(), "Straight Arrow Connector 597", _LEADER_X, IN(4.052), IN(2.162), IN(0.696), color="808080", width=12700, dashed=True))   # 808080 gray
-    out.append(connector(n(), "Straight Arrow Connector 637", _LEADER_X, IN(3.691), IN(2.171), IN(0.426), color="808080", width=12700, dashed=True))   # 808080 gray
-    out.append(connector(n(), "Straight Arrow Connector 640", _LEADER_X, IN(2.729), IN(2.162), IN(0.704), color="808080", width=12700, dashed=True))   # 808080 gray
-    out.append(connector(n(), "Straight Arrow Connector 646", _LEADER_X, IN(2.528), IN(2.171), IN(0.308), color="808080", width=12700, dashed=True))   # 808080 gray
-    out.append(connector(n(), "Straight Arrow Connector 471", _LEADER_X, IN(2.2), IN(2.135), IN(0.3), color="808080", width=12700, dashed=True, flip_v=True))   # 808080 gray
+    out.append(connector(n(), "Straight Arrow Connector 597", _LEADER_X, IN(4.052), IN(2.162), IN(0.696), color="808080", width=12700, dash="dash"))   # 808080 gray
+    out.append(connector(n(), "Straight Arrow Connector 637", _LEADER_X, IN(3.691), IN(2.171), IN(0.426), color="808080", width=12700, dash="dash"))   # 808080 gray
+    out.append(connector(n(), "Straight Arrow Connector 640", _LEADER_X, IN(2.729), IN(2.162), IN(0.704), color="808080", width=12700, dash="dash"))   # 808080 gray
+    out.append(connector(n(), "Straight Arrow Connector 646", _LEADER_X, IN(2.528), IN(2.171), IN(0.308), color="808080", width=12700, dash="dash"))   # 808080 gray
+    out.append(connector(n(), "Straight Arrow Connector 471", _LEADER_X, IN(2.2), IN(2.135), IN(0.3), color="808080", width=12700, dash="dash", flip_v=True))   # 808080 gray
+    _x, _y, _cx, _cy, _fill, _lc, _t = _GROUP_CAPTIONS[1]
+    out.append(text_box(n(), "Label", IN(_x), IN(_y), IN(_cx), IN(_cy), [paragraph([run(_t, size=PT(10), italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill=_fill, line_color=_lc, anchor="ctr"))
     out.append(text_box(n(), "Rectangle 36", IN(0.53), IN(1.447), IN(3.2), IN(0.244), [paragraph([run("Spot Rate from CONUS", size=PT(11), bold=True, italic=True, color=BLACK, font=FONT)], align="ctr", line_spacing=100000)], fill="CEDDEC", line_color="none", anchor="ctr"))   # CEDDEC pale blue
     return "".join(out)
 

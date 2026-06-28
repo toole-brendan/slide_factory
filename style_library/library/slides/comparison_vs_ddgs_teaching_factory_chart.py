@@ -45,8 +45,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from deck_core.authoring import (
-    Chrome, IN, PT, body_slide, column_chart, graphic_frame, line_break, paragraph,
-    picture, run, table, tbreak, tcell, tcell_rich, text_box, tpara, trow, trun,
+    Chrome, IN, Link, PT, Sources, body_slide, column_chart, graphic_frame, line_break,
+    paragraph, picture, run, table, tbreak, tcell, tcell_rich, text_box, tpara, trow, trun,
 )
 
 
@@ -254,6 +254,7 @@ class ManualLabel:
     anchor: str = "ctr"
     wrap: str = "none"
     inset_x: int = 17_463
+    sup: str = ""   # trailing superscript footnote marker (e.g. "1"), baseline-raised
 
 
 class ShapeIds:
@@ -311,7 +312,8 @@ CHART_CALLOUT_LABELS: tuple[ManualLabel, ...] = (
     ManualLabel(
         "DDGCategoryLabel",
         Box(1.446, 6.233, 1.943, 0.167),
-        ("Arleigh Burke-class destroyers1",),
+        ("Arleigh Burke-class destroyers",),
+        sup="1",
         inset_x=0,
     ),
     ManualLabel(
@@ -323,7 +325,8 @@ CHART_CALLOUT_LABELS: tuple[ManualLabel, ...] = (
     ManualLabel(
         "MarauderCategoryLabel",
         Box(4.260, 6.233, 1.618, 0.167),
-        ("Golden Dome Marauders2",),
+        ("Golden Dome Marauders",),
+        sup="2",
         inset_x=0,
     ),
     ManualLabel("DDGTotalLabel", Box(2.188, 2.736, 0.458, 0.167), ("10,800",), anchor="b"),
@@ -336,15 +339,29 @@ CHART_CALLOUT_LABELS: tuple[ManualLabel, ...] = (
     ),
 )
 
-NOTE_SOURCE_TEXT = (
-    "Note: (1) Flight III destroyers; Assumes $2.7B unit price based on OBBBA "
+# Source line with external hyperlinks. The chart is rId2 and the two logos rId3/
+# rId4, so the source links start at rId5; the Sources band wires them via Link().
+HYPERLINKS = [
+    {"rId": "rId5", "url": "https://www.congress.gov/crs-product/RL32109"},                                                                                   # Congressional Research Service
+    {"rId": "rId6", "url": "https://www.congress.gov/bill/119th-congress/house-bill/1/text"},                                                                 # OBBBA text
+    {"rId": "rId7", "url": "https://www.lockheedmartin.com/content/dam/lockheed-martin/rms/documents/naval-launchers-and-munitions/Mk70_Product_Card.pdf"},   # MK 70 Product Card
+    {"rId": "rId8", "url": "https://www.lockheedmartin.com/content/dam/lockheed-martin/rms/documents/naval-launchers-and-munitions/Mk_41_Product_Card_Update_24_08549.pdf"},  # MK 41 Product Card
+]
+
+NOTE_SOURCE_TEXT = Sources(
+    note="(1) Flight III destroyers; Assumes $2.7B unit price based on OBBBA "
     "($5.4B for 2x), CRS estimate ($2.7B apiece), and FY26 Shipbuilding and "
     "Conversion, Navy Justification Book Exhibit P-5c, Ship Cost Analysis ($5.5B "
     "for 2x in FY24, $7.86B for 3x in FY25); (2) Marauder priced at $42M / unit "
     "excluding launcher costs; (3) 4x SM-3 or SM-6 per MK-70, with 4x MK-70 per "
-    "Marauder for total of 16x SM-3 or SM-6 per Marauder | Source: Congressional "
-    "Research Service; OBBBA text; FY26 Budget Estimate; Lockheed Martin MK 70 "
-    "Product Card; Lockheed Martin MK 41 Product Card"
+    "Marauder for total of 16x SM-3 or SM-6 per Marauder",
+    source=(
+        Link("Congressional Research Service", "rId5"),
+        Link("OBBBA text", "rId6"),
+        "FY26 Budget Estimate",
+        Link("Lockheed Martin MK 70 Product Card", "rId7"),
+        Link("Lockheed Martin MK 41 Product Card", "rId8"),
+    ),
 )
 
 
@@ -372,22 +389,28 @@ def table_run(
     size_pt: float = 10,
     bold: bool = False,
     italic: bool = False,
+    underline: bool = False,
     color: str = BLACK,
+    baseline: int | None = None,
 ) -> str:
     return trun(
         text,
         size=PT(size_pt),
         bold=bold or None,
         italic=italic or None,
+        underline=underline or None,
         color=color,
         font=FONT,
+        baseline=baseline,
     )
 
 
-def empty_para(align: str = "ctr") -> str:
-    """An empty table paragraph: spacing/border only, no runs."""
+def empty_para(align: str = "ctr", end_size_pt: float = 1) -> str:
+    """An empty table paragraph: spacing/border only, no runs. end_size_pt sets its
+    <a:endParaRPr> size so a blank spacer row collapses to the source height instead
+    of the renderer's default — PT1 for a tight spacer, PT12 for a body-height gap."""
 
-    return tpara([], align=align, mar_l=0, indent=0)
+    return tpara([], align=align, mar_l=0, indent=0, end_size=PT(end_size_pt))
 
 
 def cell(
@@ -469,6 +492,7 @@ def _r(
     bold: bool = False,
     italic: bool = False,
     color: str = BLACK,
+    baseline: int | None = None,
 ) -> str:
     return run(
         text,
@@ -477,6 +501,7 @@ def _r(
         italic=italic or None,
         color=color,
         font=FONT,
+        baseline=baseline,
     )
 
 
@@ -498,6 +523,8 @@ def _manual_label_para(label: ManualLabel) -> str:
         if idx:
             runs.append(line_break())
         runs.append(_r(line, bold=label.bold, italic=label.italic, color=label.color))
+    if label.sup:
+        runs.append(_r(label.sup, bold=label.bold, color=label.color, baseline=30000))
     return _tight_para(runs, align=label.align)
 
 
@@ -646,7 +673,7 @@ def paint_capability_comparison_table(out: list[str], ids: ShapeIds) -> None:
                                         table_run("class", size_pt=12, bold=True, color=WHITE),
                                         table_run(" ", size_pt=12, bold=True, italic=True, color=WHITE),
                                         table_run("destroyers", size_pt=12, bold=True, color=WHITE),
-                                        table_run("1", size_pt=12, bold=True, color=WHITE),
+                                        table_run("1", size_pt=12, bold=True, baseline=30000, color=WHITE),
                                     ],
                                     align="ctr",
                                 )
@@ -660,7 +687,7 @@ def paint_capability_comparison_table(out: list[str], ids: ShapeIds) -> None:
                                 tpara(
                                     [
                                         table_run("240x Marauders", size_pt=12, bold=True, color=WHITE),
-                                        table_run("3", size_pt=12, bold=True, color=WHITE),
+                                        table_run("3", size_pt=12, bold=True, baseline=30000, color=WHITE),
                                     ],
                                     align="ctr",
                                 )
@@ -708,7 +735,7 @@ def paint_capability_comparison_table(out: list[str], ids: ShapeIds) -> None:
                             rowspan=5,
                             **PAD,
                         ),
-                        rich_cell([empty_para()], **PAD),
+                        rich_cell([empty_para(end_size_pt=12)], **PAD),
                         rich_cell(
                             [
                                 tpara(
@@ -718,9 +745,9 @@ def paint_capability_comparison_table(out: list[str], ids: ShapeIds) -> None:
                                         table_run("SM-3 / SM-6", size_pt=12),
                                         tbreak(),
                                         tbreak(),
-                                        table_run("10x+ ", size_pt=12),
-                                        table_run("Arleigh Burke", size_pt=12, italic=True),
-                                        table_run(" capacity", size_pt=12),
+                                        table_run("10x+ ", size_pt=12, underline=True),
+                                        table_run("Arleigh Burke", size_pt=12, italic=True, underline=True),
+                                        table_run(" capacity", size_pt=12, underline=True),
                                     ],
                                     align="ctr",
                                     mar_l=0,
@@ -734,7 +761,7 @@ def paint_capability_comparison_table(out: list[str], ids: ShapeIds) -> None:
                     ],
                     h=IN(0.732),
                 ),
-                trow([rich_cell([empty_para()], **PAD)], h=IN(0.366)),
+                trow([rich_cell([empty_para(end_size_pt=12)], **PAD)], h=IN(0.366)),
                 trow(
                     [
                         rich_cell(
@@ -744,8 +771,8 @@ def paint_capability_comparison_table(out: list[str], ids: ShapeIds) -> None:
                     ],
                     h=IN(0.732),
                 ),
-                trow([rich_cell([empty_para()], **PAD)], h=IN(0.366)),
-                trow([rich_cell([empty_para()], **PAD)], h=IN(1.013)),
+                trow([rich_cell([empty_para(end_size_pt=12)], **PAD)], h=IN(0.366)),
+                trow([rich_cell([empty_para(end_size_pt=12)], **PAD)], h=IN(1.013)),
             ],
         )
     )
@@ -780,6 +807,7 @@ CHROME = Chrome(
     takeaway="Total GD MR procurement cost is roughly the same as four Arleigh "
                 "Burke-class destroyers while delivering 10x+ the interceptor capacity",
     preliminary=False,
+    title_cx=IN(11.1),   # source narrows the title box so the takeaway clears the top-right DoD/MDA logos
     sources=NOTE_SOURCE_TEXT,
 )
 

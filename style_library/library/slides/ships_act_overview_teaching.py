@@ -93,6 +93,7 @@ class RunSpec:
     bold: bool = False
     italic: bool = False
     break_before: bool = False
+    hyperlink_rid: str | None = None   # slide-rels rId from HYPERLINKS, or None
 
 
 @dataclass(frozen=True)
@@ -188,6 +189,7 @@ def _p(runs: tuple[RunSpec, ...], *, align: str | None = None, mar_l: int | None
             bold=spec.bold or None,
             italic=spec.italic or None,
             font=FONT,
+            hyperlink_rid=spec.hyperlink_rid,
         ))
     kwargs = {"line_spacing": 100000}
     if align is not None:
@@ -286,6 +288,12 @@ IMAGES = [
     {"rId": "rId3", "file": "image7_f6006d1c.png"},
 ]
 
+# External hyperlink on the crew-requirement callout. Two images take rId2/rId3,
+# so the link continues at rId4 (CREW_CALLOUT's "46 USC 8103" run references it).
+HYPERLINKS = [
+    {"rId": "rId4", "url": "https://www.law.cornell.edu/uscode/text/46/8103"},
+]
+
 TEACHING_METADATA = {
     "role": "policy_flow / funding_and_subsidy_system",
     "use_when": "A policy mechanism turns fees or penalties into subsidy-backed demand.",
@@ -354,7 +362,7 @@ SCF_TARGET = TextSpec("scf_target", "SCFTarget", Box(8.747, 2.334, 4.088, 0.819)
 TAX_CREDIT_NOTE = TextSpec("policy_note", "TaxCreditNote", Box(9.754, 1.418, 3.080, 0.595), (RunSpec("Vessel and Shipyard Investment Tax Credits (40% and 25%, respectively) from Building Ships in America Act not shown", PT(10), BLACK, italic=True),), None, BLACK, 3175, "ctr")
 ROW_MARKER = TextSpec("row_marker", "PlusRowMarker", Box(0.174, 6.652, 0.827, 0.321), (RunSpec("+ ROW", PT(10), BLACK, bold=True),), None, NO_BORDER, 3175, "ctr")
 READING_NOTE = TextSpec("reading_note", "BottomToTopNote", Box(0.139, 1.120, 3.080, 0.245), (RunSpec("Chart reads from bottom to top", PT(10), BLACK, italic=True),), None, NO_BORDER, 3175, None)
-CREW_CALLOUT = TextSpec("policy_callout", "CrewRequirementCallout", Box(4.610, 2.173, 1.958, 0.510), (RunSpec("US crew required to participate in SCF; SHIPS Act states vessels will be crewed IAW ", PT(8), BLACK, italic=True), RunSpec("46 USC 8103", PT(8), BLACK, italic=True), RunSpec(" ", PT(8), BLACK, italic=True)), None, BLACK, 3175, "ctr", prst="wedgeRectCallout", geom_adj={"adj1": "val 41650", "adj2": "val 74944"})
+CREW_CALLOUT = TextSpec("policy_callout", "CrewRequirementCallout", Box(4.610, 2.173, 1.958, 0.510), (RunSpec("US crew required to participate in SCF; SHIPS Act states vessels will be crewed IAW ", PT(8), BLACK, italic=True), RunSpec("46 USC 8103", PT(8), BLACK, italic=True, hyperlink_rid="rId4"), RunSpec(" ", PT(8), BLACK, italic=True)), None, BLACK, 3175, "ctr", prst="wedgeRectCallout", geom_adj={"adj1": "val 41650", "adj2": "val 74944"})
 
 FUNDING_CONNECTORS: tuple[ConnectorSpec, ...] = (
     ConnectorSpec("funding_route", "Connector: Elbow 43", Box(4.437, 5.344, 0.565, 2.051), BLACK, 12700, True, "bentConnector3", flip_h=True, flip_v=True, rot=5400000),
@@ -407,14 +415,28 @@ def paint_funding_pool_and_routes(out: list[str], n) -> None:
 
 
 def paint_edge_labels_and_policy_notes(out: list[str], n) -> None:
-    for label in EDGE_LABELS:
-        _draw_text(out, n, label)
-    for route in POLICY_CONNECTORS[5:9]:
-        _draw_connector(out, n, route)
+    # Paint order IS the lesson here. Each white transaction-verb box is drawn
+    # immediately AFTER the connector it sits on, so the label overlays (breaks)
+    # the line behind its text — exactly as the source-faithful module does it.
+    # The previous version painted every verb first and the routes afterward, which
+    # let connectors 137/147/189/193/204 run over "Placed into service", "Buys",
+    # and the three "Pays" labels.
+    _draw_text(out, n, EDGE_LABELS[0])              # Sells (its route is already painted)
+    _draw_text(out, n, EDGE_LABELS[1])              # Paid to US vessel owner / operators ...
+    _draw_text(out, n, EDGE_LABELS[2])              # Disburses
+    _draw_connector(out, n, POLICY_CONNECTORS[5])   # Elbow 137 — SCF "placed into service" route
+    _draw_text(out, n, EDGE_LABELS[3])              # Placed into service
+    _draw_connector(out, n, POLICY_CONNECTORS[6])   # Straight 147 — Buys route
+    _draw_text(out, n, EDGE_LABELS[4])              # Buys
     _draw_text(out, n, TAX_CREDIT_NOTE)
-    _draw_text(out, n, MONEY_BANDS[2])
-    for route in POLICY_CONNECTORS[9:]:
-        _draw_connector(out, n, route)
+    _draw_connector(out, n, POLICY_CONNECTORS[7])   # Straight 189 — penalty route
+    _draw_text(out, n, EDGE_LABELS[5])              # Pays (penalties)
+    _draw_connector(out, n, POLICY_CONNECTORS[8])   # Straight 193 — tonnage-tax route
+    _draw_text(out, n, EDGE_LABELS[6])              # Pays (tonnage taxes)
+    _draw_text(out, n, MONEY_BANDS[2])              # Cargo Fees band
+    _draw_connector(out, n, POLICY_CONNECTORS[9])   # Elbow 204 — cargo-fee route
+    _draw_text(out, n, EDGE_LABELS[7])              # Pays (cargo fees)
+    _draw_connector(out, n, POLICY_CONNECTORS[10])  # Elbow 208 — cargo-fee return route
     _draw_text(out, n, ROW_MARKER)
     _draw_text(out, n, READING_NOTE)
     _draw_text(out, n, CREW_CALLOUT)

@@ -424,7 +424,7 @@ def paint_approach_header(out: list[str], n) -> None:
 def paint_formula_output_and_chart_arrows(out: list[str], n) -> None:
     _draw_formula_box(out, n, FORMULA_BOXES[2])
     for b in DASHED_EXERCISE_ARROWS:
-        out.append(connector(n(), "DashedExerciseArrow", *b.emu(), color=DK, width=3175, dashed=True, arrow=True))
+        out.append(connector(n(), "DashedExerciseArrow", *b.emu(), color=DK, width=3175, dash="lgDash"))
 
 
 def paint_worked_chart(out: list[str], n) -> None:

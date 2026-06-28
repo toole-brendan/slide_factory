@@ -5,14 +5,14 @@ ROLE
 
 USE WHEN
   A slide needs one dominant production-ramp chart, a phase legend, cumulative
-  callout rings, a manually drawn capacity reference line, and forecast-assumption
+  callout rings, a native capacity reference line, and forecast-assumption
   text blocks below the chart.
 
 TEACHES
-  - fully declarative native stacked-column charting with column_chart(mode="stacked")
+  - fully declarative native combo charting with combo_chart(mode="stacked")
   - point-level series coloring to model phase transitions inside a stacked bar
+  - real native line-overlay series for Franklin capacity, stored in chart XML/workbook
   - manual category ticks, in-year labels, cumulative labels, and ring callouts
-  - manually overlaid solid reference line when the source was a combo chart
   - two-panel chart/backing geometry that doubles as assumptions-block background
   - off-house Preliminary and Note placement preserved when it is intentionally
     part of the source composition
@@ -37,33 +37,32 @@ TEXT-FIT PRECEDENT
 SOURCE NOTE
   Teaching rewrite of the source-faithful `production_outlook_separate.py` module.
   This version intentionally replaces the bundled styled_chart template with a
-  native `column_chart(mode="stacked", ...)` spec for the production-start bars.
-  The source chart was a combo-style exhibit: stacked starts plus a Franklin
-  capacity reference line. The bar stack is now native chart data; the capacity
-  line is an explicit, editable set of solid connectors over the chart,
-  matching the source line series.
+  native `combo_chart(mode="stacked", ...)` spec: the production-start bars are
+  stacked columns and the Franklin capacity reference is a real native line
+  overlay series in the same chart part and embedded workbook.
 
 FIDELITY NOTE
   This is a practical factory rebuild, not a byte-identical chart-template port.
   It preserves the visible chart semantics, the phase-colored stacked starts, the
-  manual axis/year labels, cumulative rings, labels, assumption blocks, logos,
-  footnote, and off-house Preliminary chip. The source workbook rows and key XML
-  style values are carried explicitly in the module as Python constants. Tiny
-  differences can remain in native chart XML ordering and connector interpolation
-  versus the source combo chart part.
+  real Franklin capacity line series, manual axis/year labels, cumulative rings,
+  labels, assumption blocks, logos, footnote, and off-house Preliminary chip. The
+  source workbook rows and key XML style values are carried explicitly in the
+  module as Python constants. Tiny differences can remain in native chart XML
+  ordering versus the source combo chart part.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 from deck_core.authoring import (
-    Chrome, IN, PT, body_slide, column_chart, connector, graphic_frame, paragraph, picture,
+    Chrome, IN, PT, body_slide, combo_chart, connector, graphic_frame, paragraph, picture,
     run, text_box,
 )
 
 
 # House colors (hex lives in the module; no shared palette).
 BLACK = "000000"
+WHITE = "FFFFFF"
 PRELIM = "FFFFCC"
 GRAY_1 = "F2F2F2"
 GRAY_2 = "D9D9D9"
@@ -80,8 +79,8 @@ IMAGES = [
 
 # Fully declarative chart data. The source chart used two stacked bar series with
 # point-level colors to split years that straddle phases; a third series was the
-# Franklin capacity line. The native factory rebuild keeps the bar stack native
-# and draws the capacity line manually so the teaching module stays readable.
+# Franklin capacity line. The native factory rebuild keeps all three series in
+# the chart: two stacked column layers plus a real line overlay.
 CHART_CATEGORIES: tuple[str, ...] = tuple(f"FY{year}" for year in range(26, 36))
 
 PHASE_1 = "9DB1CF"
@@ -147,8 +146,8 @@ PRODUCTION_START_SERIES: tuple[dict, ...] = (
 )
 
 # Kept as a readable data mirror for agents/tools that expect the converted-slide
-# data-dict shape. CHARTS consumes the two bar layers; the capacity series is
-# rendered as editable connector geometry by paint_capacity_reference_line().
+# data-dict shape. CHARTS consumes all three series: two stacked column layers and
+# the Franklin capacity line overlay.
 _CHART0_DATA = {
     "categories": CHART_CATEGORIES,
     "series": [
@@ -158,10 +157,21 @@ _CHART0_DATA = {
     ],
 }
 
+FRANKLIN_CAPACITY_LINE_SERIES = {
+    "name": "Franklin capacity (vessel starts)",
+    "values": FRANKLIN_CAPACITY_VALUES,
+    "color": FRANKLIN_CAPACITY_COLOR,
+    "width": FRANKLIN_CAPACITY_LINE_WIDTH,
+    "marker": "none",
+    "smooth": False,
+}
+
 CHART_STYLE = {
     "mode": "stacked",
     "categories": list(CHART_CATEGORIES),
     "series": [dict(series) for series in PRODUCTION_START_SERIES],
+    "line_overlay": [dict(FRANKLIN_CAPACITY_LINE_SERIES)],
+    "line_overlay_axis": "same",     # same unit/scale as starts; avoids duplicate axes
     "show_legend": False,
     "show_cat_labels": False,
     "show_value_axis_labels": True,
@@ -178,12 +188,14 @@ CHART_STYLE = {
     "axis_line_width": 9525,
     "value_axis_min": SOURCE_VALUE_AXIS_MIN,
     "value_axis_max": SOURCE_VALUE_AXIS_MAX,
+    "cat_axis_crosses": "min",
+    "value_axis_crosses": "min",
     "value_axis_major_unit": SOURCE_VALUE_AXIS_MAJOR_UNIT,
     "plot_layout": dict(SOURCE_PLOT_LAYOUT),
     "cat_header": "Fiscal year",
 }
 
-CHARTS = [column_chart(**CHART_STYLE)]
+CHARTS = [combo_chart(**CHART_STYLE)]
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -197,9 +209,9 @@ TEACHING_METADATA = {
         "assumption blocks under the exhibit."
     ),
     "teaches": [
-        "native stacked column chart",
+        "native stacked column + line combo chart",
         "data-point colors for phase transitions",
-        "manual solid combo-chart reference line",
+        "real line_overlay series for Franklin capacity",
         "manual category ticks",
         "manualized source chart data labels",
         "manual cumulative data labels",
@@ -207,6 +219,17 @@ TEACHING_METADATA = {
         "two-panel forecast assumptions",
         "off-house preliminary chip and footnote preservation",
     ],
+}
+
+NATIVE_CHART_CONTRACT = {
+    "factory": "combo_chart(mode='stacked') with line_overlay_axis='same'",
+    "series_order": (
+        "Production starts lower layer — stacked column series",
+        "Production starts upper layer — stacked column series",
+        "Franklin capacity (vessel starts) — native line_overlay series on the same 0-70 axis",
+    ),
+    "runtime_assets": "none for chart data; combo_chart emits a native chart part and embedded .xlsx",
+    "manual_overlays": "manual year ticks, source data labels, cumulative rings, legend labels, logos, and notes",
 }
 
 TEXT_FIT = {
@@ -276,6 +299,7 @@ class YearTick:
 class AnnualStartLabel:
     box: Box
     label: str
+    color: str = BLACK
 
 
 @dataclass(frozen=True)
@@ -285,11 +309,6 @@ class LegendEntry:
     swatch: Box | None
     caption: Box
 
-
-@dataclass(frozen=True)
-class CapacitySegment:
-    start: tuple[float, float]
-    end: tuple[float, float]
 
 
 @dataclass(frozen=True)
@@ -406,7 +425,8 @@ LOGOS: tuple[ImageMark, ...] = (
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# Manual chart labels, legend keys, rings, and capacity reference line.
+# Manual chart labels, legend keys, and rings. The Franklin capacity line itself
+# is native chart XML via CHART_STYLE['line_overlay'], not slide connector shapes.
 # ════════════════════════════════════════════════════════════════════════════
 YEAR_TICKS: tuple[YearTick, ...] = (
     YearTick(1.233, "FY26"),
@@ -436,12 +456,17 @@ SOURCE_CHART_VALUE_LABELS: tuple[AnnualStartLabel, ...] = (
     AnnualStartLabel(Box(4.920, 3.934, 0.191, 0.167), "25"),
     AnnualStartLabel(Box(6.123, 3.892, 0.191, 0.167), "26"),
     AnnualStartLabel(Box(7.326, 3.892, 0.191, 0.167), "26"),
+    # FY32/FY33 split across two stacked layers. The source chart shows both
+    # segment labels inside the bar plus a manual 35 total above each column.
+    AnnualStartLabel(Box(8.529, 4.675, 0.191, 0.167), "21", WHITE),
     AnnualStartLabel(Box(8.529, 3.916, 0.191, 0.167), "14"),
+    AnnualStartLabel(Box(9.731, 4.957, 0.191, 0.167), "8", WHITE),
+    AnnualStartLabel(Box(9.731, 4.198, 0.191, 0.167), "27", WHITE),
     AnnualStartLabel(Box(10.936, 3.502, 0.191, 0.167), "35"),
     AnnualStartLabel(Box(12.139, 3.502, 0.191, 0.167), "35"),
 )
 
-if tuple(label.label for label in SOURCE_CHART_VALUE_LABELS) != ("5", "18", "25", "26", "26", "14", "35", "35"):
+if tuple(label.label for label in SOURCE_CHART_VALUE_LABELS) != ("5", "18", "25", "26", "26", "21", "14", "8", "27", "35", "35"):
     raise ValueError("Manualized source chart data labels no longer match slide12_chart3.xml")
 
 LEGEND: tuple[LegendEntry, ...] = (
@@ -451,27 +476,8 @@ LEGEND: tuple[LegendEntry, ...] = (
     LegendEntry("Franklin capacity (vessel starts)", None, None, Box(10.840, 1.806, 1.939, LEGEND_LABEL_H)),
 )
 
-# The native bar chart uses the exact manual plot layout from the source chart
-# part. These points translate Franklin capacity values to slide coordinates
-# using the source 0-70 value axis. The connectors are authored as regular slide
-# shapes so the combo-chart line remains editable after the factory rebuild.
-_CAPACITY_PLOT_LEFT = CHART_FRAME.x + SOURCE_PLOT_LAYOUT["x"] * CHART_FRAME.w
-_CAPACITY_PLOT_TOP = CHART_FRAME.y + SOURCE_PLOT_LAYOUT["y"] * CHART_FRAME.h
-_CAPACITY_PLOT_W = SOURCE_PLOT_LAYOUT["w"] * CHART_FRAME.w
-_CAPACITY_PLOT_H = SOURCE_PLOT_LAYOUT["h"] * CHART_FRAME.h
-_CAPACITY_AXIS_MAX = float(SOURCE_VALUE_AXIS_MAX)
-_CATEGORY_STEP = _CAPACITY_PLOT_W / len(CHART_CATEGORIES)
-_CAPACITY_POINTS: tuple[tuple[float, float], ...] = tuple(
-    (
-        _CAPACITY_PLOT_LEFT + _CATEGORY_STEP * (idx + 0.5),
-        _CAPACITY_PLOT_TOP + (1.0 - value / _CAPACITY_AXIS_MAX) * _CAPACITY_PLOT_H,
-    )
-    for idx, value in enumerate(FRANKLIN_CAPACITY_VALUES)
-)
-CAPACITY_SEGMENTS: tuple[CapacitySegment, ...] = tuple(
-    CapacitySegment(_CAPACITY_POINTS[idx], _CAPACITY_POINTS[idx + 1])
-    for idx in range(len(_CAPACITY_POINTS) - 1)
-)
+# Franklin capacity is intentionally not translated into slide-coordinate
+# connectors: it is the CHART_STYLE['line_overlay'] native line series above.
 
 HIGHLIGHT_RINGS: tuple[Ring, ...] = (
     Ring(Box(8.334, 2.507, 0.602, 0.340)),
@@ -555,6 +561,7 @@ def _label_box(
     anchor: str = "ctr",
     bold: bool = False,
     italic: bool = False,
+    color: str = BLACK,
     wrap: str = "none",
     l_ins: int = 0,
     t_ins: int = 0,
@@ -565,7 +572,7 @@ def _label_box(
         ids.next(),
         name,
         *box.emu(),
-        [_tight_para([_r(text, bold=bold, italic=italic)], align=align)],
+        [_tight_para([_r(text, bold=bold, italic=italic, color=color)], align=align)],
         fill=None,
         line_color="none",
         anchor=anchor,
@@ -615,23 +622,6 @@ def paint_chart(out: list[str], ids: ShapeIds) -> None:
         )
     )
 
-
-def paint_capacity_reference_line(out: list[str], ids: ShapeIds) -> None:
-    for segment in CAPACITY_SEGMENTS:
-        x1, y1 = segment.start
-        x2, y2 = segment.end
-        out.append(
-            connector(
-                ids.next(),
-                "FranklinCapacityReferenceLine",
-                IN(x1),
-                IN(y1),
-                IN(x2 - x1),
-                IN(y2 - y1),
-                color=FRANKLIN_CAPACITY_COLOR,
-                width=FRANKLIN_CAPACITY_LINE_WIDTH,
-            )
-        )
 
 
 def paint_chart_manual_labels(out: list[str], ids: ShapeIds) -> None:
@@ -685,6 +675,7 @@ def paint_chart_manual_labels(out: list[str], ids: ShapeIds) -> None:
                 anchor="b",
                 l_ins=17_463,
                 r_ins=17_463,
+                color=label.color,
             )
         )
 
@@ -699,6 +690,7 @@ def paint_chart_manual_labels(out: list[str], ids: ShapeIds) -> None:
                 anchor="b",
                 l_ins=17_463,
                 r_ins=17_463,
+                color=label.color,
             )
         )
 
@@ -713,7 +705,7 @@ def paint_chrome_and_logos(out: list[str], ids: ShapeIds) -> None:
 
 
 def paint_legend(out: list[str], ids: ShapeIds) -> None:
-    # Swatches first, then the dashed capacity key, then captions — source paint order.
+    # Swatches first, then the capacity line key, then captions — source paint order.
     for entry in LEGEND:
         if entry.swatch is None:
             continue
@@ -739,9 +731,7 @@ def paint_legend(out: list[str], ids: ShapeIds) -> None:
             IN(0.000),
             color=BLACK,
             width=19_050,
-            dashed=True,
-            arrow=True,
-        )
+        )  # reference legend mark: solid line, no arrowhead (matches the line series)
     )
 
     for entry in LEGEND:
@@ -853,7 +843,6 @@ def _body() -> str:
     # Paint order matters in PowerPoint OOXML: later elements sit on top.
     paint_background(out, ids)
     paint_chart(out, ids)
-    paint_capacity_reference_line(out, ids)
     paint_chart_manual_labels(out, ids)
     paint_chrome_and_logos(out, ids)
     paint_legend(out, ids)
@@ -871,6 +860,7 @@ CHROME = Chrome(
     title="Production Outlook (separate platforms)",
     takeaway="All Phase 1 vessels started by FY32, Phase 2 by FY33, and Phase 3 by FY35",
     preliminary=False,
+    title_cx=IN(10.9),   # source narrows the title box so the takeaway clears the top-right logos
 )
 
 

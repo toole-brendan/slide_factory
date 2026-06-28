@@ -481,6 +481,7 @@ def _bars(
     seg_line_width: int = 6350,
     axis_line_color: Optional[str] = None,
     axis_line_width: int = 9525,
+    value_axis_line_color: Optional[str] = "inherit",   # val-axis line override; "inherit"=cat line, "none"/None=hidden
     value_axis_min: Optional[float] = None,
     value_axis_max: Optional[float] = None,
     value_axis_major_unit: Optional[float] = None,
@@ -494,6 +495,12 @@ def _bars(
     line_value_axis_major_unit=None,
     line_value_axis_position=None,
     value_axis_position=None,
+    # Dual-axis combo: pin the PRIMARY (bar/column) value axis to a side. A source
+    # bar value axis on the RIGHT uses catAx crosses="min" + valAx crosses="max"
+    # (the line pair stays primary-left). Default "autoZero" = byte-identical output
+    # for every existing single-axis chart.
+    value_axis_crosses: str = "autoZero",
+    cat_axis_crosses: str = "autoZero",
     show_line_value_axis_labels: bool = True,
     line_show_gridlines=None,
     line_major_gridline_color=None,
@@ -778,6 +785,21 @@ def _bars(
         )
     else:
         axis_ln_spPr = ""
+    # The value axis can carry its own line independently of the category spine:
+    # think-cell often draws one and hides the other. "inherit" reuses the cat line;
+    # an explicit None/"none" emits a noFill line so the renderer does NOT fall back
+    # to its default axis line.
+    if value_axis_line_color == "inherit":
+        val_axis_ln_spPr = (
+            "<c:spPr>" + _chart_line_xml(axis_line_color, axis_line_width, "solid", cap="flat") + "</c:spPr>"
+            if axis_line_color else ""
+        )
+    elif value_axis_line_color and value_axis_line_color != "none":
+        val_axis_ln_spPr = (
+            "<c:spPr>" + _chart_line_xml(value_axis_line_color, axis_line_width, "solid", cap="flat") + "</c:spPr>"
+        )
+    else:
+        val_axis_ln_spPr = '<c:spPr><a:ln><a:noFill/></a:ln></c:spPr>'
 
     cat_label_size = cat_label_size_pt * 100
     cat_ax_xml = (
@@ -806,7 +828,7 @@ def _bars(
         '<a:endParaRPr lang="en-US"/></a:p>'
         "</c:txPr>"
         f'<c:crossAx val="{VAL_AX_ID}"/>'
-        '<c:crosses val="autoZero"/>'
+        f'<c:crosses val="{cat_axis_crosses}"/>'
         '<c:auto val="1"/>'
         '<c:lblAlgn val="ctr"/>'
         '<c:lblOffset val="100"/>'
@@ -862,7 +884,7 @@ def _bars(
         f'<c:majorTickMark val="{"out" if show_value_axis_labels else "none"}"/>'
         '<c:minorTickMark val="none"/>'
         f'<c:tickLblPos val="{"nextTo" if show_value_axis_labels else "none"}"/>'
-        + axis_ln_spPr +
+        + val_axis_ln_spPr +
         "<c:txPr>"
         f'<a:bodyPr rot="{axis_label_rot}" spcFirstLastPara="1" vertOverflow="ellipsis" '
         'wrap="square" anchor="ctr" anchorCtr="1"/>'
@@ -876,7 +898,7 @@ def _bars(
         '<a:endParaRPr lang="en-US"/></a:p>'
         "</c:txPr>"
         f'<c:crossAx val="{CAT_AX_ID}"/>'
-        '<c:crosses val="autoZero"/>'
+        f'<c:crosses val="{value_axis_crosses}"/>'
         '<c:crossBetween val="between"/>'
         + val_major_unit +
         "</c:valAx>"
@@ -1448,6 +1470,10 @@ def _build_series(
                 f"but {len(categories)} categories"
             )
         for i, color in enumerate(data_point_colors):
+            if color is None:
+                # None = inherit the series default fill (series color). Emitting a
+                # dPt with val="None" would be invalid hex and render black.
+                continue
             d_pts_xml += (
                 "<c:dPt>"
                 f'<c:idx val="{i}"/>'

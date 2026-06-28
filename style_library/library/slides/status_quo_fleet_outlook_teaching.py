@@ -41,17 +41,27 @@ TEXT-FIT PRECEDENT
 SOURCE NOTE
   Teaching rewrite of the source-faithful `status_quo_fleet_outlook.py` module.
   The original used `styled_chart(...)` with `slide43_chart25.xml/.xlsb`; this
-  version intentionally rebuilds the chart as a native editable PowerPoint
-  `column_chart(mode="stacked")`. The visible slide contract is preserved through
-  source-positioned manual value-axis labels, year ticks, net labels, legend,
-  callouts, off-house Note/Source block, chrome, and scenario chip.
+  version rebuilds the chart as a native editable PowerPoint
+  `column_chart(mode="stacked")` while copying the source chart's manual plot
+  rectangle, gap/overlap, fixed value-axis scale, hidden gridlines, and per-point
+  color overrides into explicit Python constants. The visible slide contract is
+  preserved through source-positioned manual value-axis labels, year ticks, net
+  labels, legend, callouts, off-house Note/Source block, chrome, and scenario
+  chip.
+
+REFRESH NOTE
+  Refreshed from the project source module after the teaching-module audit. The
+  chart factory spec now uses the source XML plot layout, the source 130% gap
+  width / 100% overlap, no segment outlines, hidden gridlines, a left value axis,
+  and source point-color bridge rules so the off-white orderbook band and y-axis
+  register like the reference slide.
 
 FIDELITY NOTE
   This is a practical factory-native rebuild, not a byte-identical chart-template
-  port. It preserves the data, fixed -350K to +350K scale, source labels,
-  legend semantics, and major layout. Small differences in native column widths,
-  gridline placement, or zero-line rendering may occur relative to the source
-  chart template.
+  port. It preserves the data, fixed -350K to +350K scale, source labels, source
+  plot-area geometry, legend semantics, and major layout. Tiny differences in
+  native column widths or zero-line rendering may occur relative to the source
+  styled chart part.
 """
 from __future__ import annotations
 
@@ -79,6 +89,22 @@ SCENARIO_BLUE = "CEDDEC"
 QUIET_GRIDLINE = "D9D9D9"
 TREND_LINE = BLACK
 
+# Source chart-part styling values transcribed from status_quo_fleet_outlook.xml.
+# The native teaching chart uses K GT units for readability, so the value-axis
+# bounds below are the source bounds divided by 1,000.
+SOURCE_PLOT_LAYOUT = {
+    "x": 0.0081607030759573134,
+    "y": 0.02173004596740493,
+    "w": 0.9836785938480854,
+    "h": 0.9565399080651902,
+}
+SOURCE_GAP_WIDTH = 130
+SOURCE_BAR_OVERLAP = 100
+SOURCE_AXIS_LINE_WIDTH = 9_525
+SOURCE_VALUE_AXIS_MIN_K_GT = -350
+SOURCE_VALUE_AXIS_MAX_K_GT = 350
+SOURCE_VALUE_AXIS_MAJOR_UNIT_K_GT = 50
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # Teaching metadata: a small programmatic index for retrieval / agent search.
@@ -97,9 +123,12 @@ TEACHING_METADATA = {
         "orderbook-data availability band",
         "outside-chart four-entry legend",
         "dashed trend connector with callouts",
+        "source XML plot layout and point-color bridge overrides",
+        "chart-factory audit fixes for hidden gridlines and left value-axis registration",
     ],
     "source_module": "status_quo_fleet_outlook.py",
-    "rebuild_strategy": "replace styled_chart template with native column_chart",
+    "source_chart_assets_used_for_transcription": ("status_quo_fleet_outlook.xml", "status_quo_fleet_outlook.xlsb"),
+    "rebuild_strategy": "replace styled_chart template with native column_chart while preserving source plot layout, axis scale, and point colors",
 }
 
 TEXT_FIT = {
@@ -159,19 +188,30 @@ class Box:
 
 @dataclass(frozen=True)
 class ForecastSeries:
-    """One native chart series expressed in thousands of gross tons."""
+    """One native chart series expressed in thousands of gross tons.
+
+    The source chart uses three workbook rows whose colors change by point, not
+    four clean semantic rows. Keeping that source row structure preserves stacked
+    draw order while `data_point_colors` carries the visible commercial/offshore
+    color switches.
+    """
 
     name: str
     fill: str
     values_k_gt: tuple[float | None, ...]
+    data_point_colors: tuple[str | None, ...] | None = None
+    note: str = ""
 
     def chart_dict(self) -> dict:
-        return {
+        out = {
             "name": self.name,
             "color": self.fill,
             "values": list(self.values_k_gt),
             "hide_labels": True,
         }
+        if self.data_point_colors is not None:
+            out["data_point_colors"] = list(self.data_point_colors)
+        return out
 
 
 @dataclass(frozen=True)
@@ -239,12 +279,13 @@ TREND_CONNECTOR = (3.196, 4.898, 8.700, 0.000)
 # ════════════════════════════════════════════════════════════════════════════
 # Semantic chart data.
 # Values are thousands of gross tons (K GT), matching the manual axis scale.
-# The manual net labels below are generated from these values but keep source
-# positions because those positions were hand-authored around the source chart.
+# These three rows mirror the source workbook rows in status_quo_fleet_outlook.py.
+# The source chart intentionally uses point-level color overrides, so series names
+# below describe source draw order rather than clean legend categories.
 # ════════════════════════════════════════════════════════════════════════════
 YEARS: tuple[str, ...] = tuple(str(year) for year in range(2026, 2051))
 
-COMMERCIAL_ORDERBOOK_AND_RETIREMENTS_K_GT = tuple(
+SOURCE_ROW_1_K_GT = tuple(
     v / 1000
     for v in (
         48049, 96098, 222000, 285000, 285000, -8415, -22359, -31669, -15549,
@@ -253,7 +294,7 @@ COMMERCIAL_ORDERBOOK_AND_RETIREMENTS_K_GT = tuple(
     )
 )
 
-OFFSHORE_RETIREMENTS_K_GT = tuple(
+SOURCE_ROW_2_K_GT = tuple(
     None if v is None else v / 1000
     for v in (
         -12518, -949, -16350, -24688, -18715, -1904, -61988, -91245, -61540,
@@ -262,7 +303,7 @@ OFFSHORE_RETIREMENTS_K_GT = tuple(
     )
 )
 
-OFFSHORE_ORDERBOOK_K_GT = tuple(
+SOURCE_ROW_3_K_GT = tuple(
     None if v is None else v / 1000
     for v in (
         -196731, -62895, None, -16771, -1495, None, None, None, None, None,
@@ -271,14 +312,36 @@ OFFSHORE_ORDERBOOK_K_GT = tuple(
     )
 )
 
+# Source point-color bridge rules:
+#   row 1 defaults to offshore amber; points 0-4 are commercial teal
+#   row 2 defaults to commercial teal; points 0-4 are offshore amber
+#   row 3 is commercial teal throughout
+# This reproduces the source chart's visible color placement while retaining the
+# source workbook row / draw order.
+_SOURCE_ROW_1_COLORS: tuple[str | None, ...] = (COMMERCIAL_TEAL,) * 5 + (None,) * 20
+_SOURCE_ROW_2_COLORS: tuple[str | None, ...] = (OFFSHORE_AMBER,) * 5 + (None,) * 20
+
 FORECAST_SERIES: tuple[ForecastSeries, ...] = (
     ForecastSeries(
-        "Addressable Commercial Orderbook / Retirements",
-        COMMERCIAL_TEAL,
-        COMMERCIAL_ORDERBOOK_AND_RETIREMENTS_K_GT,
+        "Source row 1 — commercial orderbook / offshore retirements bridge",
+        OFFSHORE_AMBER,
+        SOURCE_ROW_1_K_GT,
+        data_point_colors=_SOURCE_ROW_1_COLORS,
+        note="First five points render commercial teal; remaining points use offshore amber, matching the source chart XML.",
     ),
-    ForecastSeries("Addressable Offshore Retirements", OFFSHORE_AMBER, OFFSHORE_RETIREMENTS_K_GT),
-    ForecastSeries("Addressable Offshore Orderbook", OFFSHORE_AMBER, OFFSHORE_ORDERBOOK_K_GT),
+    ForecastSeries(
+        "Source row 2 — offshore orderbook / commercial retirements bridge",
+        COMMERCIAL_TEAL,
+        SOURCE_ROW_2_K_GT,
+        data_point_colors=_SOURCE_ROW_2_COLORS,
+        note="First five points render offshore amber; remaining points use commercial teal, matching the source chart XML.",
+    ),
+    ForecastSeries(
+        "Source row 3 — commercial orderbook / retirements bridge",
+        COMMERCIAL_TEAL,
+        SOURCE_ROW_3_K_GT,
+        note="Source row 3 uses commercial teal throughout.",
+    ),
 )
 
 NET_TOTALS_K_GT: tuple[int, ...] = tuple(
@@ -391,23 +454,22 @@ CHART_STYLE = {
     "show_cat_labels": False,
     "show_value_axis_labels": False,
     "show_value_labels": False,
-    "show_gridlines": True,
-    "major_gridline_color": QUIET_GRIDLINE,
-    "major_gridline_width": 3175,
+    "show_gridlines": False,          # source has majorGridlines, but line is <a:noFill/>
     "value_axis_format": "0",
     "value_label_format": "0",
     "value_label_size_pt": 10,
     "value_label_bold": False,
     "cat_label_size_pt": 10,
-    "gap_width": 88,
-    "seg_line_color": WHITE,
-    "seg_line_width": 6350,
+    "gap_width": SOURCE_GAP_WIDTH,
+    "bar_overlap": SOURCE_BAR_OVERLAP,
+    "seg_line_color": None,           # source series outlines are noFill
     "axis_line_color": BLACK,
-    "axis_line_width": 6350,
-    "value_axis_min": -350,
-    "value_axis_max": 350,
-    "value_axis_major_unit": 50,
-    "plot_layout": {"x": 0.025, "y": 0.015, "w": 0.950, "h": 0.930},
+    "axis_line_width": SOURCE_AXIS_LINE_WIDTH,
+    "value_axis_line_color": BLACK,   # force the value axis to remain visible on the left
+    "value_axis_min": SOURCE_VALUE_AXIS_MIN_K_GT,
+    "value_axis_max": SOURCE_VALUE_AXIS_MAX_K_GT,
+    "value_axis_major_unit": SOURCE_VALUE_AXIS_MAJOR_UNIT_K_GT,
+    "plot_layout": dict(SOURCE_PLOT_LAYOUT),
     "cat_header": "Year",
 }
 
@@ -716,14 +778,14 @@ def paint_scenario_chrome(next_id) -> list[str]:
     """Scenario chip + Preliminary chip; both intentionally paint late."""
 
     return [
-        "",
         _textbox(
             next_id(),
             "ScenarioChip",
             SCENARIO_CHIP,
             [_one_line("(1) Status Quo Scenario", size=PT(12), bold=True, align="ctr")],
-            fill=SCENARIO_BLUE,
+            fill=SCENARIO_BLUE,         # CEDDEC = theme bg2 @ 90% lum (reference chip fill)
             line_color=BLACK,
+            line_width=19050,           # 1.5pt — reference chip border (theme lnRef idx=2)
             anchor="ctr",
         ),
     ]

@@ -108,6 +108,7 @@ class Panel:
     line: str | None
     italic: bool = True
     align: str = "ctr"
+    fill_alpha: int | None = None   # source tints these grouping panels to ~10% opacity
 
 
 @dataclass(frozen=True)
@@ -198,9 +199,9 @@ COPY_RULES: tuple[str, ...] = (
 )
 
 PANELS: tuple[Panel, ...] = (
-    Panel("cargo_moved_by_archetypes", Box(4.948, 3.457, 7.959, 1.850), "Cargo moved by one or more of the following maritime transport archetypes", GRAY_1, BLACK, align="l"),
+    Panel("cargo_moved_by_archetypes", Box(4.948, 3.457, 7.959, 1.850), "Cargo moved by one or more of the following maritime transport archetypes", GRAY_1, BLACK, align="l", fill_alpha=10196),
     Panel("chartered_vessels", Box(9.145, 5.962, 2.461, 1.000), "Value flow for chartered vessels", None, BLACK),
-    Panel("owned_vessels", Box(3.600, 5.962, 4.975, 1.000), "Value flow for owned vessels", BLUE_1, MID_GRAY),
+    Panel("owned_vessels", Box(3.600, 5.962, 4.975, 1.000), "Value flow for owned vessels", BLUE_1, MID_GRAY, fill_alpha=10196),
     Panel("charter_metric_frame", Box(5.088, 4.948, 4.853, 0.275), "", None, BLACK, italic=False),
 )
 
@@ -294,7 +295,7 @@ def _metric_p(metric: MetricLabel) -> str:
 def paint_value_flow_panels(out: list[str], n) -> None:
     for panel in PANELS:
         paras = [_p(panel.text, size=PT(8), italic=panel.italic, align=panel.align)] if panel.text else [paragraph([], align="r", line_spacing=100000)]
-        out.append(text_box(n(), f"ValueFlowPanel:{panel.name}", *_xywh(panel.box), paras, fill=panel.fill, line_color=panel.line, line_width=6350 if panel.name == "charter_metric_frame" else 12700, dashed_line=panel.name == "charter_metric_frame"))
+        out.append(text_box(n(), f"ValueFlowPanel:{panel.name}", *_xywh(panel.box), paras, fill=panel.fill, fill_alpha=panel.fill_alpha, line_color=panel.line, line_width=6350 if panel.name == "charter_metric_frame" else 12700, dashed_line=panel.name == "charter_metric_frame"))
 
 
 def paint_stage_headers(out: list[str], n) -> None:
@@ -309,13 +310,13 @@ def paint_archetype_nodes(out: list[str], n) -> None:
 
 def paint_row_labels_and_metric_header(out: list[str], n) -> None:
     out.append(table(n(), "RowLabel:ValueChainStep", IN(0.495), IN(1.695), IN(1.600), IN(1.638), col_widths=[IN(1.600)], rows=[
-        trow([rcell([tpara([trun("Value Chain Step", size=PT(10), bold=True, color=BLACK, font=FONT), tbreak(), tbreak()], mar_l=0, indent=0)], fill=WHITE, R=edge(BLACK, 38100))], h=IN(1.638)),
+        trow([rcell([tpara([trun("Value Chain Step", size=PT(10), bold=True, color=BLACK, font=FONT), tbreak(), tbreak()], mar_l=0, indent=0)], fill=WHITE, anchor="t", R=edge(BLACK, 38100))], h=IN(1.638)),
     ]))
     out.append(table(n(), "MetricHeader:RevenueEbit", IN(9.579), IN(1.191), IN(3.215), IN(0.500), col_widths=[IN(3.215)], rows=[
-        trow([rcell([tpara([trun("Revenue | ", size=PT(8), bold=True, color=BLACK, font=FONT), trun("EBIT margin %", size=PT(8), bold=True, italic=True, color=BLACK, font=FONT), tbreak(), trun("(Revenue = total value chain rev. indexed to $100; EBIT margins for 2024)", size=PT(8), italic=True, color=BLACK, font=FONT)], align="r", mar_l=0, indent=0)])], h=IN(0)),
+        trow([rcell([tpara([trun("Revenue | ", size=PT(8), bold=True, color=BLACK, font=FONT), trun("EBIT margin %", size=PT(8), bold=True, italic=True, color=BLACK, font=FONT), tbreak(), trun("(Revenue = total value chain rev. indexed to $100; EBIT margins for 2024)", size=PT(8), italic=True, color=BLACK, font=FONT)], align="r", mar_l=0, indent=0)], anchor="t")], h=IN(0)),
     ]))
     out.append(table(n(), "RowLabel:Archetypes", IN(0.495), IN(3.457), IN(1.600), IN(3.505), col_widths=[IN(1.600)], rows=[
-        trow([rcell([tpara([trun("Archetypes", size=PT(10), bold=True, color=BLACK, font=FONT)], mar_l=0, indent=0)], fill=WHITE, R=edge(BLACK, 38100))], h=IN(3.505)),
+        trow([rcell([tpara([trun("Archetypes", size=PT(10), bold=True, color=BLACK, font=FONT)], mar_l=0, indent=0)], fill=WHITE, anchor="t", R=edge(BLACK, 38100))], h=IN(3.505)),
     ]))
 
 

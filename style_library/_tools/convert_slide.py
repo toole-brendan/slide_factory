@@ -87,6 +87,7 @@ HOUSE_POS = {
     "sources": (LEFT_MARGIN, 5930000),
 }
 TOL = 91440   # 0.1 in
+HOUSE_TITLE_CX = 11282362   # deck_core CONTENT_W: the house title box width
 
 # House slideLayouts keyed by their <p:cSld name>. A source slide's own layout is
 # matched to the house layout of the SAME NAME, so a "50% Block + Title", "Cover 1",
@@ -117,6 +118,10 @@ SHARED_ANCHOR_MIN = 4   # a coord value repeated >= this across standalone shape
 # (deck_core.style.IN converts back to EMU at build); "emu" -> raw EMU ints. Inch
 # values use 3 decimals: visually exact (sub-0.05 px) but not byte-exact.
 _UNITS = "inches"
+
+# source-slide hyperlink rId -> module-level rId, populated per convert() run and
+# read by render_run/render_trun to emit run(hyperlink_rid=...).
+_HLINKS: dict = {}
 
 
 def _inch(emu):
@@ -161,6 +166,28 @@ def build_theme_map(z: zipfile.ZipFile) -> dict:
             if ln.get("w"):
                 m["__lnw__"][idx] = int(ln.get("w"))
     return m
+
+
+def build_table_style_map(z: zipfile.ZipFile) -> dict:
+    """styleId -> {"firstRow"/"firstCol": True} for the parts a table style renders
+    BOLD via its tcTxStyle. A header bold ONLY through its table style (no explicit
+    run b="1") loses the bold on the No-Style rebuild; parse_table bakes these in.
+    Stdlib-only, best-effort (absent/garbled file -> {})."""
+    try:
+        root = ET.fromstring(z.read("ppt/tableStyles.xml"))
+    except (KeyError, ET.ParseError):
+        return {}
+    out: dict = {}
+    for ts in root.findall(q(A, "tblStyle")):
+        parts = {}
+        for part in ("firstRow", "firstCol"):
+            el = ts.find(q(A, part))
+            tx = el.find(q(A, "tcTxStyle")) if el is not None else None
+            if tx is not None and tx.get("b") == "on":
+                parts[part] = True
+        if parts:
+            out[ts.get("styleId")] = parts
+    return out
 
 
 def _bake_lum(hex6: str, lummod, lumoff) -> str:
@@ -266,26 +293,46 @@ def py_str(s: str) -> str:
 
 
 # ── parse: source element -> record dict ──────────────────────────────────────
-def parse_run(rPr, text, theme):
-    d = {"text": text or "", "size": None, "bold": False, "italic": False,
-         "underline": False, "color": None}
+def parse_run(rPr, text, theme, shape_el=None):
+    d = {"text": text or "", "size": None, "bold": False, "bold_explicit": False,
+         "italic": False, "underline": False, "color": None, "hlink": None, "baseline": None}
     if rPr is not None:
         if rPr.get("sz"):
             d["size"] = int(rPr.get("sz"))
         d["bold"] = rPr.get("b") == "1"
+        d["bold_explicit"] = rPr.get("b") is not None   # so style-bold baking yields to it
         d["italic"] = rPr.get("i") == "1"
         d["underline"] = rPr.get("u") not in (None, "none")
+        # superscript/subscript offset: think-cell footnote markers (the small raised
+        # "1"/"2"/"3") are runs with baseline="30000". 0 = the default, so drop it.
+        if rPr.get("baseline") not in (None, "0"):
+            d["baseline"] = int(rPr.get("baseline"))
         d["color"] = color_lit(color_hex(_solid_child(rPr), theme))
+        hl = rPr.find(q(A, "hlinkClick"))   # external hyperlink -> capture the source rId
+        if hl is not None:
+            d["hlink"] = hl.get(q(R, "id"))
+    # A run with no explicit fill inherits its colour from the shape's
+    # <p:style><a:fontRef> (think-cell chips: white text via fontRef idx="minor"
+    # -> schemeClr lt1). Without this the run falls back to the body default and a
+    # white-on-dark chip renders as black-on-dark.
+    if d["color"] is None and shape_el is not None:
+        style = shape_el.find(q(P, "style"))
+        fontRef = style.find(q(A, "fontRef")) if style is not None else None
+        if fontRef is not None:
+            ref = fontRef.find(q(A, "schemeClr"))
+            if ref is None:
+                ref = fontRef.find(q(A, "srgbClr"))
+            d["color"] = color_lit(color_hex(ref, theme))
     return d
 
 
-def parse_para(p, theme):
+def parse_para(p, theme, shape_el=None):
     runs = []
     for ch in p:
         tag = ch.tag.split("}")[-1]
         if tag in ("r", "fld"):    # <a:fld> = think-cell label, frozen by reading its cache
             t = ch.find(q(A, "t"))
-            runs.append(parse_run(ch.find(q(A, "rPr")), t.text if t is not None else "", theme))
+            runs.append(parse_run(ch.find(q(A, "rPr")), t.text if t is not None else "", theme, shape_el))
         elif tag == "br":          # explicit in-paragraph line break (think-cell wraps tight labels)
             runs.append({"break": True})
     pPr = p.find(q(A, "pPr"))
@@ -351,6 +398,12 @@ def parse_sp(el, theme):
     rec["pattern_fill"] = _parse_pattfill(pat, theme) if pat is not None else None
     rec["fill"] = "None" if spPr.find(q(A, "noFill")) is not None \
         else (color_lit(color_hex(_solid_child(spPr), theme)) or "None")
+    # solidFill opacity (<a:alpha>): think-cell tints a panel by dropping a brand colour
+    # to ~10% alpha; emitting the resolved colour alone (fully opaque) reads far too
+    # strong. Capture it -> text_box(fill_alpha=) so the wash renders at source opacity.
+    _alpha_clr = _solid_child(spPr)
+    _alpha_el = _alpha_clr.find(q(A, "alpha")) if _alpha_clr is not None else None
+    rec["fill_alpha"] = int(_alpha_el.get("val")) if (_alpha_el is not None and rec["fill"] != "None") else None
     # border: explicit ln colour, else inherit from <p:style><a:lnRef> (think-cell callouts)
     rec["line_color"], rec["line_width"], rec["dashed"] = '"none"', None, False
     ln = spPr.find(q(A, "ln"))
@@ -361,7 +414,17 @@ def parse_sp(el, theme):
         if lc is not None:
             rec["line_color"] = lc
             w = ln.get("w")
-            rec["line_width"] = int(w) if w else None
+            if w:
+                rec["line_width"] = int(w)
+            else:
+                # explicit <a:ln> colour but no w: the WIDTH still inherits from the
+                # shape's <p:style><a:lnRef idx=N> (theme lnStyleLst). think-cell's
+                # scenario chips do this - a 1.5pt (idx 2 = 19050) border with an
+                # explicit black fill; a naive read drops the width to the 1pt default.
+                style = el.find(q(P, "style"))
+                lnRef = style.find(q(A, "lnRef")) if style is not None else None
+                if lnRef is not None and lnRef.get("idx") not in (None, "0"):
+                    rec["line_width"] = theme.get("__lnw__", {}).get(int(lnRef.get("idx")))
             d = ln.find(q(A, "prstDash"))
             rec["dashed"] = d is not None and d.get("val") not in (None, "solid")
     elif ln is None:
@@ -376,19 +439,24 @@ def parse_sp(el, theme):
             if lc is not None:
                 rec["line_color"] = lc
                 rec["line_width"] = theme.get("__lnw__", {}).get(int(lnRef.get("idx")))
-    # shadow / glow (think-cell callouts) -> verbatim effectLst on text_box(effects=)
+    # shadow / glow (think-cell callouts) -> verbatim effectLst on text_box(effects=).
+    # An EMPTY <a:effectLst/> carries no effect; treat it as None so it neither emits
+    # dead markup nor (via is_simple) blocks the shape from clustering.
     eff = spPr.find(q(A, "effectLst"))
-    rec["effects"] = _elem_inner_xml(eff) if eff is not None else None
+    rec["effects"] = _elem_inner_xml(eff) if (eff is not None and len(eff)) else None
     txBody = el.find(q(P, "txBody"))
     bodyPr = txBody.find(q(A, "bodyPr")) if txBody is not None else None
-    rec["anchor"], rec["wrap"], rec["ins"] = "t", "square", {}
+    rec["anchor"], rec["wrap"], rec["ins"], rec["vert"] = "t", "square", {}, None
     if bodyPr is not None:
         rec["anchor"] = bodyPr.get("anchor", "t")
         rec["wrap"] = bodyPr.get("wrap", "square")
+        # vertical text (vert270 = read bottom-to-top): think-cell rotates tight
+        # year/axis labels this way. Captured so it can re-emit, not flatten to horizontal.
+        rec["vert"] = bodyPr.get("vert")
         for attr, kw in (("lIns", "l_ins"), ("tIns", "t_ins"), ("rIns", "r_ins"), ("bIns", "b_ins")):
             if bodyPr.get(attr) is not None:
                 rec["ins"][kw] = int(bodyPr.get(attr))
-    rec["paras"] = [parse_para(p, theme) for p in txBody.findall(q(A, "p"))] if txBody is not None else []
+    rec["paras"] = [parse_para(p, theme, el) for p in txBody.findall(q(A, "p"))] if txBody is not None else []
     # custom geometry: a freeform <a:custGeom> path. Text-free -> custom_geometry()
     # (the path stays verbatim; position / fill / line become params). With text we
     # can't reposition, or combined with a pattern fill, keep the whole shape raw.
@@ -429,29 +497,77 @@ def parse_cxn(el, theme):
         for gd in av.findall(q(A, "gd")):
             if (gd.get("name"), gd.get("fmla")) != ("adj1", "val 50000"):  # 50% = elbow default
                 rec["adj"][gd.get("name")] = gd.get("fmla")
-    rec["color"], rec["width"], rec["dashed"], rec["arrow"] = "BLACK", 12700, False, False
+    rec["color"], rec["width"], rec["dash"], rec["arrow"] = "BLACK", 12700, None, False
+    rec["grad"], rec["grad_angle"] = None, None
     ln = spPr.find(q(A, "ln"))
     if ln is not None:
         w = ln.get("w")
         rec["width"] = int(w) if w else 12700
-        lc = color_lit(color_hex(_solid_child(ln), theme))
-        if lc is not None:
-            rec["color"] = lc
-        rec["dashed"] = ln.find(q(A, "prstDash")) is not None
-        rec["arrow"] = ln.find(q(A, "tailEnd")) is not None or ln.find(q(A, "headEnd")) is not None
+        if ln.find(q(A, "noFill")) is not None:
+            # invisible line: think-cell stacks an unfilled lgDash "anchor" under the
+            # visible dashed line. Drawing it (the default BLACK) doubles every dashed
+            # rule and muddies the dash pattern, so keep it noFill.
+            rec["color"] = '"none"'
+        else:
+            lc = color_lit(color_hex(_solid_child(ln), theme))
+            if lc is not None:
+                rec["color"] = lc
+        # gradient-filled line (think-cell's red->green confidence scale): capture the
+        # stops + linear angle so it renders as a gradient, not the solid BLACK fallback.
+        gf = ln.find(q(A, "gradFill"))
+        if gf is not None:
+            stops = []
+            for gs in gf.findall(q(A, "gsLst") + "/" + q(A, "gs")):
+                clr = gs.find(q(A, "srgbClr"))
+                if clr is None:
+                    clr = gs.find(q(A, "schemeClr"))
+                hx = color_hex(clr, theme)
+                if hx is not None:
+                    stops.append((int(gs.get("pos", "0")), hx.upper()))
+            if stops:
+                rec["grad"] = stops
+                lin = gf.find(q(A, "lin"))
+                if lin is not None and lin.get("ang"):
+                    rec["grad_angle"] = int(lin.get("ang"))
+        # Preserve the exact prstDash preset (dash / lgDash / sysDash / ...) rather
+        # than collapsing to a boolean; "solid" (or absent) means a solid line.
+        pd = ln.find(q(A, "prstDash"))
+        rec["dash"] = pd.get("val") if (pd is not None and pd.get("val") not in (None, "solid")) else None
+        # An arrowhead only when a head/tail end is a REAL arrow type. think-cell
+        # writes <a:tailEnd type="none"/> to SUPPRESS the theme default; the element
+        # is present but draws nothing, so presence alone must not imply an arrow.
+        def _real_end(tag):
+            e = ln.find(q(A, tag))
+            return e is not None and e.get("type") not in (None, "none")
+        _head, _tail = _real_end("headEnd"), _real_end("tailEnd")
+        rec["arrow"] = "both" if (_head and _tail) else ("head" if _head else ("tail" if _tail else False))
     return rec
 
 
-def parse_table(el, theme):
+def parse_table(el, theme, tstyles=None):
     """A <p:graphicFrame> wrapping an <a:tbl> -> table record. Merge-filler cells
     (hMerge/vMerge) are dropped; the engine re-synthesizes them from the anchor
-    cell's grid_span/row_span. Per-cell fill / borders / insets / anchor are kept."""
+    cell's grid_span/row_span. Per-cell fill / borders / insets / anchor / vert are
+    kept. firstRow/firstCol BOLD that comes from the table STYLE (not explicit run
+    formatting) is baked into the header runs so it survives the No-Style rebuild."""
     nv = el.find(".//" + q(P, "cNvPr"))
     xfrm = el.find(q(P, "xfrm"))
     off, ext = xfrm.find(q(A, "off")), xfrm.find(q(A, "ext"))
     tbl = el.find(".//" + q(A, "tbl"))
     grid = tbl.find(q(A, "tblGrid"))
     cols = [int(c.get("w")) for c in grid.findall(q(A, "gridCol"))]
+    # Table-style-driven bold: a header can be bold purely because the table style's
+    # firstRow/firstCol sets b="on" (with NO explicit run bold). Resolve which parts
+    # the style bolds AND the tblPr flags enable, so the baking pass below can apply
+    # it. The module rebuilds with No-Style-No-Grid, so an un-baked style bold is lost.
+    tblPr = tbl.find(q(A, "tblPr"))
+    style_bold = {}
+    if tblPr is not None and tstyles:
+        sid = tblPr.find(q(A, "tableStyleId"))
+        parts = tstyles.get(sid.text, {}) if sid is not None else {}
+        for part in ("firstRow", "firstCol"):
+            if parts.get(part) and tblPr.get(part) in ("1", "true"):
+                style_bold[part] = True
     rows = []
     for tr in tbl.findall(q(A, "tr")):
         cells = []
@@ -461,12 +577,17 @@ def parse_table(el, theme):
             tcPr = tc.find(q(A, "tcPr"))
             cell = {"grid_span": int(tc.get("gridSpan") or 1),
                     "row_span": int(tc.get("rowSpan") or 1),
-                    "fill": None, "anchor": "ctr", "l_ins": None, "r_ins": None,
+                    "fill": None, "anchor": "t", "vert": None, "l_ins": None, "r_ins": None,
                     "t_ins": None, "b_ins": None, "borders": {}}
             if tcPr is not None:
                 if tcPr.find(q(A, "solidFill")) is not None:
                     cell["fill"] = color_lit(color_hex(_solid_child(tcPr), theme))
-                cell["anchor"] = tcPr.get("anchor", "ctr")
+                # The OOXML table-cell default vertical anchor is TOP ("t"), not centre:
+                # think-cell writes anchor="ctr"/"b" explicitly when it wants them and
+                # leaves the attr off for top-aligned cells. Defaulting to "ctr" (the old
+                # behaviour) mis-centred every unset cell — definition rows, header labels.
+                cell["anchor"] = tcPr.get("anchor", "t")
+                cell["vert"] = tcPr.get("vert")   # vert270 etc. -> rotated spine labels
                 if tcPr.get("marL") is not None:
                     cell["l_ins"] = int(tcPr.get("marL"))
                 if tcPr.get("marR") is not None:
@@ -488,6 +609,16 @@ def parse_table(el, theme):
             cell["paras"] = [parse_para(p, theme) for p in txBody.findall(q(A, "p"))] if txBody is not None else []
             cells.append(cell)
         rows.append({"h": int(tr.get("h") or 0), "cells": cells})
+    # Bake style firstRow/firstCol bold into the header runs (explicit run bold wins).
+    if style_bold:
+        for ri, row in enumerate(rows):
+            for ci, cell in enumerate(row["cells"]):
+                if (style_bold.get("firstRow") and ri == 0) or \
+                   (style_bold.get("firstCol") and ci == 0):
+                    for p in cell["paras"]:
+                        for r in p["runs"]:
+                            if not r.get("break") and not r.get("bold_explicit"):
+                                r["bold"] = True
     return {"type": "table", "el": el, "raw": None, "role": None,
             "name": nv.get("name", "Table") if nv is not None else "Table",
             "x": int(off.get("x")), "y": int(off.get("y")),
@@ -507,8 +638,12 @@ def render_run(d, text_override=None):
         parts.append("italic=True")
     if d.get("underline"):
         parts.append("underline=True")
+    if d.get("baseline") is not None:
+        parts.append(f"baseline={d['baseline']}")
     if d["color"] is not None:
         parts.append(f"color={d['color']}")
+    if d.get("hlink") and d["hlink"] in _HLINKS:
+        parts.append(f'hyperlink_rid="{_HLINKS[d["hlink"]]}"')
     parts.append("font=FONT")
     return f"run({', '.join(parts)})"
 
@@ -567,6 +702,8 @@ def render_sp(rec, id_expr, varmap=None):
             v("x", coordlit(rec["x"])), v("y", coordlit(rec["y"])),
             v("cx", coordlit(rec["cx"])), v("cy", coordlit(rec["cy"])), paras_str]
     kw = [f"fill={v('fill', rec['fill'])}", f"line_color={v('line_color', rec['line_color'])}"]
+    if rec.get("fill_alpha") is not None:
+        kw.append(f"fill_alpha={rec['fill_alpha']}")
     if rec.get("pattern_fill"):
         pf = rec["pattern_fill"]
         pf_items = [f'"prst": "{pf["prst"]}"']
@@ -589,6 +726,8 @@ def render_sp(rec, id_expr, varmap=None):
         kw.append(f'anchor="{rec["anchor"]}"')
     if rec["wrap"] != "square":
         kw.append(f'wrap="{rec["wrap"]}"')
+    if rec.get("vert"):
+        kw.append(f'vert="{rec["vert"]}"')
     for k, val in rec["ins"].items():
         kw.append(f"{k}={val}")
     if rec.get("rot"):
@@ -605,10 +744,14 @@ def render_cxn(rec, id_expr, coords=None):
         return coords.get(field, coordlit(rec[field]))
 
     kw = [f"color={rec['color']}", f"width={rec['width']}"]
-    if rec["dashed"]:
-        kw.append("dashed=True")
+    if rec.get("grad"):
+        kw.append("grad=[" + ", ".join(f'({pos}, "{c}")' for pos, c in rec["grad"]) + "]")
+        if rec.get("grad_angle") is not None:
+            kw.append(f"grad_angle={rec['grad_angle']}")
+    if rec["dash"]:
+        kw.append(f'dash="{rec["dash"]}"')
     if rec["arrow"]:
-        kw.append("arrow=True")
+        kw.append(f'arrow="{rec["arrow"]}"')
     if rec["prst"] not in ("line", "straightConnector1"):
         kw.append(f'prst="{rec["prst"]}"')
     if rec.get("flip_h"):
@@ -628,7 +771,9 @@ def render_chrome(rec):
     if role == "breadcrumb":
         return f'breadcrumb("{py_str(data[0])}", "{py_str(data[1])}")'
     if role == "title":
-        return f'title_placeholder("{py_str(data[0])}", "{py_str(data[1])}")'
+        cx = data[2] if len(data) > 2 else None
+        cx_arg = f", cx={coordlit(cx)}" if (cx is not None and abs(cx - HOUSE_TITLE_CX) > TOL) else ""
+        return f'title_placeholder("{py_str(data[0])}", "{py_str(data[1])}"{cx_arg})'
     if role == "prelim":
         return "prelim_chip()" if data is None else f'prelim_chip(text="{py_str(data)}")'
     if role == "sources":
@@ -648,8 +793,12 @@ def render_trun(r):
         a.append("italic=True")
     if r.get("underline"):
         a.append("underline=True")
+    if r.get("baseline") is not None:
+        a.append(f"baseline={r['baseline']}")
     if r["color"] is not None:
         a.append(f"color={r['color']}")
+    if r.get("hlink") and r["hlink"] in _HLINKS:
+        a.append(f'hyperlink_rid="{_HLINKS[r["hlink"]]}"')
     a.append("font=FONT")
     return f"trun({', '.join(a)})"
 
@@ -676,6 +825,13 @@ def render_tpara(p):
         kw.append(f"space_before={p['space_before']}")
     if p.get("space_after") is not None:
         kw.append(f"space_after={p['space_after']}")
+    # An EMPTY paragraph (a spacer line between bullets, or a collapsed spacer row)
+    # carries its height in <a:endParaRPr sz>. Without re-emitting it the blank line
+    # renders at the renderer's default size — bloating inter-bullet gaps (the RHS
+    # commentary cells) and over-tall spacer rows (the 1pt spacer rows). cell() does
+    # this already for its shortcut path; rcell()'s paragraphs went without.
+    if not p["runs"] and p.get("end_size") is not None:
+        kw.append(f"end_size={sizelit(p['end_size'])}")
     return f"tpara([{runs}]{(', ' + ', '.join(kw)) if kw else ''})"
 
 
@@ -719,7 +875,8 @@ def render_cell(c):
     if c["row_span"] > 1:
         span_kw.append(f"rowspan={c['row_span']}")
     anchor_kw = [f'anchor="{c["anchor"]}"'] if (c["anchor"] and c["anchor"] != "ctr") else []
-    mech = fill_kw + anchor_kw + span_kw + _inset_kw(c) + _border_kw(c["borders"])
+    vert_kw = [f'vert="{c["vert"]}"'] if c.get("vert") else []   # vert270 spine labels
+    mech = fill_kw + anchor_kw + vert_kw + span_kw + _inset_kw(c) + _border_kw(c["borders"])
     paras = c["paras"]
     # cell() is a single-run shortcut with no bullet/indent support, so a cell whose lone
     # paragraph is bulleted or hanging-indented must take the rich rcell() path.
@@ -838,7 +995,12 @@ def detect_chrome(items):
                 notes.append("breadcrumb-like shape off house position - kept verbatim")
             continue
         if text.startswith(("Note:", "Source:", "Sources:")):   # before title: a footnote may contain " | "
-            if _near(x, y, "sources"):
+            if any(r.get("hlink") for p in rec["paras"] for r in p["runs"]):
+                # the house sources_line builder takes a FLAT string and would drop the
+                # per-run external links; keep the footnote verbatim so its hlinkClick
+                # runs survive (text_box -> render_run emits hyperlink_rid).
+                notes.append("Source line carries hyperlinks - kept verbatim to preserve them")
+            elif _near(x, y, "sources"):
                 rec["role"] = ("sources", text)
             else:
                 notes.append("Note/Source line off house position - kept verbatim")
@@ -846,7 +1008,10 @@ def detect_chrome(items):
         if (ph and ph[0] == "title") or " | " in text:
             if (ph and ph[0] == "title") or _near(x, y, "title"):
                 topic, _, takeaway = text.partition(" | ")
-                rec["role"] = ("title", (topic.strip(), takeaway.strip()))
+                # carry the source title width: think-cell narrows it on slides with
+                # top-right logos so the takeaway clears them; the house builder would
+                # otherwise force full width and run the title text under the logos.
+                rec["role"] = ("title", (topic.strip(), takeaway.strip(), rec.get("cx")))
             else:
                 notes.append("title-like shape off house position - kept verbatim")
             continue
@@ -854,11 +1019,14 @@ def detect_chrome(items):
 
 
 def is_simple(rec):
-    # pattern_fill / custgeom shapes carry a fill or geometry the cluster machinery
-    # (which only varies x/y/cx/cy/fill/line/text/geom_adj) can't reproduce, so keep
-    # them standalone — they emit text_box(pattern_fill=)/custom_geometry() instead.
+    # pattern_fill / custgeom / effects shapes carry a fill, geometry, or shadow the
+    # cluster machinery (which only varies x/y/cx/cy/fill/line/text/geom_adj) can't
+    # reproduce, so keep them standalone — they emit text_box(pattern_fill=/effects=)
+    # or custom_geometry() instead. (A shadowed callout collapsed into a same-style
+    # loop would otherwise silently lose its effectLst.)
     return (rec["type"] == "sp" and not rec["raw"] and not rec["role"]
             and not rec.get("pattern_fill") and not rec.get("custgeom")
+            and not rec.get("effects") and not rec.get("fill_alpha")
             and len(rec["paras"]) <= 1
             and (not rec["paras"] or len(rec["paras"][0]["runs"]) <= 1))
 
@@ -866,7 +1034,7 @@ def is_simple(rec):
 def const_key(rec):
     p = rec["paras"][0] if rec["paras"] else None
     r = next((x for x in p["runs"] if not x.get("break")), None) if p else None
-    return (rec["prst"], rec["line_width"], rec["dashed"], rec["anchor"], rec["wrap"],
+    return (rec["prst"], rec["line_width"], rec["dashed"], rec["anchor"], rec["wrap"], rec.get("vert"),
             tuple(sorted(rec["ins"].items())), rec.get("rot", 0),
             tuple(sorted(rec["geom_adj"].keys())),
             p["align"] if p else None, p["level"] if p else 0,
@@ -881,6 +1049,31 @@ def _member_text(rec):
     return rec["paras"][0]["runs"][0].get("text", "") if (rec["paras"] and rec["paras"][0]["runs"]) else ""
 
 
+def _bbox_overlap(a, b):
+    return (a["x"] < b["x"] + b["cx"] and a["x"] + a["cx"] > b["x"]
+            and a["y"] < b["y"] + b["cy"] and a["y"] + a["cy"] > b["y"])
+
+
+def _cluster_z_safe(items, idxs):
+    """A cluster is emitted as ONE loop at the FIRST member's z-position, so every
+    member jumps to the front of the run. That is paint-safe only when no non-member
+    drawable interleaved among the members (in document/paint order) overlaps a member
+    that would jump ahead of it — otherwise that shape paints over/under the wrong
+    neighbour (e.g. the confidence-scale arrow landing on top of its label)."""
+    member_set = set(idxs)
+    for j in range(min(idxs) + 1, max(idxs)):
+        if j in member_set:
+            continue
+        rj = items[j]
+        if rj.get("type") not in ("sp", "cxn") or rj.get("raw"):
+            continue
+        if not all(isinstance(rj.get(k), int) for k in ("x", "y", "cx", "cy")):
+            continue
+        if any(m > j and _bbox_overlap(rj, items[m]) for m in idxs):
+            return False
+    return True
+
+
 def detect_clusters(items):
     groups = {}
     for i, rec in enumerate(items):
@@ -889,6 +1082,8 @@ def detect_clusters(items):
     clusters = []
     for idxs in groups.values():
         if len(idxs) < MIN_CLUSTER:
+            continue
+        if not _cluster_z_safe(items, idxs):   # clustering would reorder a paint-overlapping shape
             continue
         varying = []
         for field in ("x", "y", "cx", "cy", "fill", "line_color"):
@@ -993,6 +1188,16 @@ def render_value(rec, field):
 def slide_rels(z, slide_no):
     root = ET.fromstring(z.read(f"ppt/slides/_rels/slide{slide_no}.xml.rels"))
     return {r.get("Id"): r.get("Target") for r in root}
+
+
+def hyperlink_rels(z, slide_no):
+    """{rId: external URL} for the slide's hyperlink relationships (TargetMode=External)."""
+    try:
+        root = ET.fromstring(z.read(f"ppt/slides/_rels/slide{slide_no}.xml.rels"))
+    except KeyError:
+        return {}
+    return {r.get("Id"): r.get("Target") for r in root
+            if (r.get("Type") or "").endswith("/hyperlink")}
 
 
 def source_layout_name(z, slide_no):
@@ -1224,6 +1429,7 @@ def convert(src_pptx, slide_no, out_path, src_dir, module_name, layout, units="i
     images_dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(src_pptx) as z:
         theme = build_theme_map(z)
+        tstyles = build_table_style_map(z)
         deck_name, deck_date = derive_provenance(z, src_pptx, deck_name)
         rels = slide_rels(z, slide_no)
         # Pick the house layout whose name matches the source slide's layout (so a
@@ -1264,7 +1470,7 @@ def convert(src_pptx, slide_no, out_path, src_dir, module_name, layout, units="i
                                   "cx": int(ext.get("cx")), "cy": int(ext.get("cy")),
                                   "rId": f"rId{len(chart_assets) + 1}"})
                 elif el.find(".//" + q(A, "tbl")) is not None:
-                    items.append(parse_table(el, theme))
+                    items.append(parse_table(el, theme, tstyles))
                 else:
                     items.append({"type": "drop", "comment": f"DROPPED graphicFrame ('{nm}') - think-cell OLE"})
             elif tag == "pic":
@@ -1313,6 +1519,27 @@ def convert(src_pptx, slide_no, out_path, src_dir, module_name, layout, units="i
                 tgt_to_img[tgt] = (rid, new_name)
                 images.append({"rId": rid, "file": new_name})
             rec["rId"], rec["file"] = tgt_to_img[tgt]
+
+        # ── hyperlinks: external links on runs become module rIds that continue AFTER
+        #    the chart + image rIds (deck_core._build's rId order), wired via HYPERLINKS ──
+        global _HLINKS
+        _HLINKS = {}
+        _hl_url = hyperlink_rels(z, slide_no)        # source rId -> URL
+        hyperlinks = []
+        _hl_base = len(chart_assets) + 2 + len(images)
+
+        def _rec_runs(rec):
+            if rec.get("type") == "table":
+                return [r for row in rec["rows"] for c in row["cells"]
+                        for p in c["paras"] for r in p["runs"]]
+            return [r for p in rec.get("paras", []) for r in p["runs"]]
+
+        for rec in items:
+            for r in _rec_runs(rec):
+                src = r.get("hlink")
+                if src and src in _hl_url and src not in _HLINKS:
+                    _HLINKS[src] = f"rId{_hl_base + len(_HLINKS)}"
+                    hyperlinks.append({"rId": _HLINKS[src], "url": _hl_url[src]})
 
         notes = ([layout_note] if layout_note else []) + group_notes + detect_chrome(items)
         clusters = detect_clusters(items)
@@ -1480,7 +1707,7 @@ def convert(src_pptx, slide_no, out_path, src_dir, module_name, layout, units="i
                 body.append(f"    out.append({render_sp(rec, 'n()', coord_map_for(rec))})")
                 stats["text_box"] += 1
 
-    module = build_module_text(module_name, slide_no, layout, chart_assets, images,
+    module = build_module_text(module_name, slide_no, layout, chart_assets, images, hyperlinks,
                                anchor_defs, data_defs, geom_defs, body, stats, notes,
                                deck_name, deck_date)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1568,21 +1795,21 @@ def bd(L=None, R=None, T=None, B=None):
 
 
 def cell(text="", *, fill=None, bold=None, italic=None, color=BLACK, size=PT(10),
-         align="l", anchor="ctr", span=1, rowspan=1,
+         align="l", anchor="ctr", vert=None, span=1, rowspan=1,
          l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, **edges):
     return tcell(text, fill=fill, bold=bold, italic=italic, color=color, size=size,
-                 align=align, anchor=anchor, grid_span=span, row_span=rowspan, font=FONT,
+                 align=align, anchor=anchor, vert=vert, grid_span=span, row_span=rowspan, font=FONT,
                  l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=bd(**edges))
 
 
-def rcell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1,
+def rcell(paras, *, fill=None, anchor="ctr", vert=None, span=1, rowspan=1,
           l_ins=45720, r_ins=45720, t_ins=45720, b_ins=45720, **edges):
-    return tcell_rich(paras, fill=fill, grid_span=span, row_span=rowspan, anchor=anchor,
+    return tcell_rich(paras, fill=fill, grid_span=span, row_span=rowspan, anchor=anchor, vert=vert,
                       l_ins=l_ins, r_ins=r_ins, t_ins=t_ins, b_ins=b_ins, borders=bd(**edges))
 '''
 
 
-def build_module_text(module_name, slide_no, layout, chart_assets, images, anchor_defs,
+def build_module_text(module_name, slide_no, layout, chart_assets, images, hyperlinks, anchor_defs,
                       data_defs, geom_defs, body, stats, notes, deck_name, deck_date):
     chart_reads, data_literals, charts, chart_syms = [], [], [], set()
     for i, (cfile, xfile, cdata) in enumerate(chart_assets):
@@ -1618,6 +1845,14 @@ def build_module_text(module_name, slide_no, layout, chart_assets, images, ancho
         images_block = "\n" + "\n".join(img_lines)
     else:
         images_block = ""
+    if hyperlinks:
+        hl_lines = ["HYPERLINKS = ["]
+        for h in hyperlinks:
+            hl_lines.append(f'    {{"rId": "{h["rId"]}", "url": "{py_str(h["url"])}"}},')
+        hl_lines.append("]")
+        hyperlinks_block = "\n" + "\n".join(hl_lines)
+    else:
+        hyperlinks_block = ""
     kit_block = _TABLE_KIT if stats.get("table") else ""
     # include the kit in the text _imports() scans so tcell/tcell_rich/PT/BLACK/FONT (used
     # only inside the kit defs) still get imported even though the body calls cell()/rcell().
@@ -1671,7 +1906,7 @@ from pathlib import Path
 LAYOUT = "{layout}"
 
 _SRC = Path(__file__).parent / "_src"
-{chart_block}{images_block}
+{chart_block}{images_block}{hyperlinks_block}
 
 {kit_block}
 {data_section}def _body() -> str:

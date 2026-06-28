@@ -12,7 +12,8 @@ TEACHES
   - fully declarative native column_chart panels instead of bundled chart XML
   - five aligned small-multiple chart frames sharing one category-label row
   - workbook-sourced revenue bars with source chart-part data-point colors
-  - manually overlaid EBIT-margin dash markers from the source secondary axis
+  - native secondary-axis EBIT-margin dash markers from the source combo charts
+  - native right-axis scale for 100 / 50 / 0 / -50 EBIT-margin ticks
   - manually placed margin labels and revenue chips across all panels
   - archetype band headers, year tags, shared value-axis ticks, and dividers
 
@@ -36,17 +37,19 @@ SOURCE NOTE
   The original used five `styled_chart(...)` calls backed by
   slide34_chart19.xml/.xlsb through slide34_chart23.xml/.xlsb. This version
   intentionally replaces those template dependencies with five native editable
-  `column_chart(mode="stacked", ...)` specs for revenue bars. The EBIT-margin
-  series from the source combo charts is preserved as explicit, editable yellow
-  dash-marker connectors positioned from the source secondary-axis scale.
+  `column_chart(mode="stacked", ...)` specs with line overlays. Revenue bars
+  remain native columns, and the EBIT-margin row is preserved as a native
+  secondary-axis line series whose stroke is hidden and whose markers are native
+  PowerPoint `dash` markers.
 
 FIDELITY NOTE
   This is a practical factory-native rebuild, not a byte-identical chart-template
   port. It preserves the source workbook rows, chart XML layout/scales, gap and
-  overlap, revenue bar point fills, manual labels/chips, year tags, group headers,
-  baseline rules, source note, and off-house Preliminary chip. The source combo
-  chart's EBIT line had `a:noFill` and per-point yellow `dash` markers; the
-  markers are therefore drawn manually rather than as a native line chart.
+  overlap, revenue bar point fills, native EBIT dash markers on the right-side
+  -50 to 100 axis, manual labels/chips, year tags, group headers, baseline rules,
+  source note, and off-house Preliminary chip. The source combo chart's EBIT
+  line had `a:noFill`; this native rebuild keeps that no-fill line behavior and
+  uses only the markers for the visible EBIT-margin series.
 """
 from __future__ import annotations
 
@@ -128,8 +131,9 @@ SOURCE_EBIT_AXIS_MAX = 100
 SOURCE_GAP_WIDTH = 80
 SOURCE_BAR_OVERLAP = 100
 SOURCE_AXIS_LINE_WIDTH = 9_525
-SOURCE_EBIT_MARKER_LINE_WIDTH = 9_525
-EBIT_MARKER_WIDTH_IN = 0.120
+SOURCE_EBIT_MARKER_SIZE = 12             # source marker size for native `dash` markers
+SOURCE_EBIT_MARKER_OUTLINE_WIDTH = 9_525  # source marker outline weight (0.75pt)
+SOURCE_EBIT_AXIS_MAJOR_UNIT = 50
 
 # Bar-series dPt color overrides in the source chart part: first five points use
 # the series default red, then owner/operator blue, charter-company green, and
@@ -173,6 +177,32 @@ def _native_panel_chart_style(year: int) -> dict:
         "show_value_axis_labels": False,
         "show_gridlines": False,
         "show_value_labels": False,
+        "line_overlay": [
+            {
+                "name": f"{year} EBIT Margin (%)",
+                "color": EBIT_MARKER_YELLOW,
+                "values": list(EBIT_MARGIN_VALUES_BY_YEAR[year]),
+                "marker": "dash",
+                "marker_size": SOURCE_EBIT_MARKER_SIZE,
+                # The source line stroke is no-fill. The factory emits the
+                # marker series as a line chart; _native_ebit_marker_chart()
+                # below patches only that line stroke to noFill while keeping
+                # the markers native/editable.
+                "width": 0,
+                "smooth": False,
+            }
+        ],
+        "line_overlay_axis": "secondary",
+        "line_value_axis_position": "r",
+        "line_value_axis_format": '#,##0;"-"#,##0',
+        "line_value_axis_min": SOURCE_EBIT_AXIS_MIN,
+        "line_value_axis_max": SOURCE_EBIT_AXIS_MAX,
+        "line_value_axis_major_unit": SOURCE_EBIT_AXIS_MAJOR_UNIT,
+        "show_line_value_axis_labels": True,
+        "line_show_gridlines": False,
+        "value_axis_position": "l",
+        "value_axis_crosses": "min",
+        "cat_axis_crosses": "min",
         "value_axis_format": '#,##0;"-"#,##0',
         "cat_label_size_pt": 8,
         "gap_width": SOURCE_GAP_WIDTH,
@@ -189,11 +219,44 @@ def _native_panel_chart_style(year: int) -> dict:
 
 
 CHART_STYLES_BY_YEAR = {year: _native_panel_chart_style(year) for year in FISCAL_YEARS}
-CHARTS = [column_chart(**CHART_STYLES_BY_YEAR[year]) for year in FISCAL_YEARS]
+
+
+def _native_ebit_marker_chart(year: int) -> dict:
+    """Return one panel chart with native EBIT dash markers and no line stroke.
+
+    `column_chart(..., line_overlay=...)` gives us the editable combo chart and
+    the embedded workbook. The source XML then needs three tiny native-chart
+    refinements that the generic factory intentionally does not expose: a no-fill
+    EBIT line stroke, source-weight native dash-marker outlines, and a hidden
+    duplicate category axis for the secondary-axis line series.
+    """
+
+    chart = dict(column_chart(**CHART_STYLES_BY_YEAR[year]))
+    xml = chart["chart_xml"]
+    xml = xml.replace(
+        f'<c:spPr><a:ln w="0" cap="rnd"><a:solidFill><a:srgbClr val="{EBIT_MARKER_YELLOW}"/></a:solidFill><a:round/></a:ln></c:spPr>',
+        '<c:spPr><a:ln><a:noFill/></a:ln></c:spPr>',
+    )
+    xml = xml.replace(
+        f'<a:ln w="9525"><a:solidFill><a:srgbClr val="{EBIT_MARKER_YELLOW}"/></a:solidFill></a:ln>',
+        f'<a:ln w="{SOURCE_EBIT_MARKER_OUTLINE_WIDTH}" cmpd="sng" algn="ctr"><a:solidFill><a:srgbClr val="{EBIT_MARKER_YELLOW}"/></a:solidFill><a:prstDash val="solid"/></a:ln>',
+    )
+    xml = xml.replace(
+        '<c:catAx><c:axId val="333333333"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/>',
+        '<c:catAx><c:axId val="333333333"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="1"/>',
+    )
+    xml = xml.replace(
+        '<c:crossAx val="333333333"/><c:crosses val="min"/>',
+        '<c:crossAx val="333333333"/><c:crosses val="max"/>',
+    )
+    chart["chart_xml"] = xml
+    return chart
+
+
+CHARTS = [_native_ebit_marker_chart(year) for year in FISCAL_YEARS]
 
 # Readable data mirrors for agents/tools that expect the converter's _CHARTn_DATA
-# shape. CHARTS consumes the revenue row; the EBIT row is rendered manually by
-# paint_ebit_margin_markers().
+# shape. CHARTS consumes both the revenue row and the native EBIT marker row.
 _CHART0_DATA = {"categories": COMPANY_CATEGORIES, "series": [{"name": "2020 Revenue", "values": list(REVENUE_VALUES_BY_YEAR[2020])}, {"name": "2020 EBIT Margin", "values": list(EBIT_MARGIN_VALUES_BY_YEAR[2020])}]}
 _CHART1_DATA = {"categories": COMPANY_CATEGORIES, "series": [{"name": "2021 Revenue", "values": list(REVENUE_VALUES_BY_YEAR[2021])}, {"name": "2021 EBIT Margin", "values": list(EBIT_MARGIN_VALUES_BY_YEAR[2021])}]}
 _CHART2_DATA = {"categories": COMPANY_CATEGORIES, "series": [{"name": "2022 Revenue", "values": list(REVENUE_VALUES_BY_YEAR[2022])}, {"name": "2022 EBIT Margin", "values": list(EBIT_MARGIN_VALUES_BY_YEAR[2022])}]}
@@ -210,7 +273,8 @@ TEACHING_METADATA = {
     ),
     "teaches": [
         "native revenue column charts",
-        "manual secondary-axis EBIT markers",
+        "native secondary-axis EBIT dash markers",
+        "native right-side EBIT-margin axis labels at 100 / 50 / 0 / -50",
         "small-multiple chart alignment",
         "manual value-axis ticks",
         "manual company labels",
@@ -218,7 +282,7 @@ TEACHING_METADATA = {
         "archetype band headers and dividers",
     ],
     "source_module": "archetype_comps_shipbuilder_margins.py",
-    "rebuild_strategy": "replace five styled_chart combo templates with native column_chart panels plus manual EBIT markers",
+    "rebuild_strategy": "replace five styled_chart combo templates with native column_chart panels plus native no-fill line overlays for EBIT dash markers",
 }
 
 TEXT_FIT = {
@@ -563,15 +627,6 @@ def _p(text: str, *, size_pt: int = 8, color: str = BLACK, bold: bool = False, i
     )
 
 
-def _ebit_marker_y(panel: ChartPanel, value: float | int) -> float:
-    scale = SOURCE_EBIT_AXIS_MAX - SOURCE_EBIT_AXIS_MIN
-    return panel.plot_y + panel.plot_h * ((SOURCE_EBIT_AXIS_MAX - float(value)) / scale)
-
-
-def _category_center_x(panel: ChartPanel, idx: int) -> float:
-    return panel.plot_x + panel.plot_w * ((idx + 0.5) / len(COMPANY_CATEGORIES))
-
-
 def paint_chrome(out: list[str], ids: ShapeIds) -> None:
     out.append("")
     out.append("")
@@ -599,41 +654,16 @@ def paint_chart_frames(out: list[str], ids: ShapeIds) -> None:
 def paint_panel_baselines(out: list[str], ids: ShapeIds) -> None:
     # Dashed baselines/rules copied from the source slide. The segmented 2021 and
     # 2022 baselines preserve gaps around labels and dividers.
-    out.append(connector(ids.next(), "Straight Connector 2230", _GRID_X, IN(2.021), IN(11.832), IN(0), color=DK, width=9525, dashed=True, arrow=True))
-    out.append(connector(ids.next(), "Straight Connector 2205", _GRID_X, IN(3.052), IN(11.832), IN(0), color=DK, width=9525, dashed=True, arrow=True))
-    out.append(connector(ids.next(), "Straight Connector 2180", _GRID_X, IN(4.083), IN(1.024), IN(0), color=DK, width=9525, dashed=True, arrow=True))
-    out.append(connector(ids.next(), "Straight Connector 2484", IN(2.280), IN(4.083), IN(5.273), IN(0), color=DK, width=9525, dashed=True, arrow=True))
-    out.append(connector(ids.next(), "Straight Connector 2485", IN(7.733), IN(4.083), IN(5.038), IN(0), color=DK, width=9525, dashed=True, arrow=True))
-    out.append(connector(ids.next(), "Straight Connector 384", _GRID_X, IN(5.115), IN(1.024), IN(0), color=DK, width=9525, dashed=True, arrow=True))
-    out.append(connector(ids.next(), "Straight Connector 2529", IN(2.280), IN(5.115), IN(5.273), IN(0), color=DK, width=9525, dashed=True, arrow=True))
-    out.append(connector(ids.next(), "Straight Connector 2530", IN(7.733), IN(5.115), IN(5.038), IN(0), color=DK, width=9525, dashed=True, arrow=True))
-    out.append(connector(ids.next(), "Straight Connector 2528", IN(2.122), IN(5.205), IN(0), IN(0.003), color=BREADCRUMB, width=6350, dashed=True, arrow=True))
-    out.append(connector(ids.next(), "Straight Connector 2020", _GRID_X, IN(6.146), IN(11.832), IN(0), color=DK, width=9525, dashed=True, arrow=True))
-
-
-def paint_ebit_margin_markers(out: list[str], ids: ShapeIds) -> None:
-    # The source combo chart line has no connecting stroke; every point is a
-    # yellow `dash` marker on the secondary EBIT-margin axis. We draw each marker
-    # explicitly so the chart can be factory-native and still preserve the source
-    # EBIT values from the XLSB/XML cache.
-    for panel in CHART_PANELS:
-        for idx, value in enumerate(EBIT_MARGIN_VALUES_BY_YEAR[panel.year]):
-            if value is None:
-                continue
-            x = _category_center_x(panel, idx) - EBIT_MARKER_WIDTH_IN / 2
-            y = _ebit_marker_y(panel, value)
-            out.append(
-                connector(
-                    ids.next(),
-                    "EBIT margin dash marker",
-                    IN(x),
-                    IN(y),
-                    IN(EBIT_MARKER_WIDTH_IN),
-                    IN(0),
-                    color=EBIT_MARKER_YELLOW,
-                    width=SOURCE_EBIT_MARKER_LINE_WIDTH,
-                )
-            )
+    out.append(connector(ids.next(), "Straight Connector 2230", _GRID_X, IN(2.021), IN(11.832), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "Straight Connector 2205", _GRID_X, IN(3.052), IN(11.832), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "Straight Connector 2180", _GRID_X, IN(4.083), IN(1.024), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "Straight Connector 2484", IN(2.280), IN(4.083), IN(5.273), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "Straight Connector 2485", IN(7.733), IN(4.083), IN(5.038), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "Straight Connector 384", _GRID_X, IN(5.115), IN(1.024), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "Straight Connector 2529", IN(2.280), IN(5.115), IN(5.273), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "Straight Connector 2530", IN(7.733), IN(5.115), IN(5.038), IN(0), color=DK, width=9525, dash="lgDash"))
+    out.append(connector(ids.next(), "Straight Connector 2528", IN(2.122), IN(5.205), IN(0), IN(0.003), color=BREADCRUMB, width=6350))
+    out.append(connector(ids.next(), "Straight Connector 2020", _GRID_X, IN(6.146), IN(11.832), IN(0), color=DK, width=9525, dash="lgDash"))
 
 
 def paint_manual_axis_and_data_labels(out: list[str], ids: ShapeIds) -> None:
@@ -701,11 +731,11 @@ def _body() -> str:
     ids = ShapeIds(start=100)
 
     # Paint order favors teaching readability: native charts and rules first,
-    # then explicit EBIT markers and manual labels/chips, then headers/dividers.
+    # then manual labels/chips, then headers/dividers. EBIT markers live inside
+    # the native chart XML, not as slide-level connector shapes.
     paint_chrome(out, ids)
     paint_chart_frames(out, ids)
     paint_panel_baselines(out, ids)
-    paint_ebit_margin_markers(out, ids)
     paint_manual_axis_and_data_labels(out, ids)
     paint_group_headers_and_panel_labels(out, ids)
     paint_axis_legends_and_dividers(out, ids)

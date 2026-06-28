@@ -13,8 +13,8 @@ TEACHES
   - encoding a source chart's per-point fills when one workbook series changes
     vessel-type meaning between categories
   - using a patterned native chart series for a hatched "Other" segment
-  - hiding selected native data labels and replacing them with manual chips for
-    very thin stacked segments
+  - hiding selected native data labels, replacing several with manual chips,
+    and preserving source manual label layouts for ultra-thin top segments
   - using a dense right-hand mandate table with rich cells, row spans, and local
     cell-border helpers
   - preserving paint order while splitting a converted slide into teaching-level
@@ -44,7 +44,8 @@ FIDELITY NOTE
   columns, hidden native category labels, fixed value axis, manual plot-area
   layout, no native legend, no segment outlines, per-point fills, and a hatched
   "Other" series), while retaining the source slide's manually placed labels,
-  legend, leader lines, mandate table, and callouts as slide shapes.
+  source-positioned thin-segment label callouts, legend, leader lines, mandate
+  table, and callouts as slide shapes.
 """
 from __future__ import annotations
 
@@ -145,7 +146,10 @@ CAPTIVE_DEMAND_SERIES: tuple[dict, ...] = (
         "name": "Bulk",
         "color": VESSEL_TYPE_COLORS["bulk"],
         "values": [1, None],
-        "label_color": WHITE,
+        # The source chart nudges this 1-vessel top-left segment outside the stack
+        # with a manual data-label layout. The local XML patch below recreates
+        # that exact native-chart label instead of letting PowerPoint auto-place it.
+        "hide_labels": True,
     },
     {
         "name": "Other",
@@ -155,7 +159,8 @@ CAPTIVE_DEMAND_SERIES: tuple[dict, ...] = (
             "fg": VESSEL_TYPE_COLORS["other_pattern_fg"],
             "bg": VESSEL_TYPE_COLORS["other_pattern_bg"],
         },
-        "label_color": BLACK,
+        # Same source-positioned native label treatment as Bulk.
+        "hide_labels": True,
     },
 )
 
@@ -197,7 +202,113 @@ CHART_STYLE = {
     "cat_header": "Demand Type",
 }
 
-CHARTS = [column_chart(**CHART_STYLE)]
+# Two very thin source labels (left-column Bulk=1 and Other=2) use chart-native
+# manual label layouts rather than slide-level text. Leaving them to the generic
+# `column_chart()` label placement causes PowerPoint/LibreOffice to place the
+# labels inside the top of the stack, where the source positioned them just to the
+# right of the hatched cap and disabled leader lines. The factory does not expose
+# per-label manualLayout yet, so this local patch is intentionally narrow and
+# visible: the chart data/fills/axes still come from `column_chart()`, while these
+# two label records are source-faithful OOXML shims.
+_SOURCE_THIN_LABEL_X = "0.13825821755337173"
+_SOURCE_BULK_LABEL_Y = "1.4858841010401188E-2"
+_SOURCE_OTHER_LABEL_Y = "-1.4858841010401188E-2"
+
+
+def _source_thin_segment_dlbls(label_y: str) -> str:
+    """Source-positioned dLbls XML for the left-column top labels.
+
+    This mirrors slide60_chart43.xml: one label at category idx 0, no native
+    leader lines, 10pt theme text, centered data label, and a hidden default
+    dLbls group so no accidental second label appears for the blank category.
+    """
+
+    return (
+        "<c:dLbls>"
+        "<c:dLbl>"
+        '<c:idx val="0"/>'
+        "<c:layout><c:manualLayout>"
+        f'<c:x val="{_SOURCE_THIN_LABEL_X}"/>'
+        f'<c:y val="{label_y}"/>'
+        "</c:manualLayout></c:layout>"
+        '<c:numFmt formatCode="#,##0;&quot;-&quot;#,##0" sourceLinked="0"/>'
+        "<c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr>"
+        "<c:txPr>"
+        '<a:bodyPr wrap="none"/><a:lstStyle/>'
+        "<a:p><a:pPr><a:defRPr sz=\"1000\" kern=\"1200\">"
+        '<a:solidFill><a:schemeClr val="tx2"/></a:solidFill>'
+        '<a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/>'
+        "</a:defRPr></a:pPr><a:endParaRPr lang=\"en-US\"/></a:p>"
+        "</c:txPr>"
+        '<c:dLblPos val="ctr"/>'
+        '<c:showLegendKey val="0"/><c:showVal val="1"/><c:showCatName val="0"/>'
+        '<c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/>'
+        "<c:extLst>"
+        '<c:ext uri="{CE6537A1-D6FC-4f65-9D91-7224C49458BB}" xmlns:c15="http://schemas.microsoft.com/office/drawing/2012/chart">'
+        '<c15:spPr xmlns:c15="http://schemas.microsoft.com/office/drawing/2012/chart">'
+        '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+        "</c15:spPr></c:ext>"
+        "</c:extLst>"
+        "</c:dLbl>"
+        "<c:spPr><a:noFill/><a:ln><a:noFill/></a:ln><a:effectLst/></c:spPr>"
+        '<c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="0"/>'
+        '<c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/>'
+        "<c:extLst>"
+        '<c:ext uri="{CE6537A1-D6FC-4f65-9D91-7224C49458BB}" xmlns:c15="http://schemas.microsoft.com/office/drawing/2012/chart">'
+        '<c15:showLeaderLines val="0"/>'
+        "</c:ext>"
+        "</c:extLst>"
+        "</c:dLbls>"
+    )
+
+
+def _patch_series_dlbls(chart_xml: str, series_name: str, dlbls_xml: str) -> str:
+    """Replace/insert one series' dLbls block in the deterministic factory XML."""
+
+    name_marker = f"<c:v>{series_name}</c:v>"
+    name_pos = chart_xml.find(name_marker)
+    if name_pos < 0:
+        raise ValueError(f"series {series_name!r} not found in generated chart XML")
+    ser_start = chart_xml.rfind("<c:ser>", 0, name_pos)
+    ser_end = chart_xml.find("</c:ser>", name_pos)
+    if ser_start < 0 or ser_end < 0:
+        raise ValueError(f"could not isolate series {series_name!r} in generated chart XML")
+    ser_end += len("</c:ser>")
+    series_xml = chart_xml[ser_start:ser_end]
+    existing_start = series_xml.find("<c:dLbls>")
+    if existing_start >= 0:
+        existing_end = series_xml.find("</c:dLbls>", existing_start) + len("</c:dLbls>")
+        series_xml = series_xml[:existing_start] + dlbls_xml + series_xml[existing_end:]
+    else:
+        insert_after = "<c:invertIfNegative val=\"0\"/>"
+        insert_pos = series_xml.find(insert_after)
+        if insert_pos < 0:
+            raise ValueError(f"no insertion point for series {series_name!r} dLbls")
+        insert_pos += len(insert_after)
+        series_xml = series_xml[:insert_pos] + dlbls_xml + series_xml[insert_pos:]
+    return chart_xml[:ser_start] + series_xml + chart_xml[ser_end:]
+
+
+def _native_captive_demand_chart() -> dict:
+    chart = column_chart(**CHART_STYLE)
+    chart_xml = chart["chart_xml"]
+    chart_xml = _patch_series_dlbls(chart_xml, "Bulk", _source_thin_segment_dlbls(_SOURCE_BULK_LABEL_Y))
+    chart_xml = _patch_series_dlbls(chart_xml, "Other", _source_thin_segment_dlbls(_SOURCE_OTHER_LABEL_Y))
+    return {**chart, "chart_xml": chart_xml}
+
+
+CHARTS = [_native_captive_demand_chart()]
+
+# Source-line external links. The column chart takes rId2, so links start at rId3;
+# the SourceNote runs reference these rIds via run(..., hyperlink_rid=...). rId5's
+# target mirrors the source deck's relative-looking AEO-crude link verbatim.
+HYPERLINKS = [
+    {"rId": "rId3", "url": "https://www.congress.gov/bill/119th-congress/senate-bill/1541/text#toc-id9f432e34eabc4c5ea3d818bfdc7a838f"},  # SHIPS Act text
+    {"rId": "rId4", "url": "https://www.eia.gov/outlooks/aeo/data/browser/#/?id=76-AEO2025&cases=ref2025&sourcekey=0"},                   # EIA AEO LNG Export Table
+    {"rId": "rId5", "url": "../https/www.eia.gov/outlooks/aeo/data/browser#/?id=11-AEO2025&cases=ref2025&sourcekey=0"},                   # EIA AEO Crude Export Table
+    {"rId": "rId6", "url": "https://www.eia.gov/todayinenergy/detail.php?id=67064"},                                                      # EIA Crude Tanker Descriptions
+    {"rId": "rId7", "url": "https://www.gao.gov/assets/gao-22-105160.pdf"},                                                               # GAO Report on Government Preference Cargo
+]
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -214,6 +325,7 @@ TEACHING_METADATA = {
         "per-point chart colors through data_point_colors",
         "patterned chart series for a hatched segment",
         "manual data-label chips over very thin stacked segments",
+        "source-positioned native chart data labels for Bulk/Other top segments",
         "dense mandate table with rich cells and row spans",
         "local table-cell helpers instead of centralized table_kit",
         "PowerPoint paint order split into semantic paint functions",
@@ -387,8 +499,8 @@ LEGEND_LABELS: tuple[LegendLabel, ...] = (
 )
 
 LEADER_LINES: tuple[LeaderLine, ...] = (
-    LeaderLine("Straight Connector 74", Box(2.599, 2.274, 0.101, 0.069), color=BREADCRUMB, arrow=True, flip_h=True, flip_v=True),
-    LeaderLine("Straight Connector 75", Box(2.599, 2.177, 0.101, 0.069), color=BREADCRUMB, arrow=True, flip_h=True),
+    LeaderLine("Straight Connector 74", Box(2.599, 2.274, 0.101, 0.069), color=BREADCRUMB, dashed=False, flip_h=True, flip_v=True),
+    LeaderLine("Straight Connector 75", Box(2.599, 2.177, 0.101, 0.069), color=BREADCRUMB, dashed=False, flip_h=True),
     LeaderLine("Straight Connector 351", Box(4.958, 2.188, 0.745, 1.927), flip_v=True),
     LeaderLine("Straight Connector 355", Box(4.958, 2.854, 0.745, 1.536), flip_v=True),
     LeaderLine("Straight Connector 358", Box(4.958, 3.487, 0.745, 1.683), flip_v=True),
@@ -529,15 +641,15 @@ def paint_opening_chrome(out: list[str], ids: ShapeIds) -> None:
                         run(SOURCE_NOTE_TEXT, size=PT(8), color=BLACK, font=FONT),
                         line_break(),
                         run("Source: S&P Panjiva; Clarksons; ", size=PT(8), color=BLACK, font=FONT),
-                        run("SHIPS Act text", size=PT(8), color=BLACK, font=FONT),
+                        run("SHIPS Act text", size=PT(8), color=BLACK, font=FONT, hyperlink_rid="rId3"),
                         run("; ", size=PT(8), color=BLACK, font=FONT),
-                        run("EIA AEO LNG Export Table", size=PT(8), color=BLACK, font=FONT),
+                        run("EIA AEO LNG Export Table", size=PT(8), color=BLACK, font=FONT, hyperlink_rid="rId4"),
                         run("; ", size=PT(8), color=BLACK, font=FONT),
-                        run("EIA AEO Crude Export Table", size=PT(8), color=BLACK, font=FONT),
+                        run("EIA AEO Crude Export Table", size=PT(8), color=BLACK, font=FONT, hyperlink_rid="rId5"),
                         run("; ", size=PT(8), color=BLACK, font=FONT),
-                        run("EIA Crude Tanker Descriptions", size=PT(8), color=BLACK, font=FONT),
+                        run("EIA Crude Tanker Descriptions", size=PT(8), color=BLACK, font=FONT, hyperlink_rid="rId6"),
                         run("; ", size=PT(8), color=BLACK, font=FONT),
-                        run("GAO Report on Government Preference Cargo", size=PT(8), color=BLACK, font=FONT),
+                        run("GAO Report on Government Preference Cargo", size=PT(8), color=BLACK, font=FONT, hyperlink_rid="rId7"),
                     ],
                     line_spacing=100_000,
                 )
@@ -795,6 +907,15 @@ def paint_chart_labels_and_legend(out: list[str], ids: ShapeIds) -> None:
         )
 
 
+# Reference drop-shadow on the light-blue callout (outerShdw, verbatim params from
+# the source deck): 0.056" blur, 0.03" offset down-right, black @ 40% alpha.
+CALLOUT_SHADOW = (
+    '<a:effectLst><a:outerShdw blurRad="50800" dist="38100" dir="2700000" '
+    'algn="tl" rotWithShape="0"><a:prstClr val="black"><a:alpha val="40000"/>'
+    '</a:prstClr></a:outerShdw></a:effectLst>'
+)
+
+
 def paint_scenario_annotations(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
@@ -819,6 +940,7 @@ def paint_scenario_annotations(out: list[str], ids: ShapeIds) -> None:
             fill="CEDDEC",
             line_color=BLACK,
             anchor="ctr",
+            effects=CALLOUT_SHADOW,
         )
     )
     out.append("")
@@ -827,9 +949,10 @@ def paint_scenario_annotations(out: list[str], ids: ShapeIds) -> None:
             ids.next(),
             SCENARIO_CHIP.name,
             *SCENARIO_CHIP.box.emu(),
-            [paragraph([run("(2) SHIPS Act Scenario", size=PT(12), bold=True, font=FONT)], align="ctr", line_spacing=100_000)],
-            fill="447BB2",
+            [paragraph([run("(2) SHIPS Act Scenario", size=PT(12), bold=True, color=WHITE, font=FONT)], align="ctr", line_spacing=100_000)],
+            fill="447BB2",              # = theme bg2 @ 50% lum (reference chip fill)
             line_color=BLACK,
+            line_width=19050,           # 1.5pt — reference chip border (theme lnRef idx=2)
             anchor="ctr",
         )
     )

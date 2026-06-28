@@ -351,7 +351,11 @@ _CHART0_DATA = {
 }
 
 CHART_STYLE = {
-    "mode": "clustered",
+    # Source slide42_chart24 is a single-series STACKED horizontal bar
+    # (grouping="stacked", gapWidth=130, overlap=100). For one series stacked and
+    # clustered render identically, but matching the source grouping keeps the bar
+    # thickness/position exact under the manual category + value labels.
+    "mode": "stacked",
     "categories": list(CHART_CATEGORIES),
     "series": [dict(_CHART0_DATA["series"][0])],
     "show_legend": False,
@@ -363,20 +367,23 @@ CHART_STYLE = {
     "value_label_format": "0.0",
     "cat_label_size_pt": 10,
     "value_label_size_pt": 10,
-    "gap_width": 95,
-    "bar_overlap": 0,
-    "seg_line_color": "FFFFFF",
+    "gap_width": 130,                     # source c:gapWidth (was eyeballed 95)
+    "bar_overlap": 100,                   # source c:overlap (stacked forces 100 anyway)
+    "seg_line_color": "FFFFFF",           # source ser ln=noFill; white on white slide = invisible
     "seg_line_width": 6350,
-    "axis_line_color": WHITE,
-    "axis_line_width": 3175,
+    "axis_line_color": "162029",          # category spine, visible (source scheme:tx1)
+    "axis_line_width": 9525,
+    "value_axis_line_color": "none",      # value axis hidden (source FFFFFF/noFill)
     "value_axis_min": 0,
     "value_axis_max": 6628515,
     "value_axis_major_unit": 1000000,
+    # Exact source plotArea manualLayout (target=inner). The prior eyeballed
+    # {0.020, 0.030, 0.955, 0.925} drifted the bottom bar ~0.09in off its label.
     "plot_layout": {
-        "x": 0.020,
-        "y": 0.030,
-        "w": 0.955,
-        "h": 0.925,
+        "x": 0.016785022595222725,
+        "y": 0.021793797150041910,
+        "w": 0.96642995480955451,
+        "h": 0.95641240569991615,
     },
     "cat_header": "Fleet segment",
 }
@@ -518,6 +525,16 @@ def paint_chrome_and_source(next_id) -> list[str]:
     ]
 
 
+# Reference drop-shadow on the right-side KPI cards + light-blue takeaway note
+# (outerShdw, verbatim from the source deck): 0.056" blur, 0.03" offset down-right,
+# black @ 40% alpha.
+CALLOUT_SHADOW = (
+    '<a:effectLst><a:outerShdw blurRad="50800" dist="38100" dir="2700000" '
+    'algn="tl" rotWithShape="0"><a:prstClr val="black"><a:alpha val="40000"/>'
+    '</a:prstClr></a:outerShdw></a:effectLst>'
+)
+
+
 def paint_big_number_comparison(next_id) -> list[str]:
     """Right-side KPI cards and their short interpretation labels."""
 
@@ -542,6 +559,7 @@ def paint_big_number_comparison(next_id) -> list[str]:
             fill=GRAY_1,
             line_color="none",
             anchor="ctr",
+            effects=CALLOUT_SHADOW,
         ))
 
     for note in COMPARISON_NOTES:
@@ -557,6 +575,7 @@ def paint_big_number_comparison(next_id) -> list[str]:
             fill=note.fill,
             line_color="none",
             anchor="ctr",
+            effects=CALLOUT_SHADOW if note.fill else None,
         ))
     return shapes
 
@@ -621,8 +640,9 @@ def paint_scenario_and_prelim(next_id) -> list[str]:
             "ScenarioChip",
             SCENARIO_CHIP,
             [_one_line("(1) Status Quo Scenario", size=PT(12), bold=True, align="ctr")],
-            fill=SOFT_BLUE_CALLOUT,
+            fill=SOFT_BLUE_CALLOUT,     # CEDDEC = theme bg2 @ 90% lum (reference chip fill)
             line_color=BLACK,
+            line_width=19050,           # 1.5pt — reference chip border (theme lnRef idx=2)
             anchor="ctr",
         ),
         "",

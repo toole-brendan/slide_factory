@@ -358,7 +358,7 @@ def plain_cell(
     )
 
 
-def rich_cell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1, **edges):
+def rich_cell(paras, *, fill=None, anchor="ctr", vert=None, span=1, rowspan=1, **edges):
     """Multi-paragraph tcell_rich wrapper; spans and borders stay local here."""
 
     return tcell_rich(
@@ -367,6 +367,7 @@ def rich_cell(paras, *, fill=None, anchor="ctr", span=1, rowspan=1, **edges):
         grid_span=span,
         row_span=rowspan,
         anchor=anchor,
+        vert=vert,
         borders=border_dict(**edges),
     )
 
@@ -418,7 +419,7 @@ def _market_header_row():
     market3, market4 = MARKET_COLUMNS[2], MARKET_COLUMNS[3]
     return trow(
         [
-            plain_cell("Market:", size=PT(10), italic=True, align="r", span=2),
+            plain_cell("Market:", size=PT(10), italic=True, align="r", anchor="t", span=2),
             plain_cell(
                 MARKET_COLUMNS[0].name,
                 size=PT(10),
@@ -465,7 +466,7 @@ def _description_row():
     market1, market3, market4 = MARKET_COLUMNS[0], MARKET_COLUMNS[2], MARKET_COLUMNS[3]
     return trow(
         [
-            plain_cell("Description:", size=PT(10), italic=True, align="r", span=2, B=edge(BLACK)),
+            plain_cell("Description:", size=PT(10), italic=True, align="r", anchor="t", span=2, B=edge(BLACK)),
             rich_cell(
                 _paras((P(T(market1.description, italic=True), align="ctr", **NO_MARGINS),)),
                 fill=market1.fill,
@@ -522,7 +523,7 @@ def _container_feeder_row():
     gray_rule = edge(RULE_GRAY, 6_350)
     return trow(
         [
-            rich_cell(_label_para("Container", align="ctr"), fill=GRAY_3, rowspan=2, T=gray_rule, B=gray_rule),
+            rich_cell(_label_para("Container", align="ctr"), fill=GRAY_3, vert="vert270", rowspan=2, T=gray_rule, B=gray_rule),
             rich_cell(_label_para("350’ Feeder"), T=gray_rule, B=gray_rule),
             rich_cell(_paras(MARINE_HIGHWAY_FEEDER_CONDITIONS), T=gray_rule, B=gray_rule),
             rich_cell(_paras(FEEDER_COMPETITIVENESS_CAVEAT), fill=GRAY_1, span=3, T=gray_rule, B=gray_rule),
@@ -536,10 +537,10 @@ def _panamax_policy_row():
     return trow(
         [
             rich_cell(_label_para("900’ Panamax"), T=gray_rule, B=gray_rule),
-            rich_cell([tpara([], align="ctr", mar_l=0, indent=0)], fill=GRAY_1, rowspan=3, T=gray_rule),
+            rich_cell([tpara([], align="ctr", mar_l=0, indent=0, end_size=PT(10))], fill=GRAY_1, rowspan=3, T=gray_rule),
             rich_cell(_paras(PANAMAX_JONES_ACT_ROUTE_NOTE), T=gray_rule, B=gray_rule),
-            rich_cell(_paras(INTERNATIONAL_TRADE_POLICY_CONDITIONS), rowspan=3, T=gray_rule),
-            rich_cell(_paras(FOREIGN_FLAGGED_CONDITIONS), rowspan=3, T=gray_rule),
+            rich_cell(_paras(INTERNATIONAL_TRADE_POLICY_CONDITIONS), anchor="t", rowspan=3, T=gray_rule),
+            rich_cell(_paras(FOREIGN_FLAGGED_CONDITIONS), anchor="t", rowspan=3, T=gray_rule),
         ],
         h=IN(0.14),
     )
@@ -549,9 +550,9 @@ def _tanker_product_row():
     gray_rule = edge(RULE_GRAY, 6_350)
     return trow(
         [
-            rich_cell(_label_para("Tanker", color=WHITE, align="ctr"), fill=MID_GRAY, rowspan=2, T=gray_rule),
+            rich_cell(_label_para("Tanker", color=WHITE, align="ctr"), fill=MID_GRAY, vert="vert270", rowspan=2, T=gray_rule),
             rich_cell(_label_para("Product"), T=gray_rule, B=gray_rule),
-            rich_cell([tpara([], align="ctr", mar_l=0, indent=0)], fill=GRAY_1, rowspan=2, T=gray_rule),
+            rich_cell([tpara([], align="ctr", mar_l=0, indent=0, end_size=PT(10))], fill=GRAY_1, rowspan=2, T=gray_rule),
         ],
         h=IN(0),
     )

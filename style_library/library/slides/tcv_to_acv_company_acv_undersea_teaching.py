@@ -460,7 +460,7 @@ def paint_timeline_scope_cards_and_logo(out: list[str], n) -> None:
     out.append(text_box(n(), "ScopeChip", IN(9.121), IN(0.074), IN(2.663), IN(0.500), [_plain("All archetypes", color=DK, bold=True, size=PT(12))], fill=PALE_SCOPE_BLUE, line_color=DK, line_width=3175, anchor="ctr"))
     for card in ACV_CARDS[2:]:
         out.append(text_box(n(), card.role, *card.box.emu(), [paragraph([run(card.lead + " ", size=PT(10), color=WHITE, font=FONT), line_break(), run(card.value, size=PT(10), color=WHITE, font=FONT)], align="ctr", line_spacing=100000)], fill=BLUE_5, line_color="none", anchor="ctr"))
-    out.append(picture(n(), "Picture 2", "rId3", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
+    out.append(picture(n(), "NavyLogo", "rId3", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
     out.append(text_box(n(), "ContractFootnote", IN(9.023), IN(3.959), IN(3.748), IN(0.403), [_plain("May be used if Weapons Procurement contract extends over 5-year period", italic=True)], fill=GRAY_1, line_color=GRAY_1, line_width=19050, anchor="ctr"))
 
 

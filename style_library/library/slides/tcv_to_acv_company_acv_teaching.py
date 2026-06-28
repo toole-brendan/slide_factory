@@ -405,7 +405,7 @@ def paint_formula_inputs_cards_and_table(out: list[str], n) -> None:
 
 def paint_scope_chip_and_logo(out: list[str], n) -> None:
     out.append(text_box(n(), "ScopeChip", IN(9.353), IN(0.137), IN(2.200), IN(0.375), [_plain("All archetypes", color=DK, bold=True)], fill=PALE_SCOPE_BLUE, line_color=DK, line_width=3175, anchor="ctr"))
-    out.append(picture(n(), "Picture 2", "rId3", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
+    out.append(picture(n(), "NavyLogo", "rId3", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
 
 
 def _body() -> str:

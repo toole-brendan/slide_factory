@@ -528,7 +528,7 @@ def paint_inputs_table(out: list[str], ids: ShapeIds) -> None:
     out.append(
         table(
             ids.next(),
-            "Table 610",
+            "KeyInputsReferenceTable",
             *INPUTS_TABLE.box.emu(),
             col_widths=[IN(width) for width in INPUTS_TABLE.col_widths],
             rows=_inputs_table_rows(),

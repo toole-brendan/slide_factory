@@ -389,7 +389,7 @@ OPERATING_EXPENSE_ROWS: tuple[AssumptionRow, ...] = (
 ASSUMPTIONS_TABLE_STYLE = AssumptionsTableStyle()
 
 ASSUMPTIONS_TABLE = AssumptionsTable(
-    name="Table 3",
+    name="OperatingExpenseAssumptionsTable",
     box=Box(0.389, 1.146, 12.338, 5.395),
     col_widths=(1.805, 3.216, 7.317),
     header_h=0.5,
@@ -398,7 +398,7 @@ ASSUMPTIONS_TABLE = AssumptionsTable(
 )
 
 SOURCE_NOTE = SourceNote(
-    name="Rectangle 8",
+    name="SourceNote",
     box=Box(0.495, 6.681, 12.367, 0.317),
     text="Source: Internal Saronic data and estimates",
 )

@@ -368,7 +368,7 @@ ANALYSIS_ENTRIES: tuple[GlossaryEntry, ...] = (
 # Table specs: styling and geometry are explicit per table.
 # ════════════════════════════════════════════════════════════════════════════
 INDUSTRIAL_POLICY_TABLE = GlossaryTable(
-    name="Table 8",
+    name="IndustrialPolicyGlossary",
     title="Industrial Policy Terms",
     box=Box(0.495, 1.491, 6.000, 3.300),
     col_headers=("Abbreviation", "Full Name"),
@@ -378,7 +378,7 @@ INDUSTRIAL_POLICY_TABLE = GlossaryTable(
 )
 
 MARKET_TABLE = GlossaryTable(
-    name="Table 10",
+    name="MarketTermsGlossary",
     title="Market Terms",
     box=Box(6.835, 1.491, 6.000, 4.200),
     col_headers=("Abbreviation", "Full Name"),
@@ -391,7 +391,7 @@ MARKET_TABLE = GlossaryTable(
 )
 
 ANALYSIS_TABLE = GlossaryTable(
-    name="Table 6",
+    name="AnalysisTermsGlossary",
     title="Analysis Terms",
     box=Box(0.495, 5.002, 6.000, 1.800),
     col_headers=("Term", "Definition"),

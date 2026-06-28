@@ -312,7 +312,7 @@ def _box_run(text: str, *, size_pt: float = 12, bold: bool = False, color: str =
 # Layout zones and local styles.
 # ════════════════════════════════════════════════════════════════════════════
 FINDINGS_TABLE = TextZone(
-    name="Table 8",
+    name="FinancialOutlookTable",
     box=Box(0.495, 1.066, 12.300, 5.950),
     font_pt=12,
     fit_note="Full-slide prose container; one native table cell with compact bullet hierarchy.",
@@ -327,7 +327,7 @@ CALLOUT_SHADOW = (
 )
 
 CONTINGENCIES = ContingenciesCallout(
-    name="Rectangle 10",
+    name="ContingenciesCallout",
     box=Box(7.936, 4.204, 4.685, 0.913),
     heading="Results detailed contingent on:",
     bullets=(

@@ -529,7 +529,7 @@ def paint_archetype_table(out: list[str], ids: ShapeIds) -> None:
     out.append(
         table(
             ids.next(),
-            "Table 11",
+            "CoordinationArchetypeTable",
             *ARCHETYPE_TABLE.box.emu(),
             col_widths=[IN(column.width_in) for column in TABLE_COLUMNS],
             rows=[

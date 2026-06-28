@@ -422,8 +422,8 @@ REQUIREMENT_CALLOUT = TextZone(
 )
 
 LOGOS: tuple[ImageMark, ...] = (
-    ImageMark("Picture 2", "rId3", Box(11.431, 0.048, 0.922, 0.922)),
-    ImageMark("Picture 8", "rId4", Box(12.372, 0.048, 0.922, 0.922)),
+    ImageMark("NavyLogo", "rId3", Box(11.431, 0.048, 0.922, 0.922)),
+    ImageMark("MissileDefenseAgencyLogo", "rId4", Box(12.372, 0.048, 0.922, 0.922)),
 )
 
 

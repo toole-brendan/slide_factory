@@ -429,7 +429,7 @@ def paint_methodology_table(out: list[str], ids: ShapeIds) -> None:
     out.append(
         table(
             ids.next(),
-            "Table 3",
+            "IncomeStatementMethodologyTable",
             *METHODOLOGY_TABLE.box.emu(),
             col_widths=[IN(column.width_in) for column in TABLE_COLUMNS],
             rows=[
@@ -446,7 +446,7 @@ def paint_poc_banner(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "Rectangle 5",
+            "MethodologyBanner",
             *POC_BANNER.box.emu(),
             [
                 paragraph(
@@ -496,7 +496,7 @@ def paint_preliminary_and_source(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "Rectangle 13",
+            "SourceNote",
             *SOURCE_LINE.box.emu(),
             [
                 paragraph(

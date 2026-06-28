@@ -586,7 +586,7 @@ def paint_matrix(out: list[str], ids: ShapeIds) -> None:
     out.append(
         table(
             ids.next(),
-            "Table 4",
+            "MarketConditionsMatrix",
             *MATRIX_TABLE.box.emu(),
             col_widths=[IN(width) for width in MATRIX_TABLE.col_widths],
             rows=_matrix_rows(),
@@ -598,7 +598,7 @@ def paint_callouts(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "TextBox 7",
+            "AddressabilityNote",
             *ADDRESSABILITY_NOTE.box.emu(),
             [
                 paragraph(
@@ -617,7 +617,7 @@ def paint_callouts(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "Rectangle 10",
+            "FurtherAnalysisCallout",
             *FURTHER_ANALYSIS_CALLOUT.box.emu(),
             [
                 paragraph(

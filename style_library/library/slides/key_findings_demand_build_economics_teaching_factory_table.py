@@ -514,7 +514,7 @@ def paint_findings_table(out: list[str], ids: ShapeIds) -> None:
     out.append(
         table(
             ids.next(),
-            "Table 13",
+            "FindingsNarrativeTable",
             *FINDINGS_TABLE.box.emu(),
             col_widths=[IN(FINDINGS_TABLE.box.w)],
             rows=[
@@ -531,7 +531,7 @@ def paint_footnote(out: list[str], ids: ShapeIds) -> None:
     out.append(
         text_box(
             ids.next(),
-            "Rectangle 4",
+            "SourceNote",
             *FOOTNOTE.box.emu(),
             [
                 paragraph(

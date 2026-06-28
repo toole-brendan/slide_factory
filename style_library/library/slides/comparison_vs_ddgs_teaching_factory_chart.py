@@ -295,8 +295,8 @@ CAPABILITY_TABLE = TextZone(
 )
 
 LOGO_SLOTS: tuple[PictureSlot, ...] = (
-    PictureSlot("Picture 2", "rId3", Box(11.431, 0.048, 0.922, 0.922)),
-    PictureSlot("Picture 8", "rId4", Box(12.372, 0.048, 0.922, 0.922)),
+    PictureSlot("NavyLogo", "rId3", Box(11.431, 0.048, 0.922, 0.922)),
+    PictureSlot("MissileDefenseAgencyLogo", "rId4", Box(12.372, 0.048, 0.922, 0.922)),
 )
 
 # Native manual labels intentionally carry the original source geometry. These

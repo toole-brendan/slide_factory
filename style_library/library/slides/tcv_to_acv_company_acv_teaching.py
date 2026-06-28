@@ -376,7 +376,7 @@ def paint_approach_header(out: list[str], n) -> None:
 def paint_formula_output_and_chart(out: list[str], n) -> None:
     _draw_formula_box(out, n, FORMULA_BOXES[0])
     for b in (Box(2.113, 3.089, 0.924, 0.000), Box(4.194, 4.023, 0.924, 0.000), Box(6.274, 4.023, 0.924, 0.000), Box(8.354, 4.068, 0.924, 0.000), Box(10.436, 4.488, 0.924, 0.000)):
-        out.append(connector(n(), "DashedExerciseArrow", *b.emu(), color=DK, width=3175, dashed=True, arrow=True))
+        out.append(connector(n(), "DashedExerciseArrow", *b.emu(), color=DK, width=3175, dash="lgDash"))
     out.append(graphic_frame(sp_id=n(), name="Chart", x=IN(0.405), y=IN(2.998), cx=IN(12.663), cy=IN(2.047), rId="rId2"))
     _draw_value_badge(out, n, BAR_VALUE_BADGES[0])
     for tick in CATEGORY_TICKS:

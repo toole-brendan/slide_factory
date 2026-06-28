@@ -418,12 +418,12 @@ SHIP_CLASS_BOXES: tuple[TextSpec, ...] = (
 )
 
 PLATFORM_CONNECTORS: tuple[ConnectorSpec, ...] = (
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 47", Box(3.685, 2.855, 0.405, 0.252), BLACK, 12700, True, "bentConnector3", rot=5400000),
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 48", Box(4.531, 2.261, 0.405, 1.440), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 49", Box(5.377, 1.415, 0.405, 3.131), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 50", Box(7.914, -1.122, 0.405, 8.205), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 51", Box(7.068, -0.276, 0.405, 6.514), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 52", Box(6.222, 0.570, 0.405, 4.822), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(3.685, 2.855, 0.405, 0.252), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(4.531, 2.261, 0.405, 1.440), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(5.377, 1.415, 0.405, 3.131), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(7.914, -1.122, 0.405, 8.205), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(7.068, -0.276, 0.405, 6.514), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(6.222, 0.570, 0.405, 4.822), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
 )
 
 BUDGET_FACTOR_BOXES: tuple[TextSpec, ...] = (
@@ -432,9 +432,9 @@ BUDGET_FACTOR_BOXES: tuple[TextSpec, ...] = (
 )
 
 SUMMARY_CONNECTORS: tuple[ConnectorSpec, ...] = (
-    ConnectorSpec("summary_arrow", "Connector: Elbow 63", Box(8.045, 0.538, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
-    ConnectorSpec("summary_arrow", "Connector: Elbow 64", Box(8.045, 1.302, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
-    ConnectorSpec("summary_arrow", "Connector: Elbow 65", Box(8.045, 2.065, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("summary_arrow", "SummaryCollectionArrow", Box(8.045, 0.538, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("summary_arrow", "SummaryCollectionArrow", Box(8.045, 1.302, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("summary_arrow", "SummaryCollectionArrow", Box(8.045, 2.065, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
 )
 
 BRACES: tuple[GlyphSpec, ...] = (
@@ -448,7 +448,7 @@ MISSION_EXCEPTIONS: tuple[TextSpec, ...] = (
     TextSpec("mission_cell_multiline", "AntiShip", Box(4.060, 1.371, 1.213, 0.333), (RunSpec("Anti-Ship ", PT(9), WHITE), RunSpec("Warfare", PT(9), WHITE, break_before=True)), BLACK, BLACK),
     TextSpec("mission_cell_non_addressable", "VBSS", Box(11.765, 1.371, 1.213, 0.333), (RunSpec("VBSS", PT(9), GRAY_3),), None, GRAY_3),
 )
-MISSION_TO_PLATFORM_EXTRA = ConnectorSpec("mission_to_platform", "Connector: Elbow 112", Box(4.840, 1.344, 0.248, 1.902), BLACK, 12700, True, "bentConnector3", rot=5400000)
+MISSION_TO_PLATFORM_EXTRA = ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(4.840, 1.344, 0.248, 1.902), BLACK, 12700, True, "bentConnector3", rot=5400000)
 SCOPE_CHIP = TextSpec("scope_chip", "ScopeChip", Box(9.352, 0.137, 2.201, 0.376), (RunSpec("Currently manned capabilities – primary approach", PT(10), WHITE, bold=True),), SURFACE_BLUE, DK)
 
 
@@ -497,7 +497,7 @@ def paint_grid_frame_legend_and_scope(out: list[str], n) -> None:
     _draw_connector(out, n, MISSION_TO_PLATFORM_EXTRA)
     _draw_legend(out, n)
     _draw_text(out, n, SCOPE_CHIP)
-    out.append(picture(n(), "Picture 2", "rId2", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
+    out.append(picture(n(), "NavyLogo", "rId2", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
 
 
 def _body() -> str:

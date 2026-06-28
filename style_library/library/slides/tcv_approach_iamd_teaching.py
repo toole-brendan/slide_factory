@@ -377,15 +377,15 @@ ALLOCATION_NOTES: tuple[TextSpec, ...] = (
 )
 
 APPROACH_HEADER = TextSpec("approach_header", "ApproachStepsHeader", Box(0.522, 1.507, 2.291, 0.359), (RunSpec("Approach steps", PT(10), italic=True),), align=None)
-HEADER_RULE = ConnectorSpec("approach_header_rule", "Straight Connector 136", Box(0.523, 1.864, 2.289, 0.002), DK, 12700, False, "line", flip_h=True)
+HEADER_RULE = ConnectorSpec("approach_header_rule", "ApproachHeaderRule", Box(0.523, 1.864, 2.289, 0.002), DK, 12700, False, "line", flip_h=True)
 HEADER_CHIP = TextSpec("scope_chip", "ScopeChip", Box(9.352, 0.137, 2.201, 0.376), (RunSpec("Currently manned capabilities – OBBBA / IDIQ approach", PT(10), WHITE, bold=True),), SURFACE_BLUE, DK, 3175, "ctr")
 
 ROUTE_CONNECTORS: tuple[ConnectorSpec, ...] = (
-    ConnectorSpec("allocation_route", "Connector: Elbow 115", Box(7.975, 0.022, 0.373, 8.079), BLACK, 12700, True, "bentConnector3", rot=5400000),
-    ConnectorSpec("allocation_route", "Connector: Elbow 116", Box(7.975, 0.754, 0.373, 8.079), BLACK, 12700, True, "bentConnector3", rot=5400000),
-    ConnectorSpec("allocation_route", "Connector: Elbow 137", Box(7.976, -1.441, 0.372, 8.079), BLACK, 12700, True, "bentConnector3", rot=5400000, adj={"adj1": "val 15352"}),
-    ConnectorSpec("allocation_route", "Connector: Elbow 145", Box(7.975, -0.710, 0.372, 8.080), BLACK, 12700, True, "bentConnector3", rot=5400000, adj={"adj1": "val 32676"}),
-    ConnectorSpec("allocation_route", "Connector: Elbow 160", Box(7.975, 1.485, 0.373, 8.079), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("allocation_route", "AllocationRouteArrow", Box(7.975, 0.022, 0.373, 8.079), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("allocation_route", "AllocationRouteArrow", Box(7.975, 0.754, 0.373, 8.079), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("allocation_route", "AllocationRouteArrow", Box(7.976, -1.441, 0.372, 8.079), BLACK, 12700, True, "bentConnector3", rot=5400000, adj={"adj1": "val 15352"}),
+    ConnectorSpec("allocation_route", "AllocationRouteArrow", Box(7.975, -0.710, 0.372, 8.080), BLACK, 12700, True, "bentConnector3", rot=5400000, adj={"adj1": "val 32676"}),
+    ConnectorSpec("allocation_route", "AllocationRouteArrow", Box(7.975, 1.485, 0.373, 8.079), BLACK, 12700, True, "bentConnector3", rot=5400000),
 )
 
 
@@ -424,7 +424,7 @@ def paint_operators_and_routes(out: list[str], n) -> None:
 def paint_legend_scope_and_logo(out: list[str], n) -> None:
     _draw_legend(out, n, ADDRESSABILITY_LEGEND)
     _draw_text(out, n, HEADER_CHIP)
-    out.append(picture(n(), "Picture 2", "rId2", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
+    out.append(picture(n(), "NavyLogo", "rId2", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
 
 
 def _body() -> str:

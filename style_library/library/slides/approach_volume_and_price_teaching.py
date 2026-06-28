@@ -270,18 +270,18 @@ CALCULATION_OPERATORS: tuple[OperatorGlyph, ...] = (
 )
 
 FLOW_CONNECTORS: tuple[ConnectorSpec, ...] = (
-    ConnectorSpec("Connector: Elbow 52", Box(7.597, 2.915, 0.333, 1.700), BLACK, 12700, True, "bentConnector3", rot=5400000),
-    ConnectorSpec("Connector: Elbow 92", Box(5.897, 2.915, 0.333, 1.700), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
-    ConnectorSpec("Connector: Elbow 97", Box(9.989, 4.107, 0.206, 1.365), BLACK, 12700, True, "bentConnector3", flip_v=True),
-    ConnectorSpec("Connector: Elbow 136", Box(9.601, 4.260, 0.508, 3.282), BLACK, 12700, True, "bentConnector2", rot=5400000),
-    ConnectorSpec("Straight Arrow Connector 143", Box(1.795, 2.233, 0.000, 0.333), BLACK, 12700, True),
-    ConnectorSpec("Connector: Elbow 169", Box(0.495, 2.741, 0.014, 3.414), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=10800000, adj={"adj1": "val 1800000"}),
+    ConnectorSpec("PriceTrackFlowArrow", Box(7.597, 2.915, 0.333, 1.700), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("PriceTrackFlowArrow", Box(5.897, 2.915, 0.333, 1.700), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
+    ConnectorSpec("PriceTrackFlowArrow", Box(9.989, 4.107, 0.206, 1.365), BLACK, 12700, True, "bentConnector3", flip_v=True),
+    ConnectorSpec("PriceTrackFlowArrow", Box(9.601, 4.260, 0.508, 3.282), BLACK, 12700, True, "bentConnector2", rot=5400000),
+    ConnectorSpec("VolumeTrackFlowArrow", Box(1.795, 2.233, 0.000, 0.333), BLACK, 12700, True),
+    ConnectorSpec("VolumeTrackFlowArrow", Box(0.495, 2.741, 0.014, 3.414), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=10800000, adj={"adj1": "val 1800000"}),
 )
 
 CALLOUTS: tuple[CalloutSpec, ...] = (
-    CalloutSpec("Speech Bubble: Rectangle 105", Box(10.164, 2.481, 2.632, 0.738), "Finding mix-weighted rate required as TEU generally have higher basic ocean and terminal handling / stevedoring charges vs. normalized FEU", {"adj1": "val -59942", "adj2": "val 53401"}),
-    CalloutSpec("Speech Bubble: Rectangle 139", Box(11.645, 5.814, 1.336, 0.626), "Also weighted by TEU/FEU mix and cargo composition ", {"adj1": "val 5870", "adj2": "val -74249"}, "ctr"),
-    CalloutSpec("Speech Bubble: Rectangle 158", Box(3.127, 5.092, 1.521, 1.238), "Matson does not publish utilization metrics; thus, utilization is solved for using published & forecast annual and quarterly container volume, westbound / eastbound cargo proportions, and cargo type proportions", {"adj1": "val -55587", "adj2": "val -66064"}),
+    CalloutSpec("MixWeightingMethodCallout", Box(10.164, 2.481, 2.632, 0.738), "Finding mix-weighted rate required as TEU generally have higher basic ocean and terminal handling / stevedoring charges vs. normalized FEU", {"adj1": "val -59942", "adj2": "val 53401"}),
+    CalloutSpec("MixWeightingNote", Box(11.645, 5.814, 1.336, 0.626), "Also weighted by TEU/FEU mix and cargo composition ", {"adj1": "val 5870", "adj2": "val -74249"}, "ctr"),
+    CalloutSpec("UtilizationMethodCallout", Box(3.127, 5.092, 1.521, 1.238), "Matson does not publish utilization metrics; thus, utilization is solved for using published & forecast annual and quarterly container volume, westbound / eastbound cargo proportions, and cargo type proportions", {"adj1": "val -55587", "adj2": "val -66064"}),
 )
 
 

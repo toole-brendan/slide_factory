@@ -403,9 +403,9 @@ BUDGET_AND_CONVERSION_BOXES: tuple[TextSpec, ...] = (
 )
 
 SUMMARY_CONNECTORS: tuple[ConnectorSpec, ...] = (
-    ConnectorSpec("summary_arrow", "Connector: Elbow 63", Box(8.045, -0.882, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
-    ConnectorSpec("summary_arrow", "Connector: Elbow 64", Box(8.045, -0.118, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
-    ConnectorSpec("summary_arrow", "Connector: Elbow 65", Box(8.045, 0.646, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("summary_arrow", "SummaryCollectionArrow", Box(8.045, -0.882, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("summary_arrow", "SummaryCollectionArrow", Box(8.045, -0.118, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("summary_arrow", "SummaryCollectionArrow", Box(8.045, 0.646, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
 )
 
 BRACES: tuple[GlyphSpec, ...] = (
@@ -456,7 +456,7 @@ def paint_operator_system(out: list[str], n) -> None:
 def paint_legend_scope_and_logo(out: list[str], n) -> None:
     _draw_legend(out, n)
     _draw_text(out, n, SCOPE_CHIP)
-    out.append(picture(n(), "Picture 2", "rId2", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
+    out.append(picture(n(), "NavyLogo", "rId2", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
 
 
 def _body() -> str:

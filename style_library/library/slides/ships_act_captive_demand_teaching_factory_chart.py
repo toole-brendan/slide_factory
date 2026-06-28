@@ -499,11 +499,11 @@ LEGEND_LABELS: tuple[LegendLabel, ...] = (
 )
 
 LEADER_LINES: tuple[LeaderLine, ...] = (
-    LeaderLine("Straight Connector 74", Box(2.599, 2.274, 0.101, 0.069), color=BREADCRUMB, dashed=False, flip_h=True, flip_v=True),
-    LeaderLine("Straight Connector 75", Box(2.599, 2.177, 0.101, 0.069), color=BREADCRUMB, dashed=False, flip_h=True),
-    LeaderLine("Straight Connector 351", Box(4.958, 2.188, 0.745, 1.927), flip_v=True),
-    LeaderLine("Straight Connector 355", Box(4.958, 2.854, 0.745, 1.536), flip_v=True),
-    LeaderLine("Straight Connector 358", Box(4.958, 3.487, 0.745, 1.683), flip_v=True),
+    LeaderLine("SegmentLabelLeader", Box(2.599, 2.274, 0.101, 0.069), color=BREADCRUMB, dashed=False, flip_h=True, flip_v=True),
+    LeaderLine("SegmentLabelLeader", Box(2.599, 2.177, 0.101, 0.069), color=BREADCRUMB, dashed=False, flip_h=True),
+    LeaderLine("SegmentLabelLeader", Box(4.958, 2.188, 0.745, 1.927), flip_v=True),
+    LeaderLine("SegmentLabelLeader", Box(4.958, 2.854, 0.745, 1.536), flip_v=True),
+    LeaderLine("SegmentLabelLeader", Box(4.958, 3.487, 0.745, 1.683), flip_v=True),
 )
 
 SOURCE_NOTE_TEXT = (

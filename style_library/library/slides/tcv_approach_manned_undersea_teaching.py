@@ -411,12 +411,12 @@ SUBMARINE_CLASS_BOXES: tuple[TextSpec, ...] = (
 )
 
 PLATFORM_CONNECTORS: tuple[ConnectorSpec, ...] = (
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 47", Box(3.685, 2.855, 0.405, 0.252), BLACK, 12700, True, "bentConnector3", rot=5400000),
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 48", Box(4.531, 2.261, 0.405, 1.440), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 49", Box(5.377, 1.415, 0.405, 3.131), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 50", Box(9.240, 0.205, 0.405, 5.552), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000, adj={"adj1": "val 28752"}),
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 51", Box(8.395, 1.050, 0.405, 3.861), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000, adj={"adj1": "val 28752"}),
-    ConnectorSpec("mission_to_platform", "Connector: Elbow 52", Box(7.549, 1.896, 0.405, 2.169), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000, adj={"adj1": "val 28752"}),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(3.685, 2.855, 0.405, 0.252), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(4.531, 2.261, 0.405, 1.440), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(5.377, 1.415, 0.405, 3.131), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(9.240, 0.205, 0.405, 5.552), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000, adj={"adj1": "val 28752"}),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(8.395, 1.050, 0.405, 3.861), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000, adj={"adj1": "val 28752"}),
+    ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(7.549, 1.896, 0.405, 2.169), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000, adj={"adj1": "val 28752"}),
 )
 
 BUDGET_FACTOR_BOXES: tuple[TextSpec, ...] = (
@@ -426,9 +426,9 @@ BUDGET_FACTOR_BOXES: tuple[TextSpec, ...] = (
 )
 
 SUMMARY_CONNECTORS: tuple[ConnectorSpec, ...] = (
-    ConnectorSpec("summary_arrow", "Connector: Elbow 63", Box(8.045, 0.538, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
-    ConnectorSpec("summary_arrow", "Connector: Elbow 64", Box(8.045, 1.302, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
-    ConnectorSpec("summary_arrow", "Connector: Elbow 65", Box(8.045, 2.065, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("summary_arrow", "SummaryCollectionArrow", Box(8.045, 0.538, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("summary_arrow", "SummaryCollectionArrow", Box(8.045, 1.302, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
+    ConnectorSpec("summary_arrow", "SummaryCollectionArrow", Box(8.045, 2.065, 0.405, 7.942), BLACK, 12700, True, "bentConnector3", rot=5400000),
 )
 
 BRACES: tuple[GlyphSpec, ...] = (
@@ -444,8 +444,8 @@ MISSION_GRID_EXTRAS: tuple[TextSpec, ...] = (
     TextSpec("mission_cell_multiline", "AntiSubmarine", Box(2.777, 1.350, 1.213, 0.333), (RunSpec("Anti-Submarine", PT(9), WHITE), RunSpec("Warfare", PT(9), WHITE, break_before=True)), BLACK, BLACK),
     TextSpec("mission_cell_non_addressable", "StrategicDeterrence", Box(10.481, 1.350, 1.213, 0.333), (RunSpec("Strategic Deterrence", PT(9), GRAY_3), RunSpec("5", PT(9), GRAY_3)), None, GRAY_3),
 )
-MISSION_TO_PLATFORM_EXTRA = ConnectorSpec("mission_to_platform", "Connector: Elbow 112", Box(4.851, 1.322, 0.260, 1.935), BLACK, 12700, True, "bentConnector3", rot=5400000)
-MISSION_TO_EFFECTOR_EXTRA = ConnectorSpec("mission_to_effectors", "Connector: Elbow 28", Box(6.178, 1.931, 0.260, 0.718), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000)
+MISSION_TO_PLATFORM_EXTRA = ConnectorSpec("mission_to_platform", "MissionToPlatformArrow", Box(4.851, 1.322, 0.260, 1.935), BLACK, 12700, True, "bentConnector3", rot=5400000)
+MISSION_TO_EFFECTOR_EXTRA = ConnectorSpec("mission_to_effectors", "MissionToEffectorsArrow", Box(6.178, 1.931, 0.260, 0.718), BLACK, 12700, True, "bentConnector3", flip_h=True, rot=16200000)
 SCOPE_CHIP = TextSpec("scope_chip", "ScopeChip", Box(9.121, 0.074, 2.663, 0.500), (RunSpec("Currently manned capabilities", PT(12), WHITE, bold=True),), SURFACE_BLUE, DK)
 
 
@@ -497,7 +497,7 @@ def paint_legend_grid_and_logo(out: list[str], n) -> None:
     for spec in MISSION_GRID_EXTRAS[:2]:
         _draw_text(out, n, spec)
     _draw_connector(out, n, MISSION_TO_EFFECTOR_EXTRA)
-    out.append(picture(n(), "Picture 2", "rId2", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
+    out.append(picture(n(), "NavyLogo", "rId2", IN(12.373), IN(0.048), IN(0.922), IN(0.922)))
     _draw_text(out, n, MISSION_GRID_EXTRAS[2])
 
 

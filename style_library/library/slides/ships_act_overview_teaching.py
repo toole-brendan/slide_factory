@@ -365,24 +365,24 @@ READING_NOTE = TextSpec("reading_note", "BottomToTopNote", Box(0.139, 1.120, 3.0
 CREW_CALLOUT = TextSpec("policy_callout", "CrewRequirementCallout", Box(4.610, 2.173, 1.958, 0.510), (RunSpec("US crew required to participate in SCF; SHIPS Act states vessels will be crewed IAW ", PT(8), BLACK, italic=True), RunSpec("46 USC 8103", PT(8), BLACK, italic=True, hyperlink_rid="rId4"), RunSpec(" ", PT(8), BLACK, italic=True)), None, BLACK, 3175, "ctr", prst="wedgeRectCallout", geom_adj={"adj1": "val 41650", "adj2": "val 74944"})
 
 FUNDING_CONNECTORS: tuple[ConnectorSpec, ...] = (
-    ConnectorSpec("funding_route", "Connector: Elbow 43", Box(4.437, 5.344, 0.565, 2.051), BLACK, 12700, True, "bentConnector3", flip_h=True, flip_v=True, rot=5400000),
-    ConnectorSpec("funding_route", "Connector: Elbow 44", Box(6.488, 5.344, 0.565, 2.051), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
-    ConnectorSpec("funding_route", "Connector: Elbow 50", Box(6.646, 4.621, 0.244, 2.045), BLACK, 12700, True, "bentConnector3", flip_h=True, flip_v=True, rot=5400000),
-    ConnectorSpec("funding_route", "Connector: Elbow 54", Box(8.669, 4.643, 0.244, 2.001), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
+    ConnectorSpec("funding_route", "FundingRouteArrow", Box(4.437, 5.344, 0.565, 2.051), BLACK, 12700, True, "bentConnector3", flip_h=True, flip_v=True, rot=5400000),
+    ConnectorSpec("funding_route", "FundingRouteArrow", Box(6.488, 5.344, 0.565, 2.051), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
+    ConnectorSpec("funding_route", "FundingRouteArrow", Box(6.646, 4.621, 0.244, 2.045), BLACK, 12700, True, "bentConnector3", flip_h=True, flip_v=True, rot=5400000),
+    ConnectorSpec("funding_route", "FundingRouteArrow", Box(8.669, 4.643, 0.244, 2.001), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
 )
 
 POLICY_CONNECTORS: tuple[ConnectorSpec, ...] = (
-    ConnectorSpec("owner_operator_route", "Connector: Elbow 65", Box(8.147, 4.286, 0.558, 1.271), BLACK, 12700, True, "bentConnector3", flip_h=True, flip_v=True, rot=5400000),
-    ConnectorSpec("owner_operator_route", "Connector: Elbow 69", Box(6.875, 4.285, 0.558, 1.272), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
-    ConnectorSpec("build_route", "Connector: Elbow 72", Box(2.661, 2.018, 1.314, 0.852), BLACK, 12700, True, "bentConnector2"),
-    ConnectorSpec("subsidy_route", "Connector: Elbow 86", Box(4.681, 2.485, 1.131, 2.543), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
-    ConnectorSpec("subsidy_route", "Connector: Elbow 89", Box(5.953, 1.213, 1.131, 5.086), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
-    ConnectorSpec("scf_route", "Connector: Elbow 137", Box(5.206, 2.744, 3.541, 0.286), BLACK, 12700, True, "bentConnector3", flip_v=True),
-    ConnectorSpec("buys_route", "Straight Arrow Connector 147", Box(1.911, 2.618, 0.000, 0.252), BLACK, 12700, True, "line", flip_v=True),
-    ConnectorSpec("penalty_route", "Straight Arrow Connector 189", Box(5.745, 6.087, 0.000, 0.565), BLACK, 12700, True, "line", flip_v=True),
-    ConnectorSpec("penalty_route", "Straight Arrow Connector 193", Box(9.791, 6.087, 0.000, 0.565), BLACK, 12700, True, "line", flip_h=True, flip_v=True),
-    ConnectorSpec("cargo_fee_route", "Connector: Elbow 204", Box(10.836, 6.087, 1.000, 0.700), BLACK, 12700, True, "bentConnector2", flip_v=True),
-    ConnectorSpec("cargo_fee_route", "Connector: Elbow 208", Box(9.691, 3.620, 0.244, 4.046), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
+    ConnectorSpec("owner_operator_route", "OwnerOperatorRouteArrow", Box(8.147, 4.286, 0.558, 1.271), BLACK, 12700, True, "bentConnector3", flip_h=True, flip_v=True, rot=5400000),
+    ConnectorSpec("owner_operator_route", "OwnerOperatorRouteArrow", Box(6.875, 4.285, 0.558, 1.272), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
+    ConnectorSpec("build_route", "BuildRouteArrow", Box(2.661, 2.018, 1.314, 0.852), BLACK, 12700, True, "bentConnector2"),
+    ConnectorSpec("subsidy_route", "SubsidyRouteArrow", Box(4.681, 2.485, 1.131, 2.543), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
+    ConnectorSpec("subsidy_route", "SubsidyRouteArrow", Box(5.953, 1.213, 1.131, 5.086), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
+    ConnectorSpec("scf_route", "StrategicCommercialFleetArrow", Box(5.206, 2.744, 3.541, 0.286), BLACK, 12700, True, "bentConnector3", flip_v=True),
+    ConnectorSpec("buys_route", "GovernmentPurchaseArrow", Box(1.911, 2.618, 0.000, 0.252), BLACK, 12700, True, "line", flip_v=True),
+    ConnectorSpec("penalty_route", "PenaltyRouteArrow", Box(5.745, 6.087, 0.000, 0.565), BLACK, 12700, True, "line", flip_v=True),
+    ConnectorSpec("penalty_route", "PenaltyRouteArrow", Box(9.791, 6.087, 0.000, 0.565), BLACK, 12700, True, "line", flip_h=True, flip_v=True),
+    ConnectorSpec("cargo_fee_route", "CargoFeeRouteArrow", Box(10.836, 6.087, 1.000, 0.700), BLACK, 12700, True, "bentConnector2", flip_v=True),
+    ConnectorSpec("cargo_fee_route", "CargoFeeRouteArrow", Box(9.691, 3.620, 0.244, 4.046), BLACK, 12700, True, "bentConnector3", flip_v=True, rot=16200000),
 )
 
 

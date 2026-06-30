@@ -29,8 +29,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 # Reuse the proven SAM client (IPv4 force, key from root .env, bounded retry, 429 halt).
-SCRIPTS = ("/Users/brendantoole/projects3/ooxml_build_pipelines_light/projects/"
-           "awards_methodology/saronic_specific_awards_data/research/contracts/scripts")
+SCRIPTS = str(Path(__file__).resolve().parents[2] / "saronic_navy_awards" / "scripts")
 sys.path.insert(0, SCRIPTS)
 from _common import env, http_get, write_json, QuotaExhausted  # noqa: E402
 

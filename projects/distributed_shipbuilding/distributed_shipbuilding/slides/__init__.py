@@ -13,11 +13,21 @@ Empty until the first slide is authored. To add a slide:
 from __future__ import annotations
 
 from . import (
-    ddg51_outsourced_market_lumpiness_teaching_factory_chart,   # market sizing: modeled outsourced TAM by stream vs. observed SAM overlay (combo_chart)
-    ddg51_outsourced_systems_workshare_teaching_factory_chart,  # workshare composition: observed SWBS-coded outsourced spend (ranked bar_chart + tables)
+    vendor_swbs_fingerprint_teaching,
+    ddg51_hull_confidence_overlay_teaching_factory_chart,
+    approach_two_stage_teaching,
+    ddg51_swbs_dollar_mix_teaching_alternative,
+    ddg_subaward_hull_results,
+    ddg51_hull_linkage_method,
+    ddg_hull_linkage_methodology_v4,
 )
 
 SLIDE_RENDERS: list[tuple] = [
-    (ddg51_outsourced_market_lumpiness_teaching_factory_chart, ddg51_outsourced_market_lumpiness_teaching_factory_chart.render),
-    (ddg51_outsourced_systems_workshare_teaching_factory_chart, ddg51_outsourced_systems_workshare_teaching_factory_chart.render),
+    (vendor_swbs_fingerprint_teaching, vendor_swbs_fingerprint_teaching.render),
+    (ddg51_hull_confidence_overlay_teaching_factory_chart, ddg51_hull_confidence_overlay_teaching_factory_chart.render),
+    (approach_two_stage_teaching, approach_two_stage_teaching.render),
+    (ddg51_swbs_dollar_mix_teaching_alternative, ddg51_swbs_dollar_mix_teaching_alternative.render),
+    (ddg_subaward_hull_results, ddg_subaward_hull_results.render),
+    (ddg51_hull_linkage_method, ddg51_hull_linkage_method.render),
+    (ddg_hull_linkage_methodology_v4, ddg_hull_linkage_methodology_v4.render),
 ]

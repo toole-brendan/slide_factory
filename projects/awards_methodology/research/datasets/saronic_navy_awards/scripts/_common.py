@@ -31,7 +31,18 @@ def _ipv4_only(host, port, family=0, type=0, proto=0, flags=0):
 socket.getaddrinfo = _ipv4_only
 
 # ---- 2. env ----------------------------------------------------------------
-ENV_PATH = Path("/Users/brendantoole/projects3/ooxml_build_pipelines_light/.env")
+def _find_env() -> Path:
+    """Locate the nearest .env walking up from this file (repo-local first), then
+    fall back to the pipeline-light root .env. Keeps SAM_API_KEY resolvable after
+    the research move into slide_factory without hardcoding one repo's path."""
+    for parent in Path(__file__).resolve().parents:
+        cand = parent / ".env"
+        if cand.exists():
+            return cand
+    return Path("/Users/brendantoole/projects3/ooxml_build_pipelines_light/.env")
+
+
+ENV_PATH = _find_env()
 UA = "army-usv-market-research/1.0 (where-to-play workbook)"
 
 

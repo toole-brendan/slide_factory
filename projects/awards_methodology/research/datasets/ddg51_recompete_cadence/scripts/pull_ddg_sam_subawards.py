@@ -19,8 +19,7 @@ from collections import defaultdict
 from pathlib import Path
 from urllib.parse import urlencode
 
-SCRIPTS = ("/Users/brendantoole/projects3/ooxml_build_pipelines_light/projects/"
-           "awards_methodology/saronic_specific_awards_data/research/contracts/scripts")
+SCRIPTS = str(Path(__file__).resolve().parents[2] / "saronic_navy_awards" / "scripts")
 sys.path.insert(0, SCRIPTS)
 from _common import env, http_get, write_json, QuotaExhausted  # noqa: E402
 

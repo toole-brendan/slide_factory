@@ -11,6 +11,10 @@ venv/
 # MS Office lock/owner temp files
 ~$*
 
+# Secrets — API keys (SAM.gov etc.); never commit
+.env
+*.env
+
 # awards_methodology research data corpora (kept on disk, not tracked in git;
 # scripts/ and the methodology/ + wiki/ markdown stay tracked)
 projects/awards_methodology/research/datasets/*/raw/

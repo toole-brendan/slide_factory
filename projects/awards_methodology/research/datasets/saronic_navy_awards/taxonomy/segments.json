@@ -1,0 +1,66 @@
+{
+  "_about": "LOCKED market taxonomy for the Navy distributed-maritime-autonomy recompete backtest. Segments A-J per transcript.md sec.4; rings per sec.2 (0 Saronic-core, 1 directly adjacent, 2 traditional-with-autonomy-insertion, 3 watch-only/exclude). Seeds are CANDIDATE GENERATORS, not hard truth: classification is keyword-dominant with NAICS/PSC as supporting evidence (see segment_classify.py). LOCK THIS before inspecting backtest outcomes so the test cannot morph around its successes.",
+  "_weights": {"keyword": 3, "psc": 2, "naics": 1},
+  "segments": [
+    {
+      "id": "A", "name": "Autonomous surface vessels / USVs / ASVs", "ring": 0,
+      "naics_seeds": ["336611", "336612", "334511"],
+      "psc_seeds": ["1905", "1925", "1940", "1990", "2090"],
+      "keyword_seeds": ["unmanned surface", "autonomous surface", "surface vessel", "usv", "asv", "robotic surface", "musv", "lusv", "optionally manned", "optionally crewed"]
+    },
+    {
+      "id": "B", "name": "Unmanned maritime systems, general", "ring": 0,
+      "naics_seeds": ["336611", "336612", "334511"],
+      "psc_seeds": ["1905", "1940", "1990", "1550"],
+      "keyword_seeds": ["unmanned undersea", "unmanned maritime", "uuv", "uncrewed", "autonomous underwater", "underwater vehicle", "autonomy", "robotic", "unmanned vehicle"]
+    },
+    {
+      "id": "C", "name": "Mine countermeasures / expeditionary MCM", "ring": 1,
+      "naics_seeds": ["336611", "336612", "334511"],
+      "psc_seeds": ["1905", "1990"],
+      "keyword_seeds": ["mine countermeasure", "mcm", "mine warfare", "mine hunting", "mine neutralization", "minesweeping", "influence sweep", "mine detection"]
+    },
+    {
+      "id": "D", "name": "Naval Special Warfare / expeditionary craft", "ring": 1,
+      "naics_seeds": ["336612", "336611"],
+      "psc_seeds": ["1925", "1940", "1990"],
+      "keyword_seeds": ["special warfare", "nsw", "combatant craft", "expeditionary", "special operations", "rigid hull inflatable", "rhib", "ccm", "cca", "maritime craft aerial delivery"]
+    },
+    {
+      "id": "E", "name": "Patrol / force protection / maritime security craft", "ring": 1,
+      "naics_seeds": ["336612"],
+      "psc_seeds": ["1925", "1940"],
+      "keyword_seeds": ["patrol craft", "patrol boat", "force protection", "maritime security", "harbor security", "anti-terrorism", "mk vi", "coastal patrol", "security boat"]
+    },
+    {
+      "id": "F", "name": "Contested logistics / support craft / connectors", "ring": 1,
+      "naics_seeds": ["336611", "336612", "488390"],
+      "psc_seeds": ["1905", "1990", "2090"],
+      "keyword_seeds": ["contested logistics", "distributed maritime", "connector", "ship-to-shore", "sealift", "support craft", "lighterage", "causeway", "at-sea resupply", "logistics vessel"]
+    },
+    {
+      "id": "G", "name": "C2 / autonomy / manned-unmanned teaming software", "ring": 1,
+      "naics_seeds": ["511210", "541511", "541512", "541519"],
+      "psc_seeds": ["7030", "D302", "D399", "D307", "D310"],
+      "keyword_seeds": ["command and control", "c2", "mission planning", "manned-unmanned", "human-machine teaming", "autonomy software", "mission control", "common control", "fleet management", "mission autonomy"]
+    },
+    {
+      "id": "H", "name": "Payload modules / sensors / EW / comms integration", "ring": 1,
+      "naics_seeds": ["334220", "334290", "334511", "517410", "332993", "336414"],
+      "psc_seeds": ["5841", "5845", "5865", "5826", "6605", "5820", "5895", "5810", "1410", "1336", "1055"],
+      "keyword_seeds": ["payload", "modular payload", "containerized", "iso container", "sensor", "isr", "maritime domain awareness", "electronic warfare", "launch and recovery", "intelligence surveillance"]
+    },
+    {
+      "id": "I", "name": "Small combatants / LCS / frigate mission-system adjacency", "ring": 2,
+      "naics_seeds": ["336611"],
+      "psc_seeds": ["1905"],
+      "keyword_seeds": ["littoral combat", "lcs", "frigate", "ffg", "constellation", "small surface combatant", "mission module", "mission package", "ssc"]
+    },
+    {
+      "id": "J", "name": "Traditional shipbuilding / repair (watch-only)", "ring": 3,
+      "naics_seeds": ["336611"],
+      "psc_seeds": ["1905", "2090"],
+      "keyword_seeds": ["shipbuilding", "ship repair", "overhaul", "drydock", "dry dock", "ship alteration", "destroyer", "ddg", "carrier", "cvn", "submarine", "ssn", "amphibious", "lpd", "lha", "auxiliary", "oiler"]
+    }
+  ]
+}

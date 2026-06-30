@@ -49,10 +49,15 @@ FIELDS = ["Award ID", "Recipient Name", "Awarding Agency", "Awarding Sub Agency"
 CONTRACT_CODES = ["C", "D"]                 # C delivery/task order, D definitive contract
 IDV_CODES = ["IDV_A", "IDV_B", "IDV_C"]     # GWAC, IDC/IDIQ, FSS  (exclude BOA/BPA/other)
 
-# Awarding SUBTIER = Department of the Navy (covers Navy + USMC; USMC excluded post-hoc
-# by M-prefix DoDAAC). Scoping the code axis to the Navy subtier makes the page cap apply
-# WITHIN the Navy so the relevant tail isn't crowded out by the rest of DoD.
-NAVY_SUBTIER = [{"type": "awarding", "tier": "subtier", "name": "Department of the Navy"}]
+# CUSTOMER-BASED scope (transcript sec.3): a requirement counts as Navy if the Navy AWARDS it OR
+# FUNDS it. The funding path catches DIU/DARPA/SCO/ONR-awarded but Navy-FUNDED autonomy/OT work that
+# an awarding-only filter misses. (navy_requirement_owner — award text naming a Navy requiring
+# activity — is a text heuristic left for a later pass.) USMC excluded post-hoc by M-prefix DoDAAC.
+# Scoping the code axis WITHIN each Navy scope keeps the page cap from being crowded out by DoD.
+CUSTOMER_SCOPES = [
+    ("navy_awarded", [{"type": "awarding", "tier": "subtier", "name": "Department of the Navy"}]),
+    ("navy_funded", [{"type": "funding", "tier": "subtier", "name": "Department of the Navy"}]),
+]
 
 # Widened capability scope (core vessels + 4 clusters + x-cutting R&D).
 CODE_QUERIES = [
@@ -91,7 +96,7 @@ def saronic(name: str) -> bool:
     return "SARONIC" in (name or "").upper()
 
 
-def run_query(label, base_filters, log):
+def run_query(label, base_filters, log, customer=""):
     out = []
     for grp_name, codes in (("contract", CONTRACT_CODES), ("idv", IDV_CODES)):
         filters = dict(base_filters)
@@ -111,15 +116,16 @@ def run_query(label, base_filters, log):
             for r in results:
                 r["_matched_query"] = label
                 r["_award_type_group"] = grp_name
+                r["_customer"] = customer
             grp.extend(results)
             if not results or not (data.get("page_metadata") or {}).get("hasNext", False):
                 break
             page += 1
             time.sleep(0.25)
         log(f"      [{grp_name}] {len(grp)} records")
-        write_json(RAW / f"widened_{slugify(label)}_{grp_name}.json",
-                   {"label": label, "award_type_group": grp_name, "record_count": len(grp),
-                    "results": grp})
+        write_json(RAW / f"widened_{slugify(customer)}_{slugify(label)}_{grp_name}.json",
+                   {"label": label, "customer": customer, "award_type_group": grp_name,
+                    "record_count": len(grp), "results": grp})
         out.extend(grp)
     return out
 
@@ -133,15 +139,17 @@ def main():
         print(msg, flush=True); logf.write(msg + "\n"); logf.flush()
 
     log(f"=== widened Navy discovery {time.strftime('%Y-%m-%d %H:%M:%S')}  "
-        f"({len(CODE_QUERIES)} codes, {CODE_MAX_PAGES} pages, instruments={CONTRACT_CODES}+{IDV_CODES})")
+        f"({len(CODE_QUERIES)} codes x {len(CUSTOMER_SCOPES)} customer scopes, {CODE_MAX_PAGES} pages, "
+        f"instruments={CONTRACT_CODES}+{IDV_CODES})")
     all_records = []
-    for kind, code in CODE_QUERIES:
-        label = f"{kind}:{code}"
-        log(f"  - {label}")
-        filt = {"agencies": NAVY_SUBTIER, f"{kind}_codes": [code]}
-        all_records.extend(run_query(label, filt, log))
+    for cust, scope in CUSTOMER_SCOPES:
+        for kind, code in CODE_QUERIES:
+            label = f"{kind}:{code}"
+            log(f"  - [{cust}] {label}")
+            filt = {"agencies": scope, f"{kind}_codes": [code]}
+            all_records.extend(run_query(label, filt, log, customer=cust))
 
-    # consolidate by generated_internal_id; union the code provenance
+    # consolidate by generated_internal_id; union the code provenance AND the customer flags
     by_id = {}
     for r in all_records:
         gid = r.get("generated_internal_id") or r.get("Award ID")
@@ -150,9 +158,11 @@ def main():
         cur = by_id.get(gid)
         if cur is None:
             r["_axes"] = {r.get("_matched_query")}
+            r["_customers"] = {r.get("_customer")}
             by_id[gid] = r
         else:
             cur["_axes"].add(r.get("_matched_query"))
+            cur["_customers"].add(r.get("_customer"))
 
     rows = []
     for gid, r in by_id.items():
@@ -170,6 +180,7 @@ def main():
             "start_date": r.get("Start Date"), "end_date": r.get("End Date"),
             "in_scope": "no" if excl else "yes", "excluded": excl,
             "matched_codes": "; ".join(sorted(a for a in r["_axes"] if a)),
+            "customer_flags": "; ".join(sorted(c for c in r["_customers"] if c)),
             "description": (r.get("Description") or "")[:400],
         })
     rows.sort(key=lambda x: (x["in_scope"] != "yes", -(x["award_amount"] or 0)))
@@ -177,7 +188,7 @@ def main():
     cols = ["generated_internal_id", "award_id", "recipient_name", "award_amount",
             "contract_award_type", "award_type_group", "awarding_sub_agency",
             "funding_sub_agency", "naics", "psc", "start_date", "end_date",
-            "in_scope", "excluded", "matched_codes", "description"]
+            "in_scope", "excluded", "matched_codes", "customer_flags", "description"]
 
     def dump(path, only_in):
         with open(path, "w", newline="") as f:

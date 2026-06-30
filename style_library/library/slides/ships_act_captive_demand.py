@@ -13,8 +13,12 @@ TEACHES
   - encoding a source chart's per-point fills when one workbook series changes
     vessel-type meaning between categories
   - using a patterned native chart series for a hatched "Other" segment
-  - hiding selected native data labels, replacing several with manual chips,
-    and preserving source manual label layouts for ultra-thin top segments
+  - suppressing all native chart labels and rebuilding the chart-label system
+    as slide-level overlays, mirroring the slide3 annual-TAM module
+  - using semantic ValueBadge / TextLabel records for segment labels, total
+    labels, category labels, and legend labels instead of chart-native dLbls
+  - exposing a machine-readable RENDER_CONTRACT so agents know the chart data,
+    label overlays, and source-fragile geometry that must be updated together
   - using a dense right-hand mandate table with rich cells, row spans, and local
     cell-border helpers
   - preserving paint order while splitting a converted slide into teaching-level
@@ -44,8 +48,8 @@ FIDELITY NOTE
   columns, hidden native category labels, fixed value axis, manual plot-area
   layout, no native legend, no segment outlines, per-point fills, and a hatched
   "Other" series), while retaining the source slide's manually placed labels,
-  source-positioned thin-segment label callouts, legend, leader lines, mandate
-  table, and callouts as slide shapes.
+  thin-segment callouts, legend, leader lines, mandate table, and callouts as
+  slide shapes.
 """
 from __future__ import annotations
 
@@ -106,17 +110,19 @@ CAPTIVE_DEMAND_SERIES: tuple[dict, ...] = (
         "name": "Container",
         "color": VESSEL_TYPE_COLORS["container"],
         "values": [124, 46],
+        "hide_labels": True,
     },
     {
         "name": "LNG",
         "color": VESSEL_TYPE_COLORS["lng"],
         "values": [46, 41],
-        "label_color": BLACK,
+        "hide_labels": True,
     },
     {
         "name": "Crude Tanker",
         "color": VESSEL_TYPE_COLORS["crude_tanker"],
         "values": [18, 15],
+        "hide_labels": True,
     },
     {
         "name": "Ro-Ro / Product Tanker bridge",
@@ -126,10 +132,7 @@ CAPTIVE_DEMAND_SERIES: tuple[dict, ...] = (
             VESSEL_TYPE_COLORS["product_tanker"],
         ],
         "values": [9, 1],
-        # The 1-vessel legal-demand segment is too thin for a native centered
-        # label, so the source places a manual colored chip on top of the bar.
-        "hide_label_points": [1],
-        "label_color": WHITE,
+        "hide_labels": True,
     },
     {
         "name": "Product Tanker / Bulk bridge",
@@ -139,16 +142,12 @@ CAPTIVE_DEMAND_SERIES: tuple[dict, ...] = (
             VESSEL_TYPE_COLORS["bulk"],
         ],
         "values": [1, 1],
-        # Both points are drawn as manual chips to keep the thin segments legible.
         "hide_labels": True,
     },
     {
         "name": "Bulk",
         "color": VESSEL_TYPE_COLORS["bulk"],
         "values": [1, None],
-        # The source chart nudges this 1-vessel top-left segment outside the stack
-        # with a manual data-label layout. The local XML patch below recreates
-        # that exact native-chart label instead of letting PowerPoint auto-place it.
         "hide_labels": True,
     },
     {
@@ -159,7 +158,6 @@ CAPTIVE_DEMAND_SERIES: tuple[dict, ...] = (
             "fg": VESSEL_TYPE_COLORS["other_pattern_fg"],
             "bg": VESSEL_TYPE_COLORS["other_pattern_bg"],
         },
-        # Same source-positioned native label treatment as Bulk.
         "hide_labels": True,
     },
 )
@@ -177,7 +175,7 @@ CHART_STYLE = {
     "series": [dict(series) for series in CAPTIVE_DEMAND_SERIES],
     "show_legend": False,
     "show_cat_labels": False,
-    "show_value_labels": True,
+    "show_value_labels": False,
     "show_gridlines": False,
     "show_value_axis_labels": True,
     "value_axis_format": '#,##0;"-"#,##0',
@@ -202,102 +200,31 @@ CHART_STYLE = {
     "cat_header": "Demand Type",
 }
 
-# Two very thin source labels (left-column Bulk=1 and Other=2) use chart-native
-# manual label layouts rather than slide-level text. Leaving them to the generic
-# `column_chart()` label placement causes PowerPoint/LibreOffice to place the
-# labels inside the top of the stack, where the source positioned them just to the
-# right of the hatched cap and disabled leader lines. The factory does not expose
-# per-label manualLayout yet, so this local patch is intentionally narrow and
-# visible: the chart data/fills/axes still come from `column_chart()`, while these
-# two label records are source-faithful OOXML shims.
-_SOURCE_THIN_LABEL_X = "0.13825821755337173"
-_SOURCE_BULK_LABEL_Y = "1.4858841010401188E-2"
-_SOURCE_OTHER_LABEL_Y = "-1.4858841010401188E-2"
+# The slide3 reference suppresses all native chart labels and paints value labels
+# as slide-level overlays.  The chart remains a normal editable native chart; the
+# values, totals, and category captions are controlled below by ValueBadge and
+# TextLabel records that are painted after the chart frame.
+CHART_LABEL_POLICY = {
+    "native_chart_labels": {
+        "mechanism": "disabled: CHART_STYLE['show_value_labels'] is False and every series has hide_labels=True",
+        "fit_class": "not_used",
+        "copy_rule": "Keep native labels off; add/edit labels through SEGMENT_VALUE_BADGES, TOTAL_VALUE_LABELS, and CATEGORY_LABELS.",
+    },
+    "manual_value_badges": {
+        "mechanism": "slide-level text_box overlays painted after the native chart, matching slide3",
+        "fit_class": "exact_overlay",
+        "box_in": "0.115-0.267in wide x 0.167in high",
+        "font_pt": 10,
+        "copy_rule": "Use for one- to three-character value tokens; update geometry when chart frame, plot_layout, axis scale, or values change.",
+    },
+    "manual_totals_and_categories": {
+        "mechanism": "slide-level TextLabel records, not native category labels or chart data labels",
+        "fit_class": "exact_overlay",
+        "copy_rule": "Totals and category captions are manual labels and must be reconciled with chart data changes.",
+    },
+}
 
-
-def _source_thin_segment_dlbls(label_y: str) -> str:
-    """Source-positioned dLbls XML for the left-column top labels.
-
-    This mirrors slide60_chart43.xml: one label at category idx 0, no native
-    leader lines, 10pt theme text, centered data label, and a hidden default
-    dLbls group so no accidental second label appears for the blank category.
-    """
-
-    return (
-        "<c:dLbls>"
-        "<c:dLbl>"
-        '<c:idx val="0"/>'
-        "<c:layout><c:manualLayout>"
-        f'<c:x val="{_SOURCE_THIN_LABEL_X}"/>'
-        f'<c:y val="{label_y}"/>'
-        "</c:manualLayout></c:layout>"
-        '<c:numFmt formatCode="#,##0;&quot;-&quot;#,##0" sourceLinked="0"/>'
-        "<c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr>"
-        "<c:txPr>"
-        '<a:bodyPr wrap="none"/><a:lstStyle/>'
-        "<a:p><a:pPr><a:defRPr sz=\"1000\" kern=\"1200\">"
-        '<a:solidFill><a:schemeClr val="tx2"/></a:solidFill>'
-        '<a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/>'
-        "</a:defRPr></a:pPr><a:endParaRPr lang=\"en-US\"/></a:p>"
-        "</c:txPr>"
-        '<c:dLblPos val="ctr"/>'
-        '<c:showLegendKey val="0"/><c:showVal val="1"/><c:showCatName val="0"/>'
-        '<c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/>'
-        "<c:extLst>"
-        '<c:ext uri="{CE6537A1-D6FC-4f65-9D91-7224C49458BB}" xmlns:c15="http://schemas.microsoft.com/office/drawing/2012/chart">'
-        '<c15:spPr xmlns:c15="http://schemas.microsoft.com/office/drawing/2012/chart">'
-        '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
-        "</c15:spPr></c:ext>"
-        "</c:extLst>"
-        "</c:dLbl>"
-        "<c:spPr><a:noFill/><a:ln><a:noFill/></a:ln><a:effectLst/></c:spPr>"
-        '<c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="0"/>'
-        '<c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/>'
-        "<c:extLst>"
-        '<c:ext uri="{CE6537A1-D6FC-4f65-9D91-7224C49458BB}" xmlns:c15="http://schemas.microsoft.com/office/drawing/2012/chart">'
-        '<c15:showLeaderLines val="0"/>'
-        "</c:ext>"
-        "</c:extLst>"
-        "</c:dLbls>"
-    )
-
-
-def _patch_series_dlbls(chart_xml: str, series_name: str, dlbls_xml: str) -> str:
-    """Replace/insert one series' dLbls block in the deterministic factory XML."""
-
-    name_marker = f"<c:v>{series_name}</c:v>"
-    name_pos = chart_xml.find(name_marker)
-    if name_pos < 0:
-        raise ValueError(f"series {series_name!r} not found in generated chart XML")
-    ser_start = chart_xml.rfind("<c:ser>", 0, name_pos)
-    ser_end = chart_xml.find("</c:ser>", name_pos)
-    if ser_start < 0 or ser_end < 0:
-        raise ValueError(f"could not isolate series {series_name!r} in generated chart XML")
-    ser_end += len("</c:ser>")
-    series_xml = chart_xml[ser_start:ser_end]
-    existing_start = series_xml.find("<c:dLbls>")
-    if existing_start >= 0:
-        existing_end = series_xml.find("</c:dLbls>", existing_start) + len("</c:dLbls>")
-        series_xml = series_xml[:existing_start] + dlbls_xml + series_xml[existing_end:]
-    else:
-        insert_after = "<c:invertIfNegative val=\"0\"/>"
-        insert_pos = series_xml.find(insert_after)
-        if insert_pos < 0:
-            raise ValueError(f"no insertion point for series {series_name!r} dLbls")
-        insert_pos += len(insert_after)
-        series_xml = series_xml[:insert_pos] + dlbls_xml + series_xml[insert_pos:]
-    return chart_xml[:ser_start] + series_xml + chart_xml[ser_end:]
-
-
-def _native_captive_demand_chart() -> dict:
-    chart = column_chart(**CHART_STYLE)
-    chart_xml = chart["chart_xml"]
-    chart_xml = _patch_series_dlbls(chart_xml, "Bulk", _source_thin_segment_dlbls(_SOURCE_BULK_LABEL_Y))
-    chart_xml = _patch_series_dlbls(chart_xml, "Other", _source_thin_segment_dlbls(_SOURCE_OTHER_LABEL_Y))
-    return {**chart, "chart_xml": chart_xml}
-
-
-CHARTS = [_native_captive_demand_chart()]
+CHARTS = [column_chart(**CHART_STYLE)]
 
 # Source-line external links. The column chart takes rId2, so links start at rId3;
 # the SourceNote runs reference these rIds via run(..., hyperlink_rid=...). rId5's
@@ -311,12 +238,41 @@ HYPERLINKS = [
 ]
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# Teaching metadata: comments a future agent can inspect programmatically.
+# ════════════════════════════════════════════════════════════════════════════
+TEACHING_METADATA = {
+    "role": "policy_mandate_comparison",
+    "use_when": (
+        "Use for a policy-backed demand comparison where a left stacked chart "
+        "quantifies totals and a right table documents mandate mechanics."
+    ),
+    "teaches": [
+        "native column_chart stacked chart rebuilt from source XML",
+        "per-point chart colors through data_point_colors",
+        "patterned chart series for a hatched segment",
+        "manual slide-overlay value badges for all stacked-segment labels",
+        "slide3-style label data records instead of patched chart-native dLbls",
+        "CHART_LABEL_POLICY distinguishing chart data from overlay labels",
+        "RENDER_CONTRACT for chart frame, label overlays, and table row policy",
+        "dense mandate table with rich cells and row spans",
+        "local table-cell helpers instead of centralized table_kit",
+        "PowerPoint paint order split into semantic paint functions",
+    ],
+}
+
 TEXT_FIT = {
     "mandate_table": {
         "box_in": (7.089, 4.007),
         "font_pt": "10 body + 12 Yes/No flags",
         "content": "title row + header row + five mandate rows",
         "note": "Rich provision cells use tbreak() for three-line labels; keep provision names short.",
+    },
+    "chart_value_badges": {
+        "box_in": "0.115-0.267 wide x 0.167 high",
+        "font_pt": 10,
+        "content": "manual segment value labels painted as slide text boxes over the native chart",
+        "note": "Mirrors slide3: keep native chart labels suppressed and edit labels in SEGMENT_VALUE_BADGES.",
     },
     "chart_category_labels": {
         "box_in": [(1.667, 0.333), (1.663, 0.167)],
@@ -352,6 +308,9 @@ class Box:
     def emu(self) -> tuple[int, int, int, int]:
         return IN(self.x), IN(self.y), IN(self.w), IN(self.h)
 
+    def inches(self) -> tuple[float, float, float, float]:
+        return self.x, self.y, self.w, self.h
+
 
 @dataclass(frozen=True)
 class TextZone:
@@ -362,14 +321,45 @@ class TextZone:
 
 
 @dataclass(frozen=True)
-class ValueChip:
+class ValueBadge:
+    """Manual slide-level chart value label, matching the slide3 label pattern.
+
+    The native chart carries data only.  Every visible value token is a text_box
+    overlay with explicit inch geometry, fill, and text color.  Fill usually
+    matches the underlying chart segment so the overlay behaves like a data
+    label rather than a visible UI chip.
+    """
+
+    name: str
     box: Box
-    fill: str
-    label: str = "1"
+    label: str
+    fill: str | None
+    text_color: str = BLACK
+    source_binding: tuple[str, int] | None = None  # (series name, category idx)
+    reason: str = "manual chart label overlay"
+    fit_class: str = "exact_overlay"
+    copy_rule: str = (
+        "Use only for one- to three-character value tokens; update box geometry "
+        "when chart frame, plot_layout, axis scale, category count, series order, "
+        "or values change."
+    )
 
 
 @dataclass(frozen=True)
-class LegendKey:
+class TextLabel:
+    name: str
+    box: Box
+    text: str
+    font_pt: float = 10
+    bold: bool = False
+    italic: bool = False
+    align: str | None = "ctr"
+    anchor: str = "ctr"
+    wrap: str = "none"
+
+
+@dataclass(frozen=True)
+class LegendSwatch:
     box: Box
     fill: str
 
@@ -447,24 +437,91 @@ PORT_ALPHA_LABEL = TextZone(
 )
 
 MARKER_SIZE = Box(0, 0, 0.115, 0.167)
-KEY_SIZE = Box(0, 0, 0.196, 0.146)
+SWATCH_SIZE = Box(0, 0, 0.196, 0.146)
 VESSEL_LABEL_X = 4.139
 VESSEL_LABEL_H = 0.167
 TEXT_ROW_H = 0.167
 
-VALUE_CHIPS: tuple[ValueChip, ...] = (
-    ValueChip(Box(2.309, 2.210, MARKER_SIZE.w, MARKER_SIZE.h), VESSEL_TYPE_COLORS["product_tanker"]),
-    ValueChip(Box(4.583, 3.997, MARKER_SIZE.w, MARKER_SIZE.h), VESSEL_TYPE_COLORS["bulk"]),
-    ValueChip(Box(3.951, 4.016, MARKER_SIZE.w, MARKER_SIZE.h), VESSEL_TYPE_COLORS["product_tanker"]),
+SEGMENT_VALUE_BADGES: tuple[ValueBadge, ...] = (
+    # SCF / MSTF-supported demand stack, bottom-to-top.  Wider labels stay centered;
+    # 1-vessel top-cap labels sit to the right and use the source leader lines.
+    ValueBadge("SCFContainerValue", Box(1.915, 4.786, 0.267, TEXT_ROW_H), "124", VESSEL_TYPE_COLORS["container"], WHITE, ("Container", 0)),
+    ValueBadge("SCFLngValue", Box(1.934, 3.170, 0.229, TEXT_ROW_H), "46", VESSEL_TYPE_COLORS["lng"], BLACK, ("LNG", 0)),
+    ValueBadge("SCFCrudeTankerValue", Box(1.934, 2.562, 0.229, TEXT_ROW_H), "18", VESSEL_TYPE_COLORS["crude_tanker"], WHITE, ("Crude Tanker", 0)),
+    ValueBadge("SCFRoRoValue", Box(1.991, 2.306, MARKER_SIZE.w, MARKER_SIZE.h), "9", VESSEL_TYPE_COLORS["ro_ro"], WHITE, ("Ro-Ro / Product Tanker bridge", 0)),
+    ValueBadge(
+        "SCFProductTankerValue",
+        Box(2.309, 2.210, MARKER_SIZE.w, MARKER_SIZE.h),
+        "1",
+        VESSEL_TYPE_COLORS["product_tanker"],
+        WHITE,
+        ("Product Tanker / Bulk bridge", 0),
+        reason="SCF-side 1-vessel product-tanker segment is too thin for a centered native label.",
+    ),
+    ValueBadge(
+        "SCFBulkTopCapValue",
+        Box(2.704, 2.2595, MARKER_SIZE.w, MARKER_SIZE.h),
+        "1",
+        None,
+        BLACK,
+        ("Bulk", 0),
+        reason="SCF-side 1-vessel top-cap label is placed outside the stack with source leader-line support.",
+    ),
+    ValueBadge(
+        "SCFOtherTopCapValue",
+        Box(2.704, 2.0935, MARKER_SIZE.w, MARKER_SIZE.h),
+        "2",
+        None,
+        BLACK,
+        ("Other", 0),
+        reason="SCF-side hatched Other segment label is placed outside the stack with source leader-line support.",
+    ),
+    # Legally mandated demand stack, bottom-to-top.
+    ValueBadge("MandatedContainerValue", Box(4.210, 5.527, 0.229, TEXT_ROW_H), "46", VESSEL_TYPE_COLORS["container"], WHITE, ("Container", 1)),
+    ValueBadge("MandatedLngValue", Box(4.210, 4.700, 0.229, TEXT_ROW_H), "41", VESSEL_TYPE_COLORS["lng"], BLACK, ("LNG", 1)),
+    ValueBadge("MandatedCrudeTankerValue", Box(4.210, 4.168, 0.229, TEXT_ROW_H), "15", VESSEL_TYPE_COLORS["crude_tanker"], WHITE, ("Crude Tanker", 1)),
+    ValueBadge(
+        "MandatedProductTankerValue",
+        Box(3.951, 4.016, MARKER_SIZE.w, MARKER_SIZE.h),
+        "1",
+        VESSEL_TYPE_COLORS["product_tanker"],
+        WHITE,
+        ("Ro-Ro / Product Tanker bridge", 1),
+        reason="Legal-demand-side 1-vessel product-tanker segment is too thin for a centered native label.",
+    ),
+    ValueBadge(
+        "MandatedBulkValue",
+        Box(4.583, 3.997, MARKER_SIZE.w, MARKER_SIZE.h),
+        "1",
+        VESSEL_TYPE_COLORS["bulk"],
+        WHITE,
+        ("Product Tanker / Bulk bridge", 1),
+        reason="Legal-demand-side 1-vessel bulk segment is too thin for a centered native label.",
+    ),
 )
 
-LEGEND_KEYS: tuple[LegendKey, ...] = (
-    LegendKey(Box(3.887, 2.149, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["ro_ro"]),
-    LegendKey(Box(3.887, 2.372, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["bulk"]),
-    LegendKey(Box(3.887, 2.594, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["product_tanker"]),
-    LegendKey(Box(3.887, 2.816, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["crude_tanker"]),
-    LegendKey(Box(3.887, 3.038, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["lng"]),
-    LegendKey(Box(3.887, 3.260, KEY_SIZE.w, KEY_SIZE.h), VESSEL_TYPE_COLORS["container"]),
+TOTAL_VALUE_LABELS: tuple[ValueBadge, ...] = (
+    ValueBadge("SCFTotalLabel", Box(1.915, 2.033, 0.267, TEXT_ROW_H), "201", None, BLACK),
+    ValueBadge("MandatedDemandTotalLabel", Box(4.191, 3.830, 0.267, TEXT_ROW_H), "104", None, BLACK),
+)
+
+CATEGORY_LABELS: tuple[TextLabel, ...] = (
+    TextLabel(
+        "SCFCategoryLabel",
+        Box(1.215, 6.094, 1.667, 0.333),
+        "Strategic Commercial Fleet (supported by MSTF)",
+        wrap="square",
+    ),
+    TextLabel("MandatedDemandCategoryLabel", Box(3.493, 6.094, 1.663, TEXT_ROW_H), "Legally Mandated Demand"),
+)
+
+LEGEND_SWATCHES: tuple[LegendSwatch, ...] = (
+    LegendSwatch(Box(3.887, 2.149, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["ro_ro"]),
+    LegendSwatch(Box(3.887, 2.372, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["bulk"]),
+    LegendSwatch(Box(3.887, 2.594, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["product_tanker"]),
+    LegendSwatch(Box(3.887, 2.816, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["crude_tanker"]),
+    LegendSwatch(Box(3.887, 3.038, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["lng"]),
+    LegendSwatch(Box(3.887, 3.260, SWATCH_SIZE.w, SWATCH_SIZE.h), VESSEL_TYPE_COLORS["container"]),
 )
 
 LEGEND_LABELS: tuple[LegendLabel, ...] = (
@@ -494,6 +551,94 @@ SOURCE_LIST = (
     "EIA AEO Crude Export Table; EIA Crude Tanker Descriptions; GAO Report on "
     "Government Preference Cargo"
 )
+
+
+def _badge_contract(badge: ValueBadge) -> dict:
+    return {
+        "name": badge.name,
+        "label": badge.label,
+        "box_in": badge.box.inches(),
+        "fill": badge.fill,
+        "text_color": badge.text_color,
+        "source_binding": badge.source_binding,
+        "fit_class": badge.fit_class,
+        "reason": badge.reason,
+        "copy_rule": badge.copy_rule,
+    }
+
+
+def _text_label_contract(label: TextLabel) -> dict:
+    return {
+        "name": label.name,
+        "text": label.text,
+        "box_in": label.box.inches(),
+        "font_pt": label.font_pt,
+        "bold": label.bold,
+        "italic": label.italic,
+        "align": label.align,
+        "anchor": label.anchor,
+        "wrap": label.wrap,
+    }
+
+
+RENDER_CONTRACT = {
+    "slide": {
+        "layout": LAYOUT,
+        "canvas_in": (13.333, 7.500),
+        "composition": (
+            "left native stacked-column chart with slide-level manual value labels; "
+            "right mandate table; source-positioned scenario annotations"
+        ),
+    },
+    "native_chart": {
+        "frame_in": CHART_FRAME.inches(),
+        "factory": "column_chart(mode='stacked')",
+        "categories": CAPTIVE_DEMAND_CATEGORIES,
+        "value_axis": {"min": 0, "max": 220, "major_unit": 20},
+        "gap_width": CHART_STYLE["gap_width"],
+        "bar_overlap": CHART_STYLE["bar_overlap"],
+        "plot_layout_inner": dict(CHART_STYLE["plot_layout"]),
+        "native_category_labels": "hidden; slide text boxes provide category labels",
+        "native_legend": "hidden; slide legend is manual",
+        "segment_outlines": "none",
+    },
+    "label_system": {
+        "native_chart_labels": CHART_LABEL_POLICY["native_chart_labels"],
+        "manual_value_badges": {
+            **CHART_LABEL_POLICY["manual_value_badges"],
+            "records": tuple(_badge_contract(badge) for badge in SEGMENT_VALUE_BADGES),
+        },
+        "manual_totals": {
+            **CHART_LABEL_POLICY["manual_totals_and_categories"],
+            "records": tuple(_badge_contract(badge) for badge in TOTAL_VALUE_LABELS),
+        },
+        "manual_category_labels": {
+            **CHART_LABEL_POLICY["manual_totals_and_categories"],
+            "records": tuple(_text_label_contract(label) for label in CATEGORY_LABELS),
+        },
+    },
+    "table": {
+        "mandate_table": {
+            "box_in": MANDATE_TABLE.box.inches(),
+            "col_widths_in": (2.808, 1.799, 1.241, 1.241),
+            "font_pt": "10 body; 12 Yes/No flags",
+            "row_height_policy": (
+                "source minima through trow(h=...); wrapped table text can still grow rows"
+            ),
+            "content_budget": (
+                "title row + header row + five mandate rows; provision labels use "
+                "three short lines at most"
+            ),
+            "fit_class": "tight_reference_table",
+        },
+    },
+    "agent_copy_rules": (
+        "Do not put prose in chart value badges; they are one- to three-character label overlays.",
+        "When changing chart data or axis scale, update native chart data, SEGMENT_VALUE_BADGES, TOTAL_VALUE_LABELS, and CATEGORY_LABELS together.",
+        "Keep CHART_STYLE['show_value_labels']=False; do not reintroduce chart-native dLbls unless the label system is deliberately redesigned.",
+        "Use the slide3 pattern: chart first, then manual value badges, totals, category labels, and legend as slide shapes.",
+    ),
+}
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -745,14 +890,16 @@ def paint_chart_labels_and_legend(out: list[str], ids: ShapeIds) -> None:
         )
     )
 
-    for chip in VALUE_CHIPS:
+    # Slide3-style chart labels: every visible data label is a manual slide
+    # overlay painted above the chart frame.  The native chart has no data labels.
+    for badge in SEGMENT_VALUE_BADGES:
         out.append(
             text_box(
                 ids.next(),
-                "ValueLabel",
-                *chip.box.emu(),
-                [_tight_para([_r(chip.label, color=WHITE)], align="ctr")],
-                fill=chip.fill,
+                badge.name,
+                *badge.box.emu(),
+                [_tight_para([_r(badge.label, color=badge.text_color)], align="ctr")],
+                fill=badge.fill,
                 line_color="none",
                 anchor="ctr",
                 wrap="none",
@@ -763,90 +910,52 @@ def paint_chart_labels_and_legend(out: list[str], ids: ShapeIds) -> None:
             )
         )
 
-    out.append(
-        text_box(
-            ids.next(),
-            "SCFCategoryLabel",
-            IN(1.215),
-            IN(6.094),
-            IN(1.667),
-            IN(0.333),
-            [_tight_para([_r("Strategic Commercial Fleet (supported by MSTF)")], align="ctr")],
-            fill=None,
-            line_color="none",
-            l_ins=0,
-            t_ins=0,
-            r_ins=0,
-            b_ins=0,
+    for badge in TOTAL_VALUE_LABELS:
+        out.append(
+            text_box(
+                ids.next(),
+                badge.name,
+                *badge.box.emu(),
+                [_tight_para([_r(badge.label, color=badge.text_color)], align="ctr")],
+                fill=badge.fill,
+                line_color="none",
+                anchor="b",
+                wrap="none",
+                l_ins=17_463,
+                t_ins=0,
+                r_ins=17_463,
+                b_ins=0,
+            )
         )
-    )
-    out.append(
-        text_box(
-            ids.next(),
-            "MandatedDemandCategoryLabel",
-            IN(3.493),
-            IN(6.094),
-            IN(1.663),
-            IN(TEXT_ROW_H),
-            [_tight_para([_r("Legally Mandated Demand")], align="ctr")],
-            fill=None,
-            line_color="none",
-            wrap="none",
-            l_ins=0,
-            t_ins=0,
-            r_ins=0,
-            b_ins=0,
-        )
-    )
-    out.append(
-        text_box(
-            ids.next(),
-            "SCFTotalLabel",
-            IN(1.915),
-            IN(2.033),
-            IN(0.267),
-            IN(TEXT_ROW_H),
-            [_tight_para([_r("201")], align="ctr")],
-            fill=None,
-            line_color="none",
-            anchor="b",
-            wrap="none",
-            l_ins=17_463,
-            t_ins=0,
-            r_ins=17_463,
-            b_ins=0,
-        )
-    )
-    out.append(
-        text_box(
-            ids.next(),
-            "MandatedDemandTotalLabel",
-            IN(4.191),
-            IN(3.830),
-            IN(0.267),
-            IN(TEXT_ROW_H),
-            [_tight_para([_r("104")], align="ctr")],
-            fill=None,
-            line_color="none",
-            anchor="b",
-            wrap="none",
-            l_ins=17_463,
-            t_ins=0,
-            r_ins=17_463,
-            b_ins=0,
-        )
-    )
 
-    # Pattern-fill legend key — text_box(pattern_fill=) mirrors the native
+    for label in CATEGORY_LABELS:
+        out.append(
+            text_box(
+                ids.next(),
+                label.name,
+                *label.box.emu(),
+                [_tight_para([_r(label.text, size_pt=label.font_pt, bold=label.bold, italic=label.italic)], align=label.align)],
+                fill=None,
+                line_color="none",
+                anchor=label.anchor,
+                wrap=label.wrap,
+                l_ins=0,
+                t_ins=0,
+                r_ins=0,
+                b_ins=0,
+            )
+        )
+
+    # Pattern-fill legend swatch — text_box(pattern_fill=) mirrors the native
     # chart's hatched `Other` series without a per-module OOXML helper.
     out.append(
         text_box(
             ids.next(),
-            "OtherPatternKey",
+            "OtherPatternSwatch",
             IN(3.887),
             IN(1.927),
-            IN(KEY_SIZE.w),
-            IN(KEY_SIZE.h),
+            IN(SWATCH_SIZE.w),
+            IN(SWATCH_SIZE.h),
             [_empty_para()],
             fill=None,
             line_color="none",
@@ -855,14 +964,14 @@ def paint_chart_labels_and_legend(out: list[str], ids: ShapeIds) -> None:
         )
     )
 
-    for key in LEGEND_KEYS:
+    for swatch in LEGEND_SWATCHES:
         out.append(
             text_box(
                 ids.next(),
-                "LegendColorKey",
-                *key.box.emu(),
+                "LegendSwatch",
+                *swatch.box.emu(),
                 [_empty_para()],
-                fill=key.fill,
+                fill=swatch.fill,
                 line_color="none",
                 anchor="ctr",
             )

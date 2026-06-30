@@ -13,21 +13,30 @@ Empty until the first slide is authored. To add a slide:
 from __future__ import annotations
 
 from . import (
+    definitions_market_levels,
+    outsourced_spend_by_work_type,
     vendor_swbs_fingerprint_teaching,
     ddg51_hull_confidence_overlay_teaching_factory_chart,
     approach_two_stage_teaching,
     ddg51_swbs_dollar_mix_teaching_alternative,
-    ddg_subaward_hull_results,
-    ddg51_hull_linkage_method,
-    ddg_hull_linkage_methodology_v4,
+    ddg_hull_linkage_methodology_v4_updated,
+    slide1_outsourced_bc_walk,
+    slide3_outsourced_bc_annual_tam_ref,
 )
 
+# Archived (moved to projects/distributed_shipbuilding/_archive/slides/, out of
+# the build): ddg_subaward_hull_results, ddg51_hull_linkage_method,
+# ddg_hull_linkage_methodology_v4, ddg_subaward_hull_linkage_results.
+# Deleted: slide2_worktype_by_program, slide5_worktype_by_fy.
+
 SLIDE_RENDERS: list[tuple] = [
+    (definitions_market_levels, definitions_market_levels.render),
+    (outsourced_spend_by_work_type, outsourced_spend_by_work_type.render),
     (vendor_swbs_fingerprint_teaching, vendor_swbs_fingerprint_teaching.render),
     (ddg51_hull_confidence_overlay_teaching_factory_chart, ddg51_hull_confidence_overlay_teaching_factory_chart.render),
     (approach_two_stage_teaching, approach_two_stage_teaching.render),
     (ddg51_swbs_dollar_mix_teaching_alternative, ddg51_swbs_dollar_mix_teaching_alternative.render),
-    (ddg_subaward_hull_results, ddg_subaward_hull_results.render),
-    (ddg51_hull_linkage_method, ddg51_hull_linkage_method.render),
-    (ddg_hull_linkage_methodology_v4, ddg_hull_linkage_methodology_v4.render),
+    (ddg_hull_linkage_methodology_v4_updated, ddg_hull_linkage_methodology_v4_updated.render),
+    (slide1_outsourced_bc_walk, slide1_outsourced_bc_walk.render),
+    (slide3_outsourced_bc_annual_tam_ref, slide3_outsourced_bc_annual_tam_ref.render),
 ]

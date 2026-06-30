@@ -20,19 +20,18 @@ TEACHES
     the bar (Mixed above, Partial below), joined to the sliver by a short neutral
     leader line (ships_act_captive_demand thin-segment idiom)
   - a full-width vendor reference table (key_inputs / coordination_archetypes kit)
-    whose Evidence-class cell is a colored chip matching the bar segments
-  - flagging one worked-example row (SOCAIL, LDA) and footnoting it
+    of the top dollar vendors, each traceable to a primary ship system
   - keeping a separate-denominator finding (the FY23-27 MYP incumbency block) in a
     visually separate callout so it is not read against the 375-vendor base
 
 TEXT-FIT PRECEDENT
   fingerprint_table:
     geometry: 12.340in wide x 2.730in high
-    columns: 2.85 / 1.15 / 1.35 / 2.05 / 1.25 / 2.49 / 1.20 in
+    columns: 3.10 / 1.15 / 1.35 / 2.45 / 1.25 / 3.04 in
     type: Arial 10pt, single-spaced; header + 12 data rows at ~0.21in row pitch
     copy_when: a slide needs a dense vendor catalogue under a compact exhibit, and
-               every row must be traceable to a vendor, a primary ship system, and
-               an evidence class without leaving the slide
+               every row must be traceable to a vendor and a primary ship system
+               without leaving the slide
   share_bars:
     geometry: each bar frame 7.20in wide x 0.36in high; plot fills the frame so a
               segment's slide-x equals frame_x + cumulative_share * frame_w
@@ -83,7 +82,6 @@ CLASS_PARTIAL = "9DB1CF"   # Partial SWBS evidence        (recurring light chart
 CLASS_LOWNO   = "BFBFBF"   # Low / no SWBS evidence        (caveat gray; dark labels)
 
 CALLOUT_BLUE  = "CEDDEC"   # pale-blue incumbency note fill
-SOCAIL_FILL   = "EAF1F8"   # very pale row highlight for the worked-example row
 
 LAYOUT = "slideLayout4"
 
@@ -180,8 +178,7 @@ TEACHING_METADATA = {
         "two separate native stacked bars as a paired 100% comparison",
         "all-manual value labels (native labels off) per the freight_charges idiom",
         "hand-painted dominant labels in-bar; thin slivers get color chips + short leaders",
-        "full-width vendor table with class-colored chip cells",
-        "worked-example row highlight + footnote",
+        "full-width vendor reference table of the top dollar vendors",
         "separate-denominator finding isolated in a callout",
     ],
 }
@@ -258,15 +255,14 @@ class VendorRow:
     primary_group: str
     primary_pct: str
     top_subsystem: str
-    evidence: str          # one of the four class labels (drives chip color)
-    worked_example: bool = False
+    evidence: str          # one of the four class labels (documentary; chip column removed)
 
 
 VENDOR_ROWS: tuple[VendorRow, ...] = (
     VendorRow("Rolls-Royce Marine North America", "541.5", "98%", "300 Electric Plant",    "85%",  "310 Electric power generation",           "High-confidence single SWBS"),
     VendorRow("General Electric",                 "348.6", "100%", "200 Propulsion Plant",  "100%", "234 Propulsion gas turbines",             "High-confidence single SWBS"),
     VendorRow("York International",               "243.5", "88%",  "500 Auxiliary Systems", "88%",  "516 Refrigeration system",                "High-confidence single SWBS"),
-    VendorRow("SOCAIL, LDA",                      "204.5", "100%", "200 Propulsion Plant",  "100%", "234 Propulsion gas turbines",             "High-confidence single SWBS", worked_example=True),
+    VendorRow("SOCAIL, LDA",                      "204.5", "100%", "200 Propulsion Plant",  "100%", "234 Propulsion gas turbines",             "High-confidence single SWBS"),
     VendorRow("Timken Gears & Services",          "174.5", "100%", "200 Propulsion Plant",  "100%", "241 Propulsion reduction gears",          "High-confidence single SWBS"),
     VendorRow("Johnson Controls Navy Systems",    "160.2", "99%",  "500 Auxiliary Systems", "99%",  "516 Refrigeration system",                "High-confidence single SWBS"),
     VendorRow("Northrop Grumman Systems",         "146.3", "93%",  "500 Auxiliary Systems", "90%",  "561 Steering and diving control systems", "High-confidence single SWBS"),
@@ -277,17 +273,15 @@ VENDOR_ROWS: tuple[VendorRow, ...] = (
     VendorRow("Espey Mfg. & Electronics",         "56.1",  "84%",  "300 Electric Plant",    "84%",  "314 Power conversion equipment",          "High-confidence single SWBS"),
 )
 
-COL_W = (2.70, 1.15, 1.35, 2.05, 1.25, 2.64, 1.20)   # sums to 12.34
-# Vendor col trimmed 2.85->2.70 (widest entry ~2.12in) and Top-subsystem col
-# widened 2.49->2.64 so "561 Steering and diving control systems" (~2.45in) no
-# longer wraps to a second line and inflates the table height into the callout.
+COL_W = (3.10, 1.15, 1.35, 2.45, 1.25, 3.04)   # sums to 12.34 (Evidence-class col removed)
+# The freed 1.20in (former Evidence-class chip column) is redistributed to the
+# three text columns (Vendor, Primary SWBS group, Top SWBS subsystem); the numeric
+# columns keep their tight widths. "561 Steering and diving control systems"
+# (~2.45in) still clears its 3.04in column without wrapping.
 HEADERS = ("Vendor", "DDG HII $M", "SWBS coverage", "Primary SWBS group",
-           "Primary SWBS %", "Top SWBS subsystem", "Evidence class")
+           "Primary SWBS %", "Top SWBS subsystem")
 # Right-aligned numeric columns by index.
 RIGHT_COLS = {1, 2, 4}
-
-# Map a class label to its ramp color for the table chip.
-CLASS_COLOR_BY_LABEL = {c.label: c.color for c in SWBS_CLASSES}
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -305,20 +299,6 @@ def cell(text, *, fill=None, bold=None, color=BLACK, align="l", size=PT(10),
          t_ins=22_860, b_ins=22_860, l_ins=45_720, r_ins=45_720, **edges):
     return tcell(text, fill=fill, bold=bold, color=color, align=align, size=size,
                  anchor="ctr", font=FONT, l_ins=l_ins, r_ins=r_ins,
-                 t_ins=t_ins, b_ins=b_ins, borders=border_dict(**edges))
-
-
-def chip_cell(label, *, t_ins=18_000, b_ins=18_000, **edges):
-    """Evidence-class chip: class-colored fill, white text, doubles as the key."""
-    fill = CLASS_COLOR_BY_LABEL.get(label, CLASS_LOWNO)
-    txt = WHITE if fill in (CLASS_HC, CLASS_MIXED) else BLACK
-    # Shorten the printed chip text; full names live in the legend.
-    short = {"High-confidence single SWBS": "High-confidence",
-             "High-coverage mixed": "Mixed",
-             "Partial SWBS evidence": "Partial",
-             "Low / no SWBS evidence": "Low / no"}.get(label, label)
-    return tcell(short, fill=fill, bold=True, color=txt, align="ctr", size=PT(9),
-                 anchor="ctr", font=FONT, l_ins=18_000, r_ins=18_000,
                  t_ins=t_ins, b_ins=b_ins, borders=border_dict(**edges))
 
 
@@ -452,7 +432,7 @@ def paint_legend(out: list[str], ids: ShapeIds) -> None:
 def _header_row():
     cells = []
     for i, h in enumerate(HEADERS):
-        align = "r" if i in RIGHT_COLS else ("ctr" if i == 6 else "l")
+        align = "r" if i in RIGHT_COLS else "l"
         cells.append(cell(h, bold=True, align=align, fill=WHITE, anchor="b",
                           B=edge(BLACK)))
     return trow(cells, h=IN(HEADER_H))
@@ -464,16 +444,13 @@ def _vendor_rows():
     n = len(VENDOR_ROWS)
     for ri, vr in enumerate(VENDOR_ROWS):
         bottom = None if ri == n - 1 else hair
-        fill = SOCAIL_FILL if vr.worked_example else WHITE
-        vendor_text = vr.vendor + ("¹" if vr.worked_example else "")
         cells = [
-            cell(vendor_text, fill=fill, bold=vr.worked_example or None, align="l", B=bottom),
-            cell(vr.dollars_m, fill=fill, align="r", B=bottom),
-            cell(vr.coverage, fill=fill, align="r", B=bottom),
-            cell(vr.primary_group, fill=fill, align="l", B=bottom),
-            cell(vr.primary_pct, fill=fill, align="r", B=bottom),
-            cell(vr.top_subsystem, fill=fill, align="l", B=bottom),
-            chip_cell(vr.evidence, B=bottom),
+            cell(vr.vendor, fill=WHITE, align="l", B=bottom),
+            cell(vr.dollars_m, fill=WHITE, align="r", B=bottom),
+            cell(vr.coverage, fill=WHITE, align="r", B=bottom),
+            cell(vr.primary_group, fill=WHITE, align="l", B=bottom),
+            cell(vr.primary_pct, fill=WHITE, align="r", B=bottom),
+            cell(vr.top_subsystem, fill=WHITE, align="l", B=bottom),
         ]
         rows.append(trow(cells, h=IN(ROW_H)))
     return rows
@@ -519,9 +496,7 @@ CHROME = Chrome(
               "to one SWBS group."),
     sources=Sources(
         source=("DDG Subaward Transactions (Builder = HII-Ingalls); constant FY2026 $"),
-        note=("\u00b9 SOCAIL, LDA reads as an unresolved supplier archetype, but DDG SWBS "
-              "resolves it to 234 propulsion gas turbines. "
-              "Evidence class: High-confidence = \u226580% SWBS coverage and \u226570% of $ in one "
+        note=("Evidence class: High-confidence = \u226580% SWBS coverage and \u226570% of $ in one "
               "primary SWBS group; Mixed = \u226580% coverage, <70% concentration; "
               "Partial = 50\u201379% coverage; Low/no = <50%. Vendor-count shares are of the "
               "375-vendor HII DDG base."),

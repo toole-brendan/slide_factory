@@ -1153,15 +1153,9 @@ def _area_series_xml(
     )
 
     if series.get("pattern"):
-        pattern = series["pattern"]
-        fill_xml = (
-            f'<a:pattFill prst="{_esc_attr(pattern.get("prst", "ltUpDiag"))}">'
-            f'<a:fgClr><a:srgbClr val="{_esc_attr(pattern.get("fg", BLACK))}"/></a:fgClr>'
-            f'<a:bgClr><a:srgbClr val="{_esc_attr(pattern.get("bg", WHITE))}"/></a:bgClr>'
-            "</a:pattFill>"
-        )
+        fill_xml = _chart_pattern_fill_xml(series["pattern"])
     elif series.get("color"):
-        fill_xml = f'<a:solidFill><a:srgbClr val="{_esc_attr(series["color"])}"/></a:solidFill>'
+        fill_xml = _chart_solid_fill_xml(series["color"])
     else:
         fill_xml = "<a:noFill/>"
 
@@ -1444,17 +1438,14 @@ def _build_series(
     elif pattern:
         ser_spPr = (
             "<c:spPr>"
-            f'<a:pattFill prst="{pattern.get("prst", "ltUpDiag")}">'
-            f'<a:fgClr><a:srgbClr val="{pattern.get("fg", "000000")}"/></a:fgClr>'
-            f'<a:bgClr><a:srgbClr val="{pattern.get("bg", "FFFFFF")}"/></a:bgClr>'
-            "</a:pattFill>"
+            + _chart_pattern_fill_xml(pattern)
             + seg_ln +
             "</c:spPr>"
         )
     elif series_color:
         ser_spPr = (
             "<c:spPr>"
-            f'<a:solidFill><a:srgbClr val="{series_color}"/></a:solidFill>'
+            + _chart_solid_fill_xml(series_color)
             + seg_ln +
             "</c:spPr>"
         )

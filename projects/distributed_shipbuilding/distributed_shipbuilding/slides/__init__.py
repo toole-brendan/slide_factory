@@ -29,7 +29,9 @@ from . import (
     tam_to_observed_sam_bridge,
     slide3_outsourced_bc_annual_tam_ref,
     sam_where_to_play_scorecard,
+    capability_domain_primary_output_map,
     vendor_swbs_fingerprint_teaching,
+    priority_supplier_pools,
     construction_stage_supplier_map,
     outsourced_spend_by_work_type,
     ddg51_swbs_dollar_mix_teaching_alternative,
@@ -65,7 +67,9 @@ SLIDE_RENDERS: list[tuple] = [
     (divider_sam_supplier_market_structure, divider_sam_supplier_market_structure.render),
     (slide3_outsourced_bc_annual_tam_ref, slide3_outsourced_bc_annual_tam_ref.render),
     (sam_where_to_play_scorecard, sam_where_to_play_scorecard.render),
+    (capability_domain_primary_output_map, capability_domain_primary_output_map.render),
     (vendor_swbs_fingerprint_teaching, vendor_swbs_fingerprint_teaching.render),
+    (priority_supplier_pools, priority_supplier_pools.render),
 
     # 4 — SAM Ship Construction Lens
     (divider_sam_ship_construction_lens, divider_sam_ship_construction_lens.render),
